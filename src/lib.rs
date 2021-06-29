@@ -1,443 +1,290 @@
-use wasm_bindgen::{prelude::Closure, JsCast};
+#![warn(missing_docs)]
 
-use web_sys::{
-    Element, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node, NodeFilter,
-};
-use yew::{html::Scope, prelude::*, utils::document, virtual_dom::VDiff};
+/*!
+Yew Testing Library
 
-#[non_exhaustive]
-enum WhatToShow {
-    ShowText,
+Provides helper functions and traits to help test Yew components.
+
+Requirements:
+- [`wasm-bindgen-test`](wasm_bindgen_test) in dev-dependencies
+
+All Yew Test functions are assuming they will be in wasm-bindgen-tests:
+
+```no_run
+use wasm_bindgen_test::*;
+wasm_bindgen_test_configuration!(run_in_browser);
+
+#[wasm_bindgen_test]
+fn test() {
+    // .. test code here
+}
+```
+
+Running wasm-bindgen-tests
+
+Multiple browsers can be used here or just one:
+```
+$ wasm-pack test --headless --firefox --chrome
+```
+*/
+
+use std::{marker::PhantomData, ops::Deref};
+
+use wasm_bindgen::JsCast;
+use web_sys::{Element, NodeList};
+
+mod asserts;
+#[doc(inline)]
+pub mod events;
+#[doc(inline)]
+pub mod queries;
+mod utils;
+
+/// Wrapper around a root element which has been rendered.
+pub struct TestRender {
+    root_element: Element,
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<u32> for WhatToShow {
-    fn into(self) -> u32 {
-        match self {
-            WhatToShow::ShowText => 4,
+/// Iterator for [`Element`]s
+pub struct ElementIter<'a, T: JsCast> {
+    iter: Box<dyn Iterator<Item = T> + 'a>,
+    _marker: PhantomData<&'a T>,
+}
+
+impl<T: JsCast> ElementIter<'_, T> {
+    pub(crate) fn new(node_list: Option<NodeList>) -> Self {
+        if let Some(node_list) = node_list {
+            node_list.into()
+        } else {
+            Self {
+                iter: Box::new(std::iter::empty()),
+                _marker: PhantomData,
+            }
         }
     }
 }
 
-pub enum LabelByTextError<'search> {
-    LabelNotFound(&'search str),
-    NoElementFound((&'search str, String)),
-}
-
-impl<'search> std::fmt::Debug for LabelByTextError<'search> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LabelByTextError::LabelNotFound(text) => {
-                write!(f, "No label found with text: {}.", text)
-            }
-            LabelByTextError::NoElementFound((text, id)) => {
-                write!(f, "Found a label with the text: '{}'\n however, no input was found with the id of '{}'", text, id)
+impl<T: JsCast> From<NodeList> for ElementIter<'_, T> {
+    fn from(node_list: NodeList) -> Self {
+        let mut nodes = vec![];
+        for i in 0..node_list.length() {
+            if let Some(element) = node_list.get(i).and_then(|node| node.dyn_into().ok()) {
+                nodes.push(element);
             }
         }
-    }
-}
-
-struct Empty;
-impl Component for Empty {
-    type Message = ();
-    type Properties = ();
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        todo!()
-    }
-
-    fn update(&mut self, _: Self::Message) -> ShouldRender {
-        todo!()
-    }
-
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        todo!()
-    }
-
-    fn view(&self) -> Html {
-        todo!()
-    }
-}
-
-pub struct Rendered {
-    // parent_scope: AnyScope,
-    parent_element: Element,
-    // node: Html,
-}
-
-impl Rendered {
-    pub fn render(mut html: Html) -> Self {
-        let parent_scope = Scope::<Empty>::new(None).into();
-        let parent_element = document().create_element("div").unwrap();
-
-        html.apply(&parent_scope, &parent_element, NodeRef::default(), None);
 
         Self {
-            parent_element,
-            // parent_scope,
-            // node: html,
+            iter: Box::new(nodes.into_iter()),
+            _marker: PhantomData,
         }
     }
 }
 
-impl Rendered {
-    pub fn get_by_text<T>(&self, search: &'_ str) -> Option<T>
-    where
-        T: JsCast,
-    {
-        let mut filter = NodeFilter::new();
-        let search = search.to_owned();
+impl<T: JsCast> Iterator for ElementIter<'_, T> {
+    type Item = T;
 
-        let filter_on_text_value = move |node: Node| {
-            node.text_content()
-                .map(|text| text == search)
-                .unwrap_or_default()
-        };
-
-        let cb = Closure::wrap(Box::new(filter_on_text_value) as Box<dyn Fn(Node) -> bool>);
-        filter.accept_node(cb.as_ref().unchecked_ref());
-
-        let walker = document()
-            .create_tree_walker_with_what_to_show_and_filter(
-                &self.parent_element,
-                WhatToShow::ShowText.into(),
-                Some(&filter),
-            )
-            .unwrap();
-
-        walker
-            .next_node()
-            .unwrap()
-            .and_then(|node| node.parent_element().and_then(|e| e.dyn_into().ok()))
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
     }
 
-    pub fn get_by_placeholder_text<T>(&self, search: &'_ str) -> Option<T>
-    where
-        T: JsCast,
-    {
-        let holders = self
-            .parent_element
-            .query_selector_all(":placeholder-shown")
-            .ok()?;
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
 
-        for i in 0..holders.length() {
-            let holder = holders.get(i)?;
-            match holder.dyn_into::<HtmlInputElement>() {
-                Ok(input) => {
-                    if input.placeholder() == search {
-                        return input.dyn_into().ok();
-                    }
-                }
-                Err(node) => {
-                    let text_area: HtmlTextAreaElement = node.dyn_into().ok()?;
-                    if text_area.placeholder() == search {
-                        return text_area.dyn_into().ok();
-                    }
-                }
-            }
+/// Iterator for [`NodeList`]
+pub(crate) struct RawNodeListIter<T> {
+    index: u32,
+    node_list: Option<NodeList>,
+    _marker: PhantomData<T>,
+}
+
+impl<T> RawNodeListIter<T>
+where
+    T: JsCast,
+{
+    fn new(node_list: Option<NodeList>) -> Self {
+        Self {
+            index: 0,
+            node_list,
+            _marker: PhantomData,
         }
+    }
+}
 
-        None
+impl<T> Iterator for RawNodeListIter<T>
+where
+    T: JsCast,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node_list = self.node_list.as_ref()?;
+
+        if self.index < node_list.length() {
+            let node = node_list.get(self.index)?;
+            self.index += 1;
+            node.dyn_into().ok()
+        } else {
+            None
+        }
     }
 
-    pub fn get_by_label_text<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, LabelByTextError<'search>>
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (
+            0,
+            self.node_list.as_ref().map(|list| list.length() as usize),
+        )
+    }
+}
+
+impl TestRender {
+    /**
+    Wrap rendered root element ready to be queried.
+
+    # Examples
+    ```no_run
+    use yew::virtual_dom::shallow_render;
+    use yew_test::prelude::*;
+    // Counter component implementation..
+    let rendered = TestRender::new(test_render(html!(<Counter />)));
+    // .. use `rendered` to get elements and perform tests
+    ```
+    */
+    pub fn new(root_element: Element) -> Self {
+        Self { root_element }
+    }
+
+    /**
+    Get an Element by the id, if no element with that id exists then returns [`None`].
+
+    This is a low level query and users can't see an element id - it is recommended to use
+    a by_* query instead.
+
+    # Examples
+    ```no_run
+    use yew::virtual_dom::shallow_render;
+    use yew_test::prelude::*;
+
+    let rendered = shallow_render(html! {
+        <div id="mydiv" />
+    })
+    .into();
+
+    let div: HtmlElement = rendered.get_by_id("mydiv").expect("only element has id of mydiv!");
+    assert_eq!("mydiv", div.id());
+    ```
+    */
+    pub fn get_by_id<T>(&self, id: &str) -> Option<T>
     where
         T: JsCast,
     {
-        let labels = match self.parent_element.query_selector_all("label") {
-            Ok(labels) => labels,
-            Err(_) => return Err(LabelByTextError::LabelNotFound(search)),
-        };
-
-        for i in 0..labels.length() {
-            let label = labels.get(i).unwrap();
-            if label
-                .text_content()
-                .map(|text| text == search)
-                .unwrap_or_default()
-            {
-                let label_element: Element = label.unchecked_into();
-                if let Some(id) = label_element.get_attribute("for") {
-                    return match self
-                        .parent_element
-                        .query_selector(&format!("#{}", id))
-                        .unwrap()
-                        .and_then(|element| element.dyn_into().ok())
-                    {
-                        Some(element) => Ok(element),
-                        None => Err(LabelByTextError::NoElementFound((search, id))),
-                    };
-                } else {
-                    return Err(LabelByTextError::LabelNotFound(search));
-                };
-            }
-        }
-
-        Err(LabelByTextError::LabelNotFound(search))
+        self.root_element
+            .query_selector(&format!("#{}", id))
+            .ok()
+            .flatten()
+            .and_then(|e| e.dyn_into().ok())
     }
 
-    pub fn get_by_display_value<T>(&self, search: &'_ str) -> Option<T>
+    /**
+    Get all Elements by the class value.
+
+    This is a low level query and users can't see what class an element has - it is recommended to
+    use a by_* query instead.
+
+    # Examples
+    ```no_run
+    use yew::virtual_dom::shallow_render;
+    use yew_test::prelude::*;
+
+    let rendered = shallow_render(html! {
+        <div class="divclass" />
+    })
+    .into();
+
+    let iter = rendered.get_by_class("divclass");
+    let div: HtmlElement = iter.next().expect("should be one element in this iterator!");
+    assert!(iter.next().is_none());
+    ```
+    */
+    pub fn query_by_class<T>(&'_ self, class: &str) -> impl Iterator<Item = T>
     where
         T: JsCast,
     {
-        let displays = self
-            .parent_element
-            .query_selector_all("input, select, textarea")
-            .ok()?;
-
-        for i in 0..displays.length() {
-            let display = displays.get(i)?;
-
-            let display = match display.dyn_into::<HtmlInputElement>() {
-                Ok(input) if input.value() == search => return input.dyn_into().ok(),
-                Err(node) => node,
-                _ => continue,
-            };
-
-            let display = match display.dyn_into::<HtmlTextAreaElement>() {
-                Ok(area) if area.value() == search => return area.dyn_into().ok(),
-                Err(node) => node,
-                _ => continue,
-            };
-
-            if let Ok(select) = display.dyn_into::<HtmlSelectElement>() {
-                if select.value() == search {
-                    return select.dyn_into().ok();
-                }
-            }
-        }
-
-        None
+        RawNodeListIter::new(
+            self.root_element
+                .query_selector_all(&format!(".{}", class))
+                .ok(),
+        )
     }
+}
+
+impl From<Element> for TestRender {
+    fn from(root_element: Element) -> Self {
+        Self { root_element }
+    }
+}
+
+impl Deref for TestRender {
+    type Target = Element;
+
+    fn deref(&self) -> &Self::Target {
+        &self.root_element
+    }
+}
+
+/// Yew Test Prelude
+///
+/// Convenient module to import the most used imports for yew_test.
+///
+/// ```no_run
+/// use yew_test::prelude::*;
+/// ```
+pub mod prelude {
+    pub use crate::{assert_text_content, queries::*, TestRender};
+    pub use web_sys::{Element, HtmlElement, Node};
 }
 
 #[cfg(test)]
 mod tests {
-    struct Counter {
-        count: usize,
-        link: ComponentLink<Self>,
-    }
-
-    impl Component for Counter {
-        type Message = ();
-        type Properties = ();
-
-        fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-            Self { count: 0, link }
-        }
-
-        fn update(&mut self, _: Self::Message) -> ShouldRender {
-            self.count += 1;
-            true
-        }
-
-        fn change(&mut self, _: Self::Properties) -> ShouldRender {
-            false
-        }
-
-        fn view(&self) -> Html {
-            html! {
-                <div>
-                    <p>{ format!("Count: {}", self.count) }</p>
-                    <button onclick=self.link.callback(|_| ())>{ "Click me!" }</button>
-                </div>
-            }
-        }
-    }
+    use crate::prelude::*;
+    use web_sys::HtmlButtonElement;
+    use yew::prelude::*;
+    use yew::virtual_dom::test_render;
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-    use web_sys::{HtmlElement, HtmlInputElement};
 
     use super::*;
 
     #[wasm_bindgen_test]
-    fn button_click_test() {
-        let rendered = Rendered::render(html! {
-            <Counter />
-        });
+    fn get_div_by_id() {
+        let rendered: TestRender = test_render(html! {
+            <div id="mydiv"/>
+        })
+        .into();
 
-        let button: HtmlElement = rendered.get_by_text("Click me!").unwrap();
-        button.click();
+        let _: HtmlElement = rendered
+            .get_by_id("mydiv")
+            .expect("div with id=`mydiv` is the only element!");
 
-        let count = rendered.get_by_text::<Element>("Count: 1");
-        assert!(count.is_some());
-
-        button.click();
-        let count = rendered.get_by_text::<Element>("Count: 2");
-        assert!(count.is_some());
+        let nothing = rendered.get_by_id::<Element>("this id does not exist!");
+        assert!(nothing.is_none())
     }
 
     #[wasm_bindgen_test]
-    fn input_value_change() {
-        let label_text = "What needs to be done?";
-        let rendered = Rendered::render(html! {
+    fn get_btn_by_class() {
+        let rendered: TestRender = test_render(html! {
             <>
-                <label for="todo">{ &label_text }</label>
-                <input type="text" id="todo" value="" />
+                <button class="super-btn" />
+                <div class="super-btn" />
             </>
-        });
+        })
+        .into();
 
-        let new_value = "Gardening";
-
-        let input: HtmlInputElement = rendered.get_by_label_text(label_text).unwrap();
-        input.set_value(new_value);
-
-        let input_after: HtmlInputElement = rendered.get_by_label_text(label_text).unwrap();
-        assert_eq!(new_value, input_after.value());
-        assert_eq!(input, input_after);
-    }
-
-    #[wasm_bindgen_test]
-    fn get_input_by_display_value() {
-        let rendered = Rendered::render(html! {
-            <input type="text" id="greeting" value="Welcome" />
-        });
-
-        let input: HtmlInputElement = rendered.get_by_display_value("Welcome").unwrap();
-        assert_eq!("greeting", input.id());
-    }
-
-    #[wasm_bindgen_test]
-    fn text_search() {
-        let test = Rendered::render(html! {
-            <div>
-                <div>
-                    { "Hello, World!" }
-                </div>
-            </div>
-        });
-
-        let result = test.get_by_text::<Element>("Hello, World!");
-        assert!(result.is_some());
-    }
-
-    #[wasm_bindgen_test]
-    fn get_inputs_by_label_text() {
-        let mut tests = vec![
-            input_label_text(),
-            input_label_text_different_parents(),
-            input_label_text_label_after_input(),
-        ];
-
-        for test in tests.drain(..) {
-            let test = Rendered::render(test);
-
-            let result = test.get_by_label_text("What needs to be done?");
-
-            let input: HtmlInputElement = result.unwrap();
-            assert_eq!("hi!".to_owned(), input.value());
-        }
-    }
-
-    // TODO:
-    // [ ] - support aria-* attributes?
-
-    #[wasm_bindgen_test]
-    fn get_input_by_placeholder_text() {
-        let rendered = Rendered::render(html! {
-            <div>
-                <input id="34" placeholder="Username" />
-            </div>
-        });
-
-        let result: HtmlElement = rendered.get_by_placeholder_text("Username").unwrap();
-        assert_eq!("34", result.id());
-    }
-
-    #[wasm_bindgen_test]
-    fn get_textarea_by_placeholder_text() {
-        let rendered = Rendered::render(html! {
-            <div>
-                <textarea id="23" placeholder="Enter bio here" />
-            </div>
-        });
-
-        let result: HtmlElement = rendered.get_by_placeholder_text("Enter bio here").unwrap();
-        assert_eq!("23", result.id());
-
-        let rendered = Rendered::render(html! {
-            <div>
-                <textarea placeholder="Enter life story here" />
-            </div>
-        });
-
-        assert!(rendered
-            .get_by_placeholder_text::<Element>("Enter bio here")
-            .is_none());
-    }
-
-    #[wasm_bindgen_test]
-    fn no_element_found_when_id_and_for_do_not_match() {
-        let rendered = Rendered::render(html! {
-            <div>
-                <form>
-                    <label for="new-todoz">{ "What needs to be done?" }</label>
-                    <br />
-                    <input id="new-todo" value={"hi!"} />
-                </form>
-            </div>
-        });
-
-        let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
-        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
-    }
-
-    #[wasm_bindgen_test]
-    fn text_not_found_when_search_term_not_found_in_label() {
-        let rendered = Rendered::render(html! {
-            <div>
-                <form>
-                    <label for="new-todo">{ "What doesn't need to be done?" }</label>
-                    <br />
-                    <input id="new-todo" value={ "hi!" } />
-                </form>
-            </div>
-        });
-
-        let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
-
-        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
-    }
-
-    fn input_label_text() -> Html {
-        html! {
-            <div>
-                <form>
-                    <label for="new-todo">{"What needs to be done?"}</label>
-                    <br />
-                    <input id="new-todo" value={"hi!"} />
-                </form>
-            </div>
-        }
-    }
-
-    fn input_label_text_label_after_input() -> Html {
-        html! {
-            <div>
-                <form>
-                    <input id="new-todo" value={"hi!"} />
-                    <br />
-                    <label for="new-todo">{"What needs to be done?"}</label>
-                </form>
-            </div>
-        }
-    }
-
-    fn input_label_text_different_parents() -> Html {
-        html! {
-            <div>
-                <form>
-                    <div>
-                        <label for="new-todo">{"What needs to be done?"}</label>
-                    </div>
-                    <br />
-                    <input id="new-todo" value={"hi!"} />
-                </form>
-            </div>
-        }
+        let mut super_btns = rendered.query_by_class::<HtmlElement>("super-btn");
+        let _button: HtmlButtonElement = super_btns.next().and_then(|e| e.dyn_into().ok()).unwrap();
+        let _div: HtmlElement = super_btns.next().unwrap();
+        assert!(super_btns.next().is_none());
     }
 }

@@ -1,0 +1,19 @@
+[package]
+name = "todo"
+version = "0.1.0"
+authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+strum = "0.21"
+strum_macros = "0.21"
+serde = "1"
+serde_derive = "1"
+yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+yew-services = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+
+[dev-dependencies]
+yew-test = { path = "../.." }
+wasm-bindgen-test = "0.3.24"
