@@ -229,8 +229,8 @@ impl Model {
                         checked=entry.completed
                         onclick=self.link.callback(move |_| Msg::Toggle(idx))
                     />
-                    <label for=id ondblclick=self.link.callback(move |_| Msg::ToggleEdit(idx))>{ &entry.description }</label>
-                    <button class="destroy" onclick=self.link.callback(move |_| Msg::Remove(idx)) />
+                    <label for=id.clone() ondblclick=self.link.callback(move |_| Msg::ToggleEdit(idx))>{ &entry.description }</label>
+                    <button aria-controls=id class="destroy" onclick=self.link.callback(move |_| Msg::Remove(idx)) />
                 </div>
                 { self.view_entry_edit_input((idx, &entry)) }
             </li>
@@ -388,6 +388,114 @@ mod tests {
         assert_text_content!("Clear completed (2)", clear_completed_btn);
 
         // must clear completed because the storage is a side effect and can spill into other tests
+        clear_completed_btn.click();
+    }
+
+    #[wasm_bindgen_test]
+    fn make_new_todo_item_and_remove_it() {
+        let rendered: TestRender = test_render(html! { <Model /> }).into();
+
+        // get todo input
+        let input: HtmlInputElement = rendered
+            .get_by_placeholder_text("What needs to be done?")
+            .unwrap();
+
+        // enter todo item
+        type_to(&input, "Some todo item");
+        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+
+        // get todo item input
+        let checkbox: HtmlInputElement = rendered
+            .get_by_label_text("Some todo item")
+            .expect("Input should be found by it's label text");
+
+        // get single controlling element of checkbox using it's id
+        let remove_button: HtmlButtonElement = rendered
+            .get_by_aria_prop(AriaProperty::Controls([checkbox.id()].into()), None)
+            .unwrap();
+
+        // click and remove todo item
+        remove_button.click();
+
+        assert!(!rendered.contains(Some(&checkbox)));
+    }
+
+    fn render_model() -> TestRender {
+        test_render(html! { <Model /> }).into()
+    }
+
+    #[wasm_bindgen_test]
+    fn check_active_completed_tabs() {
+        let rendered = render_model();
+
+        // get todo input
+        let input: HtmlInputElement = rendered
+            .get_by_placeholder_text("What needs to be done?")
+            .unwrap();
+
+        // enter todo item
+        type_to(&input, "A");
+        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+
+        // get todo item input
+        let checkbox_a: HtmlInputElement = rendered
+            .get_by_label_text("A")
+            .expect("Input should be found by it's label text");
+
+        // enter todo item
+        type_to(&input, "B");
+        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+
+        // complete todo 'A'
+        checkbox_a.click();
+
+        // find active filter link
+        let active_filter: HtmlElement = rendered
+            .get_by_aria_role(AriaRole::Link, "Active")
+            .expect("couldn't find 'Active' link");
+        active_filter.click();
+
+        // 'A' is completed so is not active
+        assert!(rendered.get_by_label_text::<HtmlInputElement>("A").is_err());
+
+        // find completed filter link
+        let completed_filter: HtmlElement = rendered
+            .get_by_aria_role(AriaRole::Link, "Completed")
+            .expect("couldn't find 'Completed' link");
+
+        completed_filter.click();
+
+        // 'A' is completed so should now be able to find it!
+        assert!(rendered.get_by_label_text::<HtmlInputElement>("A").is_ok());
+        // 'B' is active so can not be found in completed filter
+        assert!(rendered.get_by_label_text::<HtmlInputElement>("B").is_err());
+
+        /*
+        rendered.contains does not work here - this will always return true as these elements
+        still 'live' in the DOM but disconnected. So we must try and find them again.
+        */
+
+        // time to clean up!
+
+        // change back to 'All' filter to find checkbox_b
+        rendered
+            .get_by_aria_role::<_, HtmlElement>(AriaRole::Link, "All")
+            .expect("all filter")
+            .click();
+
+        // set b as completed -
+        // Note: even if we had a previous reference to the 'B' input that would be invalid after
+        // changing the filter so getting a new reference to 'B' would always be required!
+        rendered
+            .get_by_label_text::<HtmlInputElement>("B")
+            .unwrap()
+            .click();
+
+        // get clear completed button
+        let clear_completed_btn: HtmlButtonElement = rendered
+            .get_by_aria_role(AriaRole::Button, "Clear completed (2)")
+            .expect("clear button");
+
         clear_completed_btn.click();
     }
 }
