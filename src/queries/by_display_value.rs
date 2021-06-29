@@ -56,6 +56,14 @@ pub trait ByDisplayValue {
     fn get_by_display_value<T>(&self, search: &'_ str) -> Option<T>
     where
         T: JsCast;
+
+    /**
+    Expect only a single [`Element`](web_sys::Element) from this query - if no or many results
+    come from this query then it will panic.
+    */
+    fn expect_by_display_value<T>(&self, search: &'_ str) -> T
+    where
+        T: JsCast;
 }
 
 impl ByDisplayValue for TestRender {
@@ -109,6 +117,75 @@ impl ByDisplayValue for TestRender {
         }
 
         None
+    }
+
+    fn expect_by_display_value<T>(&self, search: &'_ str) -> T
+    where
+        T: JsCast,
+    {
+        let displays = self
+            .root_element
+            .query_selector_all("input, select, textarea")
+            .expect("Error trying to query the DOM");
+
+        let mut found = vec![];
+
+        for i in 0..displays.length() {
+            let display = displays.get(i).unwrap();
+
+            let display = match display.dyn_into::<HtmlInputElement>() {
+                Ok(input) if input.value() == search => {
+                    match input.dyn_into::<T>() {
+                        Ok(result) => {
+                            found.push(result);
+                            continue;
+                        }
+                        Err(node) => node.unchecked_into(), // safe as it must be a node!
+                    }
+                }
+                Err(node) => node,
+                _ => continue,
+            };
+
+            let display = match display.dyn_into::<HtmlTextAreaElement>() {
+                Ok(area) if area.value() == search => match area.dyn_into::<T>() {
+                    Ok(result) => {
+                        found.push(result);
+                        continue;
+                    }
+                    Err(node) => node.unchecked_into(),
+                },
+                Err(node) => node,
+                _ => continue,
+            };
+
+            if let Ok(select) = display.dyn_into::<HtmlSelectElement>() {
+                if select.value() == search {
+                    if let Ok(result) = select.dyn_into::<T>() {
+                        found.push(result);
+                    }
+                }
+            }
+        }
+
+        if found.is_empty() {
+            panic!(
+                "No input, select, or textarea elements could be found with the display value of:
+                {} in the following html:\n {:?}",
+                search,
+                self.inner_html()
+            )
+        } else if found.len() == 1 {
+            found.pop().unwrap()
+        } else {
+            panic!(
+                "Expected only one element to match!\n
+                Found {} elements with a value of `{}` in the following html:\n {:?}",
+                found.len(),
+                search,
+                self.inner_html(),
+            )
+        }
     }
 }
 

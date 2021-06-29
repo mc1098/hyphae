@@ -294,8 +294,6 @@ mod tests {
         // confirm that our new todo items is not completed
         assert!(!checkbox.checked());
 
-        yew::web_sys::console::log_1(&format!("{:?}", rendered.inner_html()).into());
-
         // get clear completed button
         let clear_completed_btn: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "Clear completed (0)")
