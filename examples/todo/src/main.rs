@@ -219,17 +219,18 @@ impl Model {
             class.push(" completed");
         }
         let id = format!("todo-item-{}", idx);
+        let check_id = format!("todo-item-{}-check", idx);
         html! {
-            <li class=class>
+            <li id=id.clone() class=class>
                 <div class="view">
                     <input
-                        id=id.clone()
+                        id=check_id.clone()
                         type="checkbox"
                         class="toggle"
                         checked=entry.completed
                         onclick=self.link.callback(move |_| Msg::Toggle(idx))
                     />
-                    <label for=id.clone() ondblclick=self.link.callback(move |_| Msg::ToggleEdit(idx))>{ &entry.description }</label>
+                    <label for=check_id ondblclick=self.link.callback(move |_| Msg::ToggleEdit(idx))>{ &entry.description }</label>
                     <button aria-controls=id class="destroy" onclick=self.link.callback(move |_| Msg::Remove(idx)) />
                 </div>
                 { self.view_entry_edit_input((idx, &entry)) }
@@ -404,20 +405,20 @@ mod tests {
         type_to(&input, "Some todo item");
         dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
 
-        // get todo item input
-        let checkbox: HtmlInputElement = rendered
-            .get_by_label_text("Some todo item")
-            .expect("Input should be found by it's label text");
+        // get todo item
+        let todo_item: HtmlElement = rendered
+            .get_by_aria_role(AriaRole::ListItem, "Some todo item")
+            .unwrap();
 
         // get single controlling element of checkbox using it's id
         let remove_button: HtmlButtonElement = rendered
-            .get_by_aria_prop(AriaProperty::Controls([checkbox.id()].into()), None)
+            .get_by_aria_prop(AriaProperty::Controls([todo_item.id()].into()), None)
             .unwrap();
 
         // click and remove todo item
         remove_button.click();
 
-        assert!(!rendered.contains(Some(&checkbox)));
+        assert!(!rendered.contains(Some(&todo_item)));
     }
 
     fn render_model() -> TestRender {
