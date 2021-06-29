@@ -210,20 +210,20 @@ pub trait ByAria {
 pub type IdReference = String;
 
 /// A list of one or more [`IdReference`]s.
-pub struct IdReferenceList<'a>(&'a [String]);
+pub struct IdReferenceList(Vec<String>);
 
-impl std::fmt::Display for IdReferenceList<'_> {
+impl std::fmt::Display for IdReferenceList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.0.join(","))
     }
 }
 
-impl<'a, S> From<&'a S> for IdReferenceList<'a>
+impl<S> From<S> for IdReferenceList
 where
     S: AsRef<[String]>,
 {
-    fn from(slice: &'a S) -> Self {
-        IdReferenceList(slice.as_ref())
+    fn from(slice: S) -> Self {
+        IdReferenceList(slice.as_ref().to_owned())
     }
 }
 
@@ -480,9 +480,9 @@ aria_enum! {
         Atomic(bool),
         /// Identifies the element (or elements) whose contents or presence are controlled by
         /// the current element.
-        Controls(IdReferenceList<'a>),
+        Controls(IdReferenceList),
         /// Identifies the element (or elements) that describes the object.
-        DescribedBy(IdReferenceList<'a>),
+        DescribedBy(IdReferenceList),
         /// Identifies the element that provides a detailed, extended description for the object.
         Details(IdReference),
         #[deprecated(note = "Deprecated in ARIA 1.1")]
@@ -508,7 +508,7 @@ aria_enum! {
         /// Identifies the next element (or elements) in an alternate reading order of content
         /// which, at the user's discretion, allows assistive technology to override the
         /// general default of reading in document source order.
-        FlowTo(IdReferenceList<'a>),
+        FlowTo(IdReferenceList),
         /// Indicates the availability and type of interactive popup element, such as menu or
         /// dialog, that can be triggered by an element.
         HasPopup(HasPopupToken),
@@ -518,7 +518,7 @@ aria_enum! {
         /// Defines a string value that labels the current element.
         Label(&'a str),
         /// Identifies the element (or elements) that labels the current element.
-        LabelledBy(IdReferenceList<'a>),
+        LabelledBy(IdReferenceList),
         /// Defines the hierarchical level of an element within a structure.
         Level(i32),
         /// Indicates that an element will be updated, and describes the types of updates the
@@ -537,7 +537,7 @@ aria_enum! {
         /// Identifies an element (or elements) in order to define a visual, functional, or
         /// contextual parent/child relationship between DOM elements where the DOM hierarchy
         /// cannot be used to represent the relationship.
-        Owns(IdReferenceList<'a>),
+        Owns(IdReferenceList),
         /// Defines a short hint (a word or short phrase) intended to aid the user with data
         /// entry when the control has no value. A hint could be a sample value or a brief
         /// description of the expected format.
