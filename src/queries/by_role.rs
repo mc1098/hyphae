@@ -207,10 +207,10 @@ pub trait ByAria {
 }
 
 /// Reference to the ID of another element in the same document
-pub type IdReference<'a> = &'a str;
+pub type IdReference = String;
 
 /// A list of one or more [`IdReference`]s.
-pub struct IdReferenceList<'a>(&'a [&'a str]);
+pub struct IdReferenceList<'a>(&'a [String]);
 
 impl std::fmt::Display for IdReferenceList<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -220,7 +220,7 @@ impl std::fmt::Display for IdReferenceList<'_> {
 
 impl<'a, S> From<&'a S> for IdReferenceList<'a>
 where
-    S: AsRef<[&'a str]>,
+    S: AsRef<[String]>,
 {
     fn from(slice: &'a S) -> Self {
         IdReferenceList(slice.as_ref())
@@ -484,15 +484,15 @@ aria_enum! {
         /// Identifies the element (or elements) that describes the object.
         DescribedBy(IdReferenceList<'a>),
         /// Identifies the element that provides a detailed, extended description for the object.
-        Details(IdReference<'a>),
+        Details(IdReference),
         #[deprecated(note = "Deprecated in ARIA 1.1")]
         /// Indicates what functions can be performed when a dragged object is released on the drop target.
         DropEffect(TokenList<'a, DropEffectToken>), //(&'a [DropEffectToken]),
         /// Identifies the element that provides an error message for the object.
-        ErrorMessage(IdReference<'a>),
+        ErrorMessage(IdReference),
         /// Identifies the currently active element when DOM focus is on a composite widget,
         /// textbox, group, or application.
-        ActiveDescendant(IdReference<'a>),
+        ActiveDescendant(IdReference),
         /// Indicates whether inputting text could trigger display of one or more predictions
         /// of the user's intended value for an input and specifies how predictions would be
         /// presented if they are made.
