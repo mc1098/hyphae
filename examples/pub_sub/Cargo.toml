@@ -1,0 +1,13 @@
+[package]
+name = "pub_sub"
+version = "0.1.0"
+authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
+edition = "2018"
+
+[dependencies]
+yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+yew-test = { path = "../.." }
+wasm-bindgen-test = "0.3.24"
