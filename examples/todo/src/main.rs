@@ -286,7 +286,7 @@ mod tests {
         type_to(&input, "Gardening");
 
         // press enter to confirm
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // 'Gardening' todo item has been rendered - lets just get the completed checkbox
         let checkbox: HtmlInputElement = rendered
@@ -324,7 +324,7 @@ mod tests {
 
         // enter a new todo - oops pressed enter before finishing to type 'car'!
         type_to(&input, "Wash the c");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get the label for the new todo item
         let label: HtmlElement = rendered.get_by_text("Wash the c").unwrap();
@@ -336,7 +336,7 @@ mod tests {
         // finish typing 'car'
         type_to(&edit_input, "ar");
         // confirm edit
-        dispatch_key_event(&edit_input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&edit_input, KeyEventType::KeyPress, Key::Enter);
 
         // confirm label has been updated with the correct text
         assert_text_content!("Wash the car", label);
@@ -366,11 +366,11 @@ mod tests {
 
         // enter first todo
         type_to(&input, "A");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // enter second todo
         type_to(&input, "B");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get clear completed button
         let clear_completed_btn: HtmlButtonElement = rendered
@@ -403,7 +403,7 @@ mod tests {
 
         // enter todo item
         type_to(&input, "Some todo item");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get todo item
         let todo_item: HtmlElement = rendered
@@ -436,7 +436,7 @@ mod tests {
 
         // enter todo item
         type_to(&input, "A");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get todo item input
         let checkbox_a: HtmlInputElement = rendered
@@ -445,7 +445,7 @@ mod tests {
 
         // enter todo item
         type_to(&input, "B");
-        dispatch_key_event(&input, KeyEventType::KeyPress, "Enter");
+        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // complete todo 'A'
         checkbox_a.click();
