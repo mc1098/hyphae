@@ -1,14 +1,14 @@
 #![warn(missing_docs)]
 
 /*!
-Yew Testing Library
+Sap
 
 Provides helper functions and traits to help test Yew components.
 
 Requirements:
 - [`wasm-bindgen-test`](wasm_bindgen_test) in dev-dependencies
 
-All Yew Test functions are assuming they will be in wasm-bindgen-tests:
+All Sap functions are assuming they will be in wasm-bindgen-tests:
 
 ```no_run
 use wasm_bindgen_test::*;
@@ -145,7 +145,7 @@ impl TestRender {
     # Examples
     ```no_run
     use yew::virtual_dom::shallow_render;
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     // Counter component implementation..
     let rendered = TestRender::new(test_render(html!(<Counter />)));
     // .. use `rendered` to get elements and perform tests
@@ -164,7 +164,7 @@ impl TestRender {
     # Examples
     ```no_run
     use yew::virtual_dom::shallow_render;
-    use yew_test::prelude::*;
+    use sap::prelude::*;
 
     let rendered = shallow_render(html! {
         <div id="mydiv" />
@@ -195,7 +195,7 @@ impl TestRender {
     # Examples
     ```no_run
     use yew::virtual_dom::shallow_render;
-    use yew_test::prelude::*;
+    use sap::prelude::*;
 
     let rendered = shallow_render(html! {
         <div class="divclass" />
@@ -233,12 +233,12 @@ impl Deref for TestRender {
     }
 }
 
-/// Yew Test Prelude
+/// Sap Prelude
 ///
 /// Convenient module to import the most used imports for yew_test.
 ///
 /// ```no_run
-/// use yew_test::prelude::*;
+/// use sap::prelude::*;
 /// ```
 pub mod prelude {
     pub use crate::{assert_text_content, queries::*, TestRender};

@@ -1,5 +1,5 @@
 [package]
-name = "yew-test"
+name = "sap"
 version = "0.1.0"
 authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
@@ -11,7 +11,7 @@ wasm-bindgen = { version = "0.2.74", features = ['serde-serialize'] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.24"
-yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render", features = ['yew-test'] }
 
 
 [dependencies.web-sys]

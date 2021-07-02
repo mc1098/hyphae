@@ -268,9 +268,9 @@ fn main() {
 mod tests {
 
     use super::*;
+    use sap::{events::*, prelude::*};
     use wasm_bindgen_test::*;
     use yew::{virtual_dom::test_render, web_sys::HtmlButtonElement};
-    use yew_test::{events::*, prelude::*};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
@@ -313,8 +313,6 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_edit_it_and_complete() {
-        use yew_test::prelude::*;
-
         let rendered = TestRender::new(test_render(html! { <Model /> }));
 
         // get todo input

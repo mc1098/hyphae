@@ -42,9 +42,9 @@ fn main() {
 mod tests {
 
     use super::*;
+    use sap::prelude::*;
     use wasm_bindgen_test::*;
     use yew::{virtual_dom::test_render, web_sys::HtmlButtonElement};
-    use yew_test::prelude::*;
 
     wasm_bindgen_test_configure!(run_in_browser);
 

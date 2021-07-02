@@ -5,9 +5,9 @@ authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
 
 [dependencies]
-yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render", features = ["yew-test"] }
 js-sys = "0.3.51"
 
 [dev-dependencies]
-yew-test = { path = "../../" }
+sap = { path = "../../" }
 wasm-bindgen-test = "0.3.24"

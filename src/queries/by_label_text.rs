@@ -93,7 +93,7 @@ pub trait ByLabelText {
 
     ## Happy path:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>
@@ -112,7 +112,7 @@ pub trait ByLabelText {
     ```
     ## Label not found:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>
@@ -131,7 +131,7 @@ pub trait ByLabelText {
     ```
     ## Label found but `for` value doesn't match input `id`:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>
@@ -173,7 +173,7 @@ pub trait ByLabelText {
 
     ## Happy path:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>
@@ -191,7 +191,7 @@ pub trait ByLabelText {
     ```
     ## Label not found:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>
@@ -210,7 +210,7 @@ pub trait ByLabelText {
     ```
     ## Label found but `for` value doesn't match input `id`:
     ```no_run
-    use yew_test::prelude::*;
+    use sap::prelude::*;
     /*
     rendered with the effective html:
     <div>

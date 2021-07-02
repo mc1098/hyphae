@@ -80,12 +80,12 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
+    use sap::{assert_text_content, queries::ByText, TestRender};
     use wasm_bindgen_test::*;
     use yew::{
         virtual_dom::test_render,
         web_sys::{HtmlButtonElement, HtmlElement},
     };
-    use yew_test::{assert_text_content, queries::ByText, TestRender};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
 
