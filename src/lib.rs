@@ -300,7 +300,9 @@ macro_rules! test_render {
 /// use sap::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::{assert_text_content, queries::*, test_render, TestRender};
+    #[cfg(feature = "Yew")]
+    pub use crate::test_render;
+    pub use crate::{assert_text_content, queries::*, TestRender};
     pub use web_sys::{Element, HtmlElement, Node};
 }
 

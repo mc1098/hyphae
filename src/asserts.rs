@@ -33,7 +33,7 @@ macro_rules! assert_text_content {
     };
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 mod tests {
 
     use crate::{queries::ByText, test_render, TestRender};

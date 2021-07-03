@@ -603,7 +603,7 @@ pub fn dispatch_input_event(element: &EventTarget, data: &str) {
     assert!(element.dispatch_event(&input_event).unwrap());
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 mod tests {
 
     use web_sys::{HtmlElement, HtmlInputElement, KeyboardEvent};

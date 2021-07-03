@@ -289,7 +289,7 @@ impl ByLabelText for TestRender {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 pub mod tests {
 
     use wasm_bindgen_test::*;

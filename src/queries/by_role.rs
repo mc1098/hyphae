@@ -1096,7 +1096,7 @@ impl ByAria for TestRender {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 mod tests {
 
     use crate::test_render;

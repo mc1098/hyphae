@@ -60,7 +60,7 @@ impl ByPlaceholderText for TestRender {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 mod tests {
 
     use wasm_bindgen_test::*;
