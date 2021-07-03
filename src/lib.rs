@@ -144,10 +144,9 @@ impl TestRender {
 
     # Examples
     ```no_run
-    use yew::virtual_dom::shallow_render;
     use sap::prelude::*;
-    // Counter component implementation..
-    let rendered = TestRender::new(test_render(html!(<Counter />)));
+
+    let rendered = TestRender::new(element);
     // .. use `rendered` to get elements and perform tests
     ```
     */
@@ -163,13 +162,9 @@ impl TestRender {
 
     # Examples
     ```no_run
-    use yew::virtual_dom::shallow_render;
     use sap::prelude::*;
 
-    let rendered = shallow_render(html! {
-        <div id="mydiv" />
-    })
-    .into();
+    let rendered: TestRender = // ..
 
     let div: HtmlElement = rendered.get_by_id("mydiv").expect("only element has id of mydiv!");
     assert_eq!("mydiv", div.id());
@@ -194,13 +189,9 @@ impl TestRender {
 
     # Examples
     ```no_run
-    use yew::virtual_dom::shallow_render;
     use sap::prelude::*;
 
-    let rendered = shallow_render(html! {
-        <div class="divclass" />
-    })
-    .into();
+    let rendered: TestRender = // ..
 
     let iter = rendered.get_by_class("divclass");
     let div: HtmlElement = iter.next().expect("should be one element in this iterator!");
