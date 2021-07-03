@@ -9,8 +9,8 @@ strum = "0.21"
 strum_macros = "0.21"
 serde = "1"
 serde_derive = "1"
-yew = { git = "https://github.com/mc1098/yew.git", branch = "test-render", features = ["yew-test"] }
-yew-services = { git = "https://github.com/mc1098/yew.git", branch = "test-render" }
+yew = { git = "https://github.com/yewstack/yew.git" }
+yew-services = { git = "https://github.com/yewstack/yew.git" }
 
 [dev-dependencies]
 sap = { path = "../.." }

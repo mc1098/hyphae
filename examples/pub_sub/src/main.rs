@@ -44,13 +44,13 @@ mod tests {
     use super::*;
     use sap::prelude::*;
     use wasm_bindgen_test::*;
-    use yew::{virtual_dom::test_render, web_sys::HtmlButtonElement};
+    use yew::web_sys::HtmlButtonElement;
 
     wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
     fn click_producer_and_view_subscriber_message() {
-        let rendered: TestRender = test_render(html! { <Model /> }).into();
+        let rendered = test_render! { <Model /> };
 
         // get subscriber heading message
         let sub_message: HtmlElement = rendered

@@ -123,11 +123,13 @@ impl ByText for TestRender {
 #[cfg(test)]
 mod tests {
 
+    use crate::test_render;
+
     use super::*;
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use web_sys::{Element, HtmlButtonElement, HtmlElement, HtmlLabelElement};
-    use yew::{html, prelude::*, virtual_dom::test_render};
+    use yew::{html, prelude::*};
 
     pub(crate) struct Counter {
         count: usize,
@@ -163,13 +165,13 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn text_search() {
-        let test = TestRender::new(test_render(html! {
+        let test = test_render! {
             <div>
                 <div>
                     { "Hello, World!" }
                 </div>
             </div>
-        }));
+        };
 
         let result = test.get_by_text::<Element>("Hello, World!");
         assert!(result.is_some());
@@ -177,14 +179,13 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn search_for_text_narrow_with_generics() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <div id="div">{ "Hello!" }</div>
                 <label id="label">{ "Hello!" }</label>
                 <button id="button">{ "Hello!" }</button>
             </div>
-        })
-        .into();
+        };
 
         let button: HtmlButtonElement = rendered.get_by_text("Hello!").unwrap();
         assert_eq!("button", button.id());
@@ -198,13 +199,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn by_text_uses_text_nodes_not_text_content() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 { "Hello, " }
                 <strong>{ "World!" }</strong>
             </div>
-        })
-        .into();
+        };
         // can't find `Hello, World!` as they are two distinct text nodes :(
         let not_found = rendered.get_by_text::<Element>("Hello, World!");
         assert!(not_found.is_none());
@@ -215,10 +215,9 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn button_click_test() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <Counter />
-        })
-        .into();
+        };
 
         let button: HtmlElement = rendered.get_by_text("Click me!").unwrap();
         button.click();

@@ -270,12 +270,14 @@ mod tests {
     use super::*;
     use sap::{events::*, prelude::*};
     use wasm_bindgen_test::*;
-    use yew::{virtual_dom::test_render, web_sys::HtmlButtonElement};
+    use yew::web_sys::HtmlButtonElement;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed() {
-        let rendered = TestRender::new(test_render(html! {<Model />}));
+        let rendered = test_render! {
+            <Model />
+        };
 
         // get todo input
         let input: HtmlInputElement = rendered
@@ -313,7 +315,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_edit_it_and_complete() {
-        let rendered = TestRender::new(test_render(html! { <Model /> }));
+        let rendered = test_render! { <Model /> };
 
         // get todo input
         let input: HtmlInputElement = rendered
@@ -355,7 +357,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_multiple_todo_items_and_complete_them_all_at_once() {
-        let rendered: TestRender = test_render(html! { <Model />}).into();
+        let rendered = test_render! { <Model /> };
 
         // get todo input
         let input: HtmlInputElement = rendered
@@ -392,7 +394,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_remove_it() {
-        let rendered: TestRender = test_render(html! { <Model /> }).into();
+        let rendered = test_render! { <Model /> };
 
         // get todo input
         let input: HtmlInputElement = rendered
@@ -419,13 +421,9 @@ mod tests {
         assert!(!rendered.contains(Some(&todo_item)));
     }
 
-    fn render_model() -> TestRender {
-        test_render(html! { <Model /> }).into()
-    }
-
     #[wasm_bindgen_test]
     fn check_active_completed_tabs() {
-        let rendered = render_model();
+        let rendered = test_render! { <Model /> };
 
         // get todo input
         let input: HtmlInputElement = rendered

@@ -66,18 +66,17 @@ mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use web_sys::{Element, HtmlElement};
-    use yew::{html, virtual_dom::test_render};
 
     use super::*;
-    use crate::TestRender;
+    use crate::{test_render, TestRender};
 
     #[wasm_bindgen_test]
     fn get_input_by_placeholder_text() {
-        let rendered = TestRender::new(test_render(html! {
+        let rendered = test_render! {
             <div>
                 <input id="34" placeholder="Username" />
             </div>
-        }));
+        };
 
         let result: HtmlElement = rendered.get_by_placeholder_text("Username").unwrap();
         assert_eq!("34", result.id());
@@ -85,23 +84,17 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_textarea_by_placeholder_text() {
-        let rendered = TestRender::new(test_render(html! {
+        let rendered = test_render! {
             <div>
                 <textarea id="23" placeholder="Enter bio here" />
             </div>
-        }));
+        };
 
         let result: HtmlElement = rendered.get_by_placeholder_text("Enter bio here").unwrap();
         assert_eq!("23", result.id());
 
-        let rendered = TestRender::new(test_render(html! {
-            <div>
-                <textarea placeholder="Enter life story here" />
-            </div>
-        }));
-
         assert!(rendered
-            .get_by_placeholder_text::<Element>("Enter bio here")
+            .get_by_placeholder_text::<Element>("Enter life story")
             .is_none());
     }
 }

@@ -1099,25 +1099,23 @@ impl ByAria for TestRender {
 #[cfg(test)]
 mod tests {
 
+    use crate::test_render;
+
     use super::*;
     use wasm_bindgen_test::*;
     use web_sys::{HtmlButtonElement, HtmlInputElement};
-    use yew::virtual_dom::test_render;
     wasm_bindgen_test_configure!(run_in_browser);
-
-    use yew::prelude::*;
 
     #[wasm_bindgen_test]
     fn get_by_button_role_with_text_content() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <div id="not-mybtn">
                     { "click me" }
                     <button id="mybtn">{ "click me!" }</button>
                 </div>
             </div>
-        })
-        .into();
+        };
         let button: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "click me!")
             .unwrap();
@@ -1127,14 +1125,13 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_by_aria_label() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <div id="not-mybtn">
                     <button id="mybtn" aria-label="ok" /> // No text on button
                 </div>
             </div>
-        })
-        .into();
+        };
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_prop(AriaProperty::Label("ok"), None)
@@ -1145,12 +1142,11 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_by_aria_disabled_state() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <input type="email" id="my-input" aria-disabled="true" />
             </div>
-        })
-        .into();
+        };
 
         let input: HtmlInputElement = rendered
             .get_by_aria_state(AriaState::Disabled(true), None)
@@ -1161,13 +1157,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_single_input_with_spelling_error() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <form>
                 <input id="best-pet" aria-label="best pet" aria-invalid="spelling" value="doge" />
                 <input id="second-best-pet" aria-label="second best pet" aria-invalid="false" value="cat"  />
             </form>
-        })
-        .into();
+        };
         let spelling_error_input: HtmlInputElement = rendered
             .get_by_aria_state(AriaState::Invalid(InvalidToken::Spelling), "best pet")
             .unwrap();
@@ -1177,12 +1172,11 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_input_by_role_with_aria_label() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <input id="myinput" type="text" aria-label="username" />
             </div>
-        })
-        .into();
+        };
 
         let input: HtmlInputElement = rendered
             .get_by_aria_role(AriaRole::TextBox, "username")
@@ -1193,15 +1187,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_button_by_role_with_aria_labelledby() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <>
                 <div id="button-label" >
                     { "My custom button label" }
                 </div>
                 <button aria-labelledby="button-label" />
             </>
-        })
-        .into();
+        };
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "My custom button label")
@@ -1215,16 +1208,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_input_by_role_with_label() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <div>
                     <label for="my-input">{ "My input label" }</label>
                 </div>
                 <input id="my-input" type="search" />
             </div>
-
-        })
-        .into();
+        };
 
         let input: HtmlInputElement = rendered
             .get_by_aria_role(AriaRole::Searchbox, "My input label")
@@ -1235,13 +1226,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_img_by_role_with_alt() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <img id="no" src="first-img.jpg" />
                 <img id="yes" src="somg-img.jpg" alt="The best image ever!" />
             </div>
-        })
-        .into();
+        };
 
         let img: HtmlImageElement = rendered
             .get_by_aria_role(AriaRole::Image, "The best image ever!")
@@ -1252,7 +1242,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_all_list_items() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div>
                 <ol>
                     <li id="item-1"></li>
@@ -1262,8 +1252,7 @@ mod tests {
                     <li id="item-5"></li>
                 </ol>
             </div>
-        })
-        .into();
+        };
         let list_items = rendered.get_all_by_aria_role::<web_sys::HtmlElement>(AriaRole::ListItem);
 
         assert_eq!(5, list_items.size_hint().1.unwrap())
@@ -1271,15 +1260,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_all_required_input() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <form>
                 <input type="text" aria-required="true" placeholder="Username" />
                 <input type="password" aria-required="true" placeholder="Password" />
                 <label for="spam-email-signup">{ "Want loads of emails about us?" }</label>
                 <input id="spam-email-signup" type="checkbox" aria-required="false" />
             </form>
-        })
-        .into();
+        };
 
         let required_fields =
             rendered.get_all_by_aria_prop::<HtmlInputElement>(AriaProperty::Required(true));
@@ -1290,15 +1278,14 @@ mod tests {
     #[wasm_bindgen_test]
     fn get_disabled_buttons_implicit() {
         // disabled=true is implicitly == aria-disabled=true
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <>
                 <button disabled=true/>
                 <button disabled=true/>
                 <button disabled=true/>
                 <button disabled=true/>
             </>
-        })
-        .into();
+        };
 
         let disabled_buttons =
             rendered.get_all_by_aria_state::<HtmlButtonElement>(AriaState::Disabled(true));

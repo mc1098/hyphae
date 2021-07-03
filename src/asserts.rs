@@ -36,22 +36,20 @@ macro_rules! assert_text_content {
 #[cfg(test)]
 mod tests {
 
-    use crate::{queries::ByText, TestRender};
+    use crate::{queries::ByText, test_render, TestRender};
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
     use web_sys::Element;
-    use yew::{prelude::*, virtual_dom::test_render};
 
     #[wasm_bindgen_test]
     fn assert_div_has_text_content() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div id="mydiv">
                 { "div text content!" }
             </div>
-        })
-        .into();
+        };
 
         let result = rendered.get_by_id::<Element>("mydiv").unwrap();
         assert_text_content!("div text content!", result);
@@ -59,15 +57,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn text_content_does_include_child_text_content() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <div id="mydiv">
                 { "text content " }
                 <strong>
                     { "is broken up!" }
                 </strong>
             </div>
-        })
-        .into();
+        };
 
         let not_found = rendered.get_by_text::<Element>("text content is broken up!");
         assert!(not_found.is_none());

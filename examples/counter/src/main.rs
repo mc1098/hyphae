@@ -80,18 +80,15 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
-    use sap::{assert_text_content, queries::ByText, TestRender};
+    use sap::prelude::*;
     use wasm_bindgen_test::*;
-    use yew::{
-        virtual_dom::test_render,
-        web_sys::{HtmlButtonElement, HtmlElement},
-    };
+    use yew::web_sys::{HtmlButtonElement, HtmlElement};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
 
     #[wasm_bindgen_test]
     fn test_counter() {
-        let rendered = TestRender::new(test_render(html! { <Model /> }));
+        let rendered = test_render! { <Model /> };
 
         let inc_btn: HtmlButtonElement = rendered.get_by_text("+1").unwrap();
         let dec_btn: HtmlButtonElement = rendered.get_by_text("-1").unwrap();

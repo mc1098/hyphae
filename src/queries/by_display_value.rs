@@ -120,15 +120,14 @@ mod tests {
 
     use super::*;
     use web_sys::{Element, HtmlInputElement};
-    use yew::{html, virtual_dom::test_render};
 
-    use crate::TestRender;
+    use crate::{test_render, TestRender};
 
     #[wasm_bindgen_test]
     fn get_input_by_display_value() {
-        let rendered = TestRender::new(test_render(html! {
+        let rendered = test_render! {
             <input type="text" id="greeting" value="Welcome" />
-        }));
+        };
 
         let input: HtmlInputElement = rendered.get_by_display_value("Welcome").unwrap();
         assert_eq!("greeting", input.id());
@@ -136,13 +135,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_text_area_due_to_type() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <>
                 <input type="text" id="input" value="hello" />
                 <textarea id="textarea" value="hello" />
             </>
-        })
-        .into();
+        };
 
         let text_area: HtmlTextAreaElement = rendered.get_by_display_value("hello").unwrap();
         assert_eq!("textarea", text_area.id());

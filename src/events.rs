@@ -607,7 +607,7 @@ pub fn dispatch_input_event(element: &EventTarget, data: &str) {
 mod tests {
 
     use web_sys::{HtmlElement, HtmlInputElement, KeyboardEvent};
-    use yew::{prelude::*, virtual_dom::test_render};
+    use yew::prelude::*;
 
     struct KeyDemo {
         link: ComponentLink<Self>,
@@ -649,16 +649,16 @@ mod tests {
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use crate::{assert_text_content, TestRender};
+    use crate::{assert_text_content, test_render, TestRender};
 
     use super::*;
     use crate::queries::*;
 
     #[wasm_bindgen_test]
     fn sim_typing_to_input_and_enter_to_confirm() {
-        let rendered = TestRender::new(test_render(html! {
+        let rendered = test_render! {
             <KeyDemo />
-        }));
+        };
 
         let last_key_value: HtmlElement = rendered.get_by_text("None").unwrap();
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
@@ -716,9 +716,9 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn type_to_input() {
-        let rendered = TestRender::new(test_render(html! {
+        let rendered = test_render! {
             <InputDemo />
-        }));
+        };
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
         type_to(&input, "hello");

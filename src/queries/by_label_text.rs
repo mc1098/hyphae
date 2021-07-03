@@ -293,30 +293,13 @@ impl ByLabelText for TestRender {
 pub mod tests {
 
     use wasm_bindgen_test::*;
-    use yew::{html, virtual_dom::test_render, Html};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
-    use crate::TestRender;
+    use crate::{test_render, TestRender};
     use web_sys::{HtmlElement, HtmlInputElement};
 
-    fn input_label_text_view(
-        label_for: &'_ str,
-        label_content: &'_ str,
-        input_id: &'_ str,
-    ) -> Html {
-        html! {
-            <div>
-                <form>
-                    <label for=label_for.to_owned()>{ label_content }</label>
-                    <br />
-                    <input id=input_id.to_owned() value={"hi!"} />
-                </form>
-            </div>
-        }
-    }
-
-    fn input_label_text() -> Html {
-        html! {
+    fn input_label_text() -> TestRender {
+        test_render! {
             <div>
                 <form>
                     <label for="new-todo">{"What needs to be done?"}</label>
@@ -327,8 +310,8 @@ pub mod tests {
         }
     }
 
-    fn input_label_text_label_after_input() -> Html {
-        html! {
+    fn input_label_text_label_after_input() -> TestRender {
+        test_render! {
             <div>
                 <form>
                     <input id="new-todo" value={"hi!"} />
@@ -339,8 +322,8 @@ pub mod tests {
         }
     }
 
-    fn input_label_text_different_parents() -> Html {
-        html! {
+    fn input_label_text_different_parents() -> TestRender {
+        test_render! {
             <div>
                 <form>
                     <div>
@@ -362,8 +345,6 @@ pub mod tests {
         ];
 
         for test in tests.drain(..) {
-            let test = TestRender::new(test_render(test));
-
             let result = test.get_by_label_text("What needs to be done?");
 
             let input: HtmlInputElement = result.unwrap();
@@ -373,22 +354,31 @@ pub mod tests {
 
     #[wasm_bindgen_test]
     fn no_element_found_when_id_and_for_do_not_match() {
-        let text = "What needs to be done?";
-        let rendered: TestRender =
-            test_render(input_label_text_view("new-todoz", text, "new_todo")).into();
+        let rendered = test_render! {
+            <div>
+                <form>
+                    <label for="new-todoz">{ "What needs to be done?" }</label>
+                    <br />
+                    <input id="new_todo" value={"hi!"} />
+                </form>
+            </div>
+        };
 
-        let result = rendered.get_by_label_text::<HtmlElement>(text);
+        let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
         assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
     }
 
     #[wasm_bindgen_test]
     fn text_not_found_when_search_term_not_found_in_label() {
-        let rendered: TestRender = test_render(input_label_text_view(
-            "new-todo",
-            "What doesn't need to be done?",
-            "new-todo",
-        ))
-        .into();
+        let rendered = test_render! {
+            <div>
+                <form>
+                    <label for="new-todo">{ "What doesn't need to be done?" }</label>
+                    <br />
+                    <input id="new-todo" value={"hi!"} />
+                </form>
+            </div>
+        };
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
 
@@ -398,13 +388,12 @@ pub mod tests {
     #[wasm_bindgen_test]
     fn input_value_change() {
         let label_text = "What needs to be done?";
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <>
-                <label for="todo">{ &label_text }</label>
+                <label for="todo">{ "What needs to be done?" }</label>
                 <input type="text" id="todo" value="" />
             </>
-        })
-        .into();
+        };
 
         let new_value = "Gardening";
 

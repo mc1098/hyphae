@@ -233,6 +233,46 @@ impl Deref for TestRender {
     }
 }
 
+///
+#[cfg(feature = "Yew")]
+#[macro_export]
+macro_rules! test_render {
+    (<$comp:ident />) => {{
+        let div = yew::utils::document().create_element("div").unwrap();
+        div.set_id("test-app");
+        yew::utils::document()
+            .body()
+            .unwrap()
+            .append_child(&div)
+            .unwrap();
+        yew::start_app_in_element::<$comp>(div.clone());
+        TestRender::new(div)
+    }};
+    ($($html:tt)+) => {{
+        pub struct TestComp;
+        impl yew::html::Component for TestComp {
+            type Properties = ();
+            type Message = ();
+
+            fn create(_: Self::Properties, _: yew::html::ComponentLink<Self>) -> Self {
+                Self
+            }
+
+            fn update(&mut self, _: Self::Message) -> yew::html::ShouldRender {
+                false
+            }
+            fn change(&mut self, _: Self::Properties) -> yew::html::ShouldRender {
+                false
+            }
+            fn view(&self) -> yew::html::Html {
+                yew::html! { $($html)+ }
+
+            }
+        }
+        test_render!(<TestComp />)
+    }};
+}
+
 /// Sap Prelude
 ///
 /// Convenient module to import the most used imports for yew_test.
@@ -241,16 +281,15 @@ impl Deref for TestRender {
 /// use sap::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::{assert_text_content, queries::*, TestRender};
+    pub use crate::{assert_text_content, queries::*, test_render, TestRender};
     pub use web_sys::{Element, HtmlElement, Node};
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "Yew"))]
 mod tests {
+
     use crate::prelude::*;
     use web_sys::HtmlButtonElement;
-    use yew::prelude::*;
-    use yew::virtual_dom::test_render;
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -259,10 +298,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_div_by_id() {
-        let rendered: TestRender = test_render(html! {
-            <div id="mydiv"/>
-        })
-        .into();
+        let rendered = test_render! { <div id="mydiv" /> };
 
         let _: HtmlElement = rendered
             .get_by_id("mydiv")
@@ -274,13 +310,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_btn_by_class() {
-        let rendered: TestRender = test_render(html! {
+        let rendered = test_render! {
             <>
                 <button class="super-btn" />
                 <div class="super-btn" />
             </>
-        })
-        .into();
+        };
 
         let mut super_btns = rendered.query_by_class::<HtmlElement>("super-btn");
         let _button: HtmlButtonElement = super_btns.next().and_then(|e| e.dyn_into().ok()).unwrap();
