@@ -224,7 +224,35 @@ impl Deref for TestRender {
     }
 }
 
-///
+/**
+Convenience macro for test rendering of Yew components or raw html blocks.
+
+Note: A big limitation to this macro is that it cannot capture dynamic values - if
+you run into this problem then you may need to create a Wrapper component to
+provide the desired values.
+
+# Examples
+
+## Components
+```no_run
+// Counter component impl
+let rendered = test_render! { <Counter /> };
+// use rendered to perform queries.
+```
+
+## Raw `html!` blocks
+This macro contains an arm that accepts the same input as Yew's `html!` macro:
+```no_run
+let rendered = test_render! {
+    <div>
+        <h1>{ Hello, World! }</h1>
+    </div>
+};
+// use rendered to perform queries.
+```
+This macro uses the version of the `html!` that is currently in your project
+so will be in sync with your project.
+*/
 #[cfg(feature = "Yew")]
 #[macro_export]
 macro_rules! test_render {
