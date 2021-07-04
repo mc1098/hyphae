@@ -1,12 +1,11 @@
 #![warn(missing_docs)]
-
 /*!
-Sap
+# Sap
 
-Provides helper functions and traits to help test Yew components.
+Provides helper functions and traits for testing DOM nodes in Rust
 
 Requirements:
-- [`wasm-bindgen-test`](wasm_bindgen_test) in dev-dependencies
+- [`wasm-bindgen-test`](https://crates.io/crates/wasm-bindgen) in dev-dependencies
 
 All Sap functions are assuming they will be in wasm-bindgen-tests:
 
@@ -230,6 +229,8 @@ Convenience macro for test rendering of Yew components or raw html blocks.
 Note: A big limitation to this macro is that it cannot capture dynamic values - if
 you run into this problem then you may need to create a Wrapper component to
 provide the desired values.
+
+_This API requires the following crate features to be activated: `Yew`_
 
 # Examples
 
