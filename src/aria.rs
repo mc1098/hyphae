@@ -194,39 +194,15 @@ fn is_presentational(node: &Node) -> bool {
         .unwrap_or_default()
 }
 
-#[inline]
-fn node_id(node: &Node) -> Option<String> {
-    node.dyn_ref::<Element>()
-        .map(|e| e.id())
-        .filter(|id| !id.is_empty())
-}
-
-#[inline]
-fn add_node_to_traversed(node: &Node, traversed: &mut HashSet<String>) {
-    if let Some(id) = node_id(node) {
-        traversed.insert(id);
-    }
-}
-
-#[inline]
-fn is_node_part_of_traversal(node: &Node, traversed: &HashSet<String>) -> bool {
-    if let Some(id) = node_id(node) {
-        traversed.contains(&id)
-    } else {
-        false
-    }
-}
-
 fn get_children_accessible_names(
     root: &Element,
     children: NodeList,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
     let mut names = vec![];
     for i in 0..children.length() {
         let child = children.get(i).unwrap();
-        add_node_to_traversed(&child, traversed);
-        let name = get_element_accessible_name_impl(root, &child, traversed)?;
+        let name = get_element_accessible_name_impl(root, &child, labelledby_traversal)?;
         if !name.is_empty() {
             names.push(name);
         }
@@ -236,13 +212,7 @@ fn get_children_accessible_names(
 
 #[allow(dead_code)]
 pub(crate) fn get_element_accessible_name(root: &Element, node: &Node) -> Result<String, JsValue> {
-    let mut traversed = HashSet::new();
-    traversed.insert(
-        node.dyn_ref::<Element>()
-            .map(|element| element.id())
-            .unwrap_or_default(),
-    );
-    get_element_accessible_name_impl(root, node, &mut traversed)
+    get_element_accessible_name_impl(root, node, false)
 }
 
 macro_rules! text_alternative_alt_title {
@@ -273,7 +243,7 @@ macro_rules! text_alternative_alt_title {
 fn get_element_accessible_name_impl(
     root: &Element,
     node: &Node,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
     let mut accumlated_text = String::new();
 
@@ -281,18 +251,19 @@ fn get_element_accessible_name_impl(
         return Ok(accumlated_text);
     }
 
-    if let Some(labelled_by) = node
-        .dyn_ref::<Element>()
-        .and_then(|element| element.get_attribute("aria-labelledby"))
-    {
-        let selector_ids = id_refs_to_query_string(labelled_by);
-        let labels = root.query_selector_all(&selector_ids)?;
-        for i in 0..labels.length() {
-            let label = labels.get(i).unwrap();
-            if !is_node_part_of_traversal(&label, traversed) {
-                add_node_to_traversed(&label, traversed);
-                accumlated_text
-                    .push_str(&get_element_accessible_name_impl(root, &label, traversed)?);
+    if !labelledby_traversal {
+        if let Some(labelled_by) = node
+            .dyn_ref::<Element>()
+            .and_then(|element| element.get_attribute("aria-labelledby"))
+        {
+            let selector_ids = id_refs_to_query_string(labelled_by);
+            let labels = root.query_selector_all(&selector_ids)?;
+            for i in 0..labels.length() {
+                let label = labels.get(i).unwrap();
+                if &label != node {
+                    accumlated_text
+                        .push_str(&get_element_accessible_name_impl(root, &label, true)?);
+                }
             }
         }
     }
@@ -314,30 +285,43 @@ fn get_element_accessible_name_impl(
         if let Some(node) = node.dyn_ref::<Element>() {
             // Text alternative info: https://www.w3.org/TR/html-aam-1.0/#accessible-name-and-description-computation
             let name = match node.tag_name().to_lowercase().as_str() {
-                "input" => text_alternative_input(root, node.unchecked_ref(), traversed)?,
-                "textarea" => text_alternative_label_title_placeholder(root, node, traversed)?,
-                "button" => text_alternative_subtree_title(root, node, traversed)?,
-                "fieldset" => {
-                    text_alternative_first_child_subtree_title(root, node, "legend", traversed)?
+                "input" => {
+                    text_alternative_input(root, node.unchecked_ref(), labelledby_traversal)?
                 }
-                "output" => text_alternative_subtree_title(root, node, traversed)?,
+                "textarea" => {
+                    text_alternative_label_title_placeholder(root, node, labelledby_traversal)?
+                }
+                "button" => text_alternative_subtree_title(root, node, labelledby_traversal)?,
+                "fieldset" => text_alternative_first_child_subtree_title(
+                    root,
+                    node,
+                    "legend",
+                    labelledby_traversal,
+                )?,
+                "output" => text_alternative_subtree_title(root, node, labelledby_traversal)?,
                 "select" | "datalist" | "optgroup" | "option" | "keygen" | "progress" | "meter"
-                | "legend" => text_alternative_label_title(root, node, traversed)?,
+                | "legend" => text_alternative_label_title(root, node, labelledby_traversal)?,
                 "label" => node.text_content().unwrap_or_default(),
-                "summary" => text_alternative_summary(root, node, traversed)?,
-                "figure" => {
-                    text_alternative_first_child_subtree_title(root, node, "figcaption", traversed)?
-                }
+                "summary" => text_alternative_summary(root, node, labelledby_traversal)?,
+                "figure" => text_alternative_first_child_subtree_title(
+                    root,
+                    node,
+                    "figcaption",
+                    labelledby_traversal,
+                )?,
                 "img" => {
                     text_alternative_alt_title!(node as HtmlImageElement)
                 }
-                "table" => {
-                    text_alternative_first_child_subtree_title(root, node, "caption", traversed)?
-                }
-                "a" => text_alternative_subtree_title(root, node, traversed)?,
+                "table" => text_alternative_first_child_subtree_title(
+                    root,
+                    node,
+                    "caption",
+                    labelledby_traversal,
+                )?,
+                "a" => text_alternative_subtree_title(root, node, labelledby_traversal)?,
                 "area" => text_alternative_alt_title!(node as HtmlAreaElement),
                 _ => {
-                    get_children_accessible_names(root, node.child_nodes(), traversed)?
+                    get_children_accessible_names(root, node.child_nodes(), labelledby_traversal)?
                     // title_or_default(node)
                 }
             };
@@ -359,11 +343,11 @@ fn get_element_accessible_name_impl(
 fn text_alternative_input(
     root: &Element,
     element: &HtmlInputElement,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
     match element.type_().as_str() {
         "text" | "password" | "search" | "tel" | "url" => {
-            text_alternative_label_title_placeholder(root, element, traversed)
+            text_alternative_label_title_placeholder(root, element, labelledby_traversal)
         }
         "button" => {
             if element.value().is_empty() {
@@ -395,9 +379,9 @@ fn text_alternative_input(
 fn text_alternative_summary(
     root: &Element,
     element: &Element,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
-    let name = text_alternative_subtree_title(root, element, traversed)?;
+    let name = text_alternative_subtree_title(root, element, labelledby_traversal)?;
 
     if !name.is_empty() {
         return Ok(name);
@@ -419,7 +403,7 @@ fn text_alternative_first_child_subtree_title(
     root: &Element,
     element: &Element,
     child_tag: &str,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
     let mut name = String::new();
     let children = element.child_nodes();
@@ -430,7 +414,7 @@ fn text_alternative_first_child_subtree_title(
             .map(|element| element.tag_name() == child_tag)
             .unwrap_or_default()
         {
-            name = get_children_accessible_names(root, child.child_nodes(), traversed)?;
+            name = get_children_accessible_names(root, child.child_nodes(), labelledby_traversal)?;
             if !name.is_empty() {
                 return Ok(name);
             } else {
@@ -444,15 +428,14 @@ fn text_alternative_first_child_subtree_title(
 fn text_alternative_label_title(
     root: &Element,
     element: &Element,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
     if !element.id().is_empty() {
         let labels = root.query_selector_all(&format!("#{}", element.id()))?;
         let mut name = String::new();
         for i in 0..labels.length() {
             let label = labels.get(i).and_then(|n| n.dyn_into().ok()).unwrap();
-            add_node_to_traversed(&label, traversed);
-            let label_name = get_element_accessible_name_impl(root, &label, traversed)?;
+            let label_name = get_element_accessible_name_impl(root, &label, labelledby_traversal)?;
             if !label_name.is_empty() {
                 name.push_str(&format!("{} ", label_name));
             }
@@ -468,9 +451,9 @@ fn text_alternative_label_title(
 fn text_alternative_label_title_placeholder(
     root: &Element,
     element: &Element,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
-    let name = text_alternative_label_title(root, element, traversed)?;
+    let name = text_alternative_label_title(root, element, labelledby_traversal)?;
 
     if name.is_empty() {
         let input = element
@@ -488,9 +471,9 @@ fn text_alternative_label_title_placeholder(
 fn text_alternative_subtree_title(
     root: &Element,
     element: &Element,
-    traversed: &mut HashSet<String>,
+    labelledby_traversal: bool,
 ) -> Result<String, JsValue> {
-    let subtree = get_children_accessible_names(root, element.child_nodes(), traversed)?;
+    let subtree = get_children_accessible_names(root, element.child_nodes(), labelledby_traversal)?;
     if subtree.is_empty() {
         let title = element
             .dyn_ref::<HtmlElement>()
