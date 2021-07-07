@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{
-    window, Element, HtmlAreaElement, HtmlButtonElement, HtmlElement, HtmlImageElement,
-    HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node, NodeList,
+    window, Element, HtmlAreaElement, HtmlElement, HtmlImageElement, HtmlInputElement,
+    HtmlTextAreaElement, Node, NodeList,
 };
 
 #[allow(dead_code)]
@@ -61,6 +61,7 @@ fn id_refs_to_query_string(id_refs: String) -> String {
         .join(",")
 }
 
+#[cfg(feature = "Unsupported")]
 fn get_css_pseudo_elt_content(element: &HtmlElement, pseudo: &str) -> Option<String> {
     let style = window()?
         .get_computed_style_with_pseudo_elt(element, pseudo)
@@ -206,6 +207,9 @@ macro_rules! text_alternative_alt_title {
 Recursive function to calculate a nodes accessible name.
 
 aria-labelledby traversal (albt)
+
+NOTE: Pseudo elements are part of the standard but some browsers seem to ignore them and even my
+screen reader does.
 */
 #[allow(dead_code)]
 fn get_element_accessible_name_impl(
@@ -247,16 +251,11 @@ fn get_element_accessible_name_impl(
             .and_then(|element| element.get_attribute("aria-label"))
             .map(|value| value.trim().to_owned())
         {
-            // accumlated_text.push_str(&label);
             return if accumlated_text.is_empty() {
                 Ok(label)
             } else {
                 Ok(format!("{} {}", label, accumlated_text))
             };
-            // Not sure why this check is in the standard? - the next section always looks for aria-label..
-            // if !label.is_empty() && (depth == 1 && !is_element_an_embedded_control(&node)) {
-            //     return Ok(label);
-            // }
         }
 
         if let Some(node) = node.dyn_ref::<Element>() {
@@ -287,16 +286,12 @@ fn get_element_accessible_name_impl(
                 }
                 "a" => text_alternative_subtree_title(node, traversed, is_albt)?,
                 "area" => text_alternative_alt_title!(node as HtmlAreaElement),
-                _ => {
-                    get_children_accessible_names(node.child_nodes(), traversed, is_albt)?
-                    // title_or_default(node)
-                }
+                _ => get_children_accessible_names(node.child_nodes(), traversed, is_albt)?,
             };
             accumlated_text.push_str(&name);
         }
     }
-    //(E)
-    //(F)
+
     if is_presentational(node) {
         accumlated_text.push_str(&get_children_accessible_names(
             node.child_nodes(),
@@ -304,12 +299,10 @@ fn get_element_accessible_name_impl(
             is_albt,
         )?);
     }
-    //(G)
+
     if NodeType::Text == node.node_type() {
         accumlated_text.push_str(&node.text_content().unwrap_or_default().trim().to_owned());
     }
-    //(H)
-    //(I)
 
     Ok(accumlated_text)
 }
@@ -340,7 +333,7 @@ fn text_alternative_input(
         "image" => {
             let name = text_alternative_alt_title!(element as HtmlInputElement);
             if name.is_empty() {
-                // W3C says this should be 'Submit Query' however browsers seems to just use 'Submit'
+                // W3C says this should be 'Submit Query' however browsers seems to use 'Submit'
                 Ok("Submit".to_owned())
             } else {
                 Ok(name)
@@ -522,8 +515,6 @@ mod tests {
             </button>
         };
 
-        // web_sys::console::log_1(&rendered.inner_html().into());
-
         assert_eq!(
             "Delete all records of Bryan Garaventa",
             element_accessible_name(&rendered.first_element_child().unwrap()).unwrap()
@@ -688,5 +679,60 @@ mod tests {
         };
 
         assert_eq!("Wow!", element_accessible_name(&rendered).unwrap(),);
+    }
+
+    #[wasm_bindgen_test]
+    fn checkbox_with_text_input() {
+        let rendered = test_render! {
+            <div role="checkbox" aria-checked="false">
+                { "Flash the screen " }
+                <span role="textbox" aria-multiline="false">{ 5 }</span>
+                { "times" }
+            </div>
+        };
+
+        assert_eq!(
+            "Flash the screen 5 times",
+            element_accessible_name(&rendered).unwrap()
+        );
+    }
+
+    #[cfg(feature = "Unsupported")]
+    #[wasm_bindgen_test]
+    fn pseudo_elements() {
+        let rendered = test_render! {
+            <div>
+                <a id="mylink" href="https://google.com" target="_blank">{ " Search "}</a>
+            </div>
+        };
+
+        window()
+            .unwrap()
+            .document()
+            .unwrap()
+            .query_selector("head")
+            .unwrap()
+            .unwrap()
+            .set_inner_html(
+                "
+            <style type='text/css'>
+                #mylink:focus:after, #mylink:hover:after {
+                    height: auto; width: auto;
+                    position: absolute;
+                    z-index: 1;
+                    margin-top: 20px;
+                    background-color: white;
+                    color: blue;
+                    font-size: 10px;
+                    content: ' - Opens in new window ';
+                }
+            </style>
+        ",
+            );
+
+        assert_eq!(
+            "Search - Opens in new window",
+            element_accessible_name(&rendered).unwrap()
+        );
     }
 }
