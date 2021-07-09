@@ -1,11 +1,402 @@
+/*!
+Supports finding: [`HtmlInputElement`](web_sys::HtmlInputElement) or
+[`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
+generically by `label text`.
+
+# Label Text
+[`HtmlInputElement`](web_sys::HtmlInputElement) and
+[`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
+can have a [`HtmlLabelElement`] associated to it by setting the `for` attribute of the label with
+the value of the labelled element's `id` attribute:
+
+```html
+<label for="username">Username:</label>
+                      ^^^^^^^^^ the "label text"
+<input id="username" type="text" />
+```
+The `for` attribute of the label element must match the `id` attribute of the input or output element
+in order to be found.
+
+# Generics
+Each trait function supports generics for convenience and to help narrow the scope of the search. If
+you are querying for a [`HtmlInputElement`](web_sys::HtmlInputElement) then you won't find a
+[`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
+and vice versa.
+
+In [`Sap`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
+type[^note].
+
+[^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
+or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
+
+# What is [`JsCast`]?
+
+The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
+performing checked and unchecked casting between JS types.
+
+*/
 use wasm_bindgen::JsCast;
 use web_sys::HtmlLabelElement;
 
 use crate::TestRender;
 
 /**
-Error indicating that either a [`HtmlLabelElement`] with a text content equal to the search term
-was not found or that no linked [`Element`](web_sys::Element) could be found.
+Enables queries by `label text`.
+
+_See each trait function for examples._
+*/
+pub trait ByLabelText {
+    /**
+    Get a generic element by the first label element which matches the label text and has the correct
+    associated element type.
+
+    The possible elements that can be returned are:
+    - [`HtmlInputElement`](web_sys::HtmlElement)
+    - [`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
+
+    Using one of the generic types above as `T` will skip any elements of the other type - if you
+    want to find the first element that matches the label text then use [`HtmlElement`](web_sys::HtmlElement).
+
+    _See [`get_by_label_text_inc`](ByLabelText::get_by_label_text_inc) for getting the element and
+    the label element._
+
+    # Errors
+
+    - [`LabelByTextError::LabelNotFound`]
+
+        When no matching label text can be found.
+    - [`LabelByTextError::NoElementFound`]
+
+        When at least a single label was found with the correct text but no associated element was
+        found, this could happen for the following reasons:
+        1. Label does not have a `for` attribute
+        2. Label has a `for` attribute but the there is no element with a corresponding `id`.
+        3. Label has a `for` attribute but the corresponding `id` is an element that is not the
+            expected type, such as an output element when [`HtmlInputElement`](web_sys::HtmlInputElement)
+            was used for `T`.
+
+    # Panics
+    _Nothing to see here._
+
+    # Examples
+
+    ## Get input by label text
+
+    The label text matches the search and the label has a valid `for` attribute linking to a input
+    element. This returns an [`Result::Ok`] with the value of `T`.
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">What needs to be done?</label>
+            <br />
+            <input id="new-todo" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::HtmlInputElement;
+
+    #[wasm_bindgen_test]
+    fn get_input_by_label_text() {
+        let rendered: TestRender = // feature dependent rendering
+            # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What need to be done?" }</label>
+            #       <br />
+            #       <input id="new-todo" value={"hi!"} />
+            #   </form>
+            # </div>
+            # };
+        let input: HtmlInputElement = rendered
+            .get_by_label_text("What needs to be done?")
+            .expect("To find the input by label text");
+
+        assert_eq!("hi!".to_owned(), input.value());
+    }
+    ```
+    ## Label not found
+
+    When the searched text doesn't match any labels then a [`Result::Err`] will be returned
+    with the value of [`LabelByTextError::LabelNotFound`].
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">What doesn't need to be done?</label>
+            <br />
+            <input id="new-todo" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::HtmlTextAreaElement;
+
+    #[wasm_bindgen_test]
+    fn label_not_found() {
+        let rendered: TestRender = // feature dependent rendering
+        # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What doesn't need to be done?" }</label>
+            #       <br />
+            #       <input id="new-todo" value={"hi!"} />
+            #   </form>
+            # </div>
+        # };
+        let result = rendered
+            .get_by_label_text::<HtmlElement>("What needs to be done?");
+
+        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
+    }
+    ```
+    ## Label found but `for` value doesn't match input `id`
+
+    When a label element is found with the search text, however, the `for` value doesn't match the
+    input element's `id`. This will return a [`Result::Err`] with a value of
+    [`LabelByTextError::NoElementFound`].
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">"What needs to be done?</label>
+            <br />
+            <input id="typo-on-id" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::HtmlTextAreaElement;
+
+    #[wasm_bindgen_test]
+    fn label_found_but_no_matching_input_element() {
+        let rendered: TestRender = // feature dependent rendering
+        # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What needs to be done?" }</label>
+            #       <br />
+            #       <input id="typo-on-id" value="hi!" />
+            #   </form>
+            # </div>
+        # };
+        let result = rendered
+            .get_by_label_text::<HtmlElement>("What needs to be done?");
+
+        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
+    }
+    ```
+    */
+    fn get_by_label_text<'search, T>(
+        &self,
+        search: &'search str,
+    ) -> Result<T, LabelByTextError<'search>>
+    where
+        T: JsCast,
+    {
+        self.get_by_label_text_inc(search).map(|(e, _)| e)
+    }
+
+    /**
+    Get a generic element and it's associated label, by the first label element which matches the
+    label text and has the correct associated element type.
+
+    The possible elements that can be returned with the [`HtmlLabelElement`] are:
+    - [`HtmlInputElement`](web_sys::HtmlInputElement)
+    - [`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
+
+    Using one of the generic types above as `T` will skip any elements of the other type - if you
+    want to find the first element that matches the label text then use [`HtmlElement`](web_sys::HtmlElement).
+
+    # Errors
+
+    - [`LabelByTextError::LabelNotFound`]
+
+        When no matching label text can be found.
+    - [`LabelByTextError::NoElementFound`]
+
+        When at least a single label was found with the correct text but no associated element was
+        found, this could happen for the following reasons:
+        1. Label does not have a `for` attribute
+        2. Label has a `for` attribute but the there is no element with a corresponding `id`.
+        3. Label has a `for` attribute but the corresponding `id` is an element that is not the
+            expected type, such as an output element when [`HtmlInputElement`](web_sys::HtmlInputElement)
+            was used for `T`.
+
+    # Panics
+    _Nothing to see here._
+
+    # Examples
+
+    ## Get input by label text
+
+    The label text matches the search and the label has a valid `for` attribute linking to a input
+    element. This returns an [`Result::Ok`] with the value of `T`.
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">What needs to be done?</label>
+            <br />
+            <input id="new-todo" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::{HtmlInputElement, HtmlLabelElement};
+
+    #[wasm_bindgen_test]
+    fn get_input_by_label_text() {
+        let rendered: TestRender = // feature dependent rendering
+            # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What need to be done?" }</label>
+            #       <br />
+            #       <input id="new-todo" value={"hi!"} />
+            #   </form>
+            # </div>
+            # };
+        // turbo fish is recommended over this approach
+        let (input, label): (HtmlInputElement, HtmlLabelElement) = rendered
+            .get_by_label_text_inc("What needs to be done?")
+            .expect("To find the input by label text");
+
+        assert_eq!("hi!".to_owned(), input.value());
+    }
+    ```
+    ## Label not found
+
+    When the searched text doesn't match any labels then a [`Result::Err`] will be returned
+    with the value of [`LabelByTextError::LabelNotFound`].
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">What doesn't need to be done?</label>
+            <br />
+            <input id="new-todo" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::HtmlTextAreaElement;
+
+    #[wasm_bindgen_test]
+    fn label_not_found() {
+        let rendered: TestRender = // feature dependent rendering
+        # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What doesn't need to be done?" }</label>
+            #       <br />
+            #       <input id="new-todo" value={"hi!"} />
+            #   </form>
+            # </div>
+        # };
+        let result = rendered
+            .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
+
+        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
+    }
+    ```
+    ## Label found but `for` value doesn't match input `id`
+
+    When a label element is found with the search text, however, the `for` value doesn't match the
+    input element's `id`. This will return a [`Result::Err`] with a value of
+    [`LabelByTextError::NoElementFound`].
+
+    Rendered html:
+    ```html
+    <div>
+        <form>
+            <label for="new-todo">"What needs to be done?</label>
+            <br />
+            <input id="typo-on-id" value="hi!" />
+        </form>
+    </div>
+    ```
+    Code:
+    ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+    use sap::prelude::*;
+    use web_sys::HtmlTextAreaElement;
+
+    #[wasm_bindgen_test]
+    fn label_found_but_no_matching_input_element() {
+        let rendered: TestRender = // feature dependent rendering
+        # test_render! {
+            # <div>
+            #   <form>
+            #       <label for="new-todo">{ "What needs to be done?" }</label>
+            #       <br />
+            #       <input id="typo-on-id" value="hi!" />
+            #   </form>
+            # </div>
+        # };
+        let result = rendered
+            .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
+
+        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
+    }
+    ```
+    */
+    fn get_by_label_text_inc<'search, T>(
+        &self,
+        search: &'search str,
+    ) -> Result<(T, HtmlLabelElement), LabelByTextError<'search>>
+    where
+        T: JsCast;
+}
+
+/**
+The label text was not found or no element could be found associated with the label element found.
 */
 pub enum LabelByTextError<'search> {
     /// No [`HtmlLabelElement`] could be found with a text content that matches the search term.
@@ -48,13 +439,13 @@ impl std::fmt::Debug for LabelByTextError<'_> {
                 } else if ids.len() == 1 {
                     writeln!(
                         f,
-                        "no element was found associated with the following id '{}'.",
+                        "no element of the correct type was found associated with the following id '{}'.",
                         ids[0]
                     )?;
                 } else {
                     writeln!(
                         f,
-                        "no element was found associated with the following ids: '{}'.",
+                        "no element of the correct type was found associated with the following ids: '{}'.",
                         ids.join(",")
                     )?;
                 }
@@ -69,170 +460,6 @@ impl std::fmt::Debug for LabelByTextError<'_> {
             }
         }
     }
-}
-
-/**
-Enables queries by lable text content.
-The following [`Element`](web_sys::Element)s can have labels:
-- [`HtmlInputElement`](web_sys::HtmlInputElement)
-- [`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
-*/
-pub trait ByLabelText {
-    /**
-    Get an [`Element`](web_sys::Element) which is associated to the first [`HtmlLabelElement`] found
-    with a text content matching the search term.
-
-    When no [`HtmlLabelElement`] with the text content matching the search term can be found then
-    this function will return `Err(LabelByTextError::LabelNotFound)`.
-
-    When a [`HtmlLabelElement`] with the text content is found but has no 'for' attribute or no
-    output or input element can be found with an `id` matching the value of the `for` attribute;
-    then this function will return `Err(LabelByTextError::NoElementFound)`.
-
-    # Examples
-
-    ## Happy path:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What needs to be done?" }</label>
-            <br />
-            <input id="new-todo" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    let result = test.get_by_label_text("What needs to be done?");
-    let input: HtmlInputElement = result.unwrap();
-
-    assert_eq!("hi!".to_owned(), input.value());
-    ```
-    ## Label not found:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What doesn't needs to be done?" }</label>
-            <br />
-            <input id="new-todo" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    // Note: that the search term doesn't match the text in the label above
-    let result = test.get_by_label_text::<HtmlElement>("What needs to be done?");
-
-    assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
-    ```
-    ## Label found but `for` value doesn't match input `id`:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What doesn't needs to be done?" }</label>
-            <br />
-            <input id="typo-on-id" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    let result = test.get_by_label_text::<HtmlElement>("What needs to be done?");
-
-    assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
-    ```
-    */
-    fn get_by_label_text<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, LabelByTextError<'search>>
-    where
-        T: JsCast,
-    {
-        self.get_by_label_text_inc(search).map(|(e, _)| e)
-    }
-
-    /**
-    Get an [`Element`](web_sys::Element) and the associated first [`HtmlLabelElement`] found
-    with a text content matching the search term.
-
-    When no [`HtmlLabelElement`] with the text content matching the search term can be found then
-    this function will return `Err(LabelByTextError::LabelNotFound)`.
-
-    When a [`HtmlLabelElement`] with the text content is found but has no 'for' attribute or no
-    output or input element can be found with an `id` matching the value of the `for` attribute;
-    then this function will return `Err(LabelByTextError::NoElementFound)`.
-
-    # Examples
-
-    ## Happy path:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What needs to be done?" }</label>
-            <br />
-            <input id="new-todo" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    let (input, label) = test.get_by_label_text_inc::<HtmlInputElement>("What needs to be done?").unwrap();
-
-    assert_eq!("hi!".to_owned(), input.value());
-    ```
-    ## Label not found:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What doesn't needs to be done?" }</label>
-            <br />
-            <input id="new-todo" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    // Note: that the search term doesn't match the text in the label above
-    let result = test.get_by_label_text_inc::<HtmlElement>("What needs to be done?");
-
-    assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
-    ```
-    ## Label found but `for` value doesn't match input `id`:
-    ```no_run
-    use sap::prelude::*;
-    /*
-    rendered with the effective html:
-    <div>
-        <form>
-            <label for="new-todo">{ "What doesn't needs to be done?" }</label>
-            <br />
-            <input id="typo-on-id" value={"hi!"} />
-        </form>
-    </div>
-    */
-    let rendered: TestRender = //..
-    let result = test.get_by_label_text_inc::<HtmlElement>("What needs to be done?");
-
-    assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
-    ```
-    */
-    fn get_by_label_text_inc<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<(T, HtmlLabelElement), LabelByTextError<'search>>
-    where
-        T: JsCast;
 }
 
 impl ByLabelText for TestRender {

@@ -1,14 +1,228 @@
 /*!
 Convenience module for firing events to [`EventTarget`].
 
-The goal of this module is to remove the boilerplate from firing web_sys events by providing
+The goal of this module is to remove the boilerplate from firing [`web_sys`] events by providing
 helper functions and traits for medium/high level actions.
 */
 use wasm_bindgen::JsCast;
 use web_sys::{
-    EventTarget, HtmlInputElement, InputEvent, InputEventInit, KeyboardEvent, KeyboardEventInit,
-    MouseEvent,
+    EventTarget, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, InputEvent,
+    InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent,
 };
+
+/**
+Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
+
+Uses the [`KeyEventType`] and [`Key`] enum to provide type safe options - this avoids typos causing
+tests to fail.
+
+The [list of keys available](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
+
+# Examples
+## Control Key
+[`Key`] has a variant for most of the keys listed above (see next example for typed chars).
+```
+use sap::events::*;
+use web_sys::HtmlButtonElement;
+
+# fn control_key_example(btn: HtmlButtonElement) {
+let btn: HtmlButtonElement = // function to get button element
+    # btn;
+// can confirm by pressing enter on button
+dispatch_key_event(&btn, KeyEventType::KeyPress, Key::Enter);
+# }
+```
+
+## Char literals
+A [`char`] can be accepted and will be the equivalent to using [`Key::Lit`] variant with the [`char`]
+value.
+```
+use sap::events::*;
+use web_sys::HtmlInputElement;
+
+# fn char_literal_example(input: HtmlInputElement) {
+let input: HtmlInputElement = // get input
+    # input;
+dispatch_key_event(&input, KeyEventType::KeyPress, 'a');
+# }
+```
+*/
+pub fn dispatch_key_event<K>(element: &EventTarget, event_type: KeyEventType, key: K)
+where
+    K: Into<Key>,
+{
+    let mut event_init = KeyboardEventInit::new();
+    event_init.key(&key.into().to_string());
+    let key_event =
+        KeyboardEvent::new_with_keyboard_event_init_dict(event_type.into(), &event_init).unwrap();
+
+    element.dispatch_event(&key_event).unwrap();
+}
+
+/**
+A simple simulation of typing a single key to the [`EventTarget`].
+
+This will fire the following events, in this order, on the target:
+- `keydown` [`KeyboardEvent`]
+- `keypress` [`KeyboardEvent`]
+- `keyup` [`KeyboardEvent`]
+- `input` [`InputEvent`]
+
+# Examples
+```
+use sap::events::*;
+use web_sys::HtmlInputElement;
+
+# fn type_key_example(input: HtmlInputElement) {
+let input: HtmlInputElement = // some function to get input element;
+    # input;
+type_key(&input, 'A');
+assert_eq!("A", input.value());
+# }
+```
+*/
+pub fn type_key<K>(element: &EventTarget, key: K)
+where
+    K: Into<Key>,
+{
+    let key = key.into();
+    for &key_event_type in [
+        KeyEventType::KeyDown,
+        KeyEventType::KeyPress,
+        KeyEventType::KeyUp,
+    ]
+    .iter()
+    {
+        dispatch_key_event(element, key_event_type, key);
+    }
+    dispatch_input_event(element, &key.to_string());
+}
+
+/**
+A simple simulation of typing multiple characters to the [`EventTarget`].
+
+This will fire the following events, in this order, for each character:
+- `keydown` [`KeyboardEvent`]
+- `keypress` [`KeyboardEvent`]
+- `keyup` [`KeyboardEvent`]
+- `input` [`InputEvent`]
+
+```
+use sap::events::*;
+use web_sys::HtmlInputElement;
+
+# fn type_to_example(input: HtmlInputElement) {
+let input: HtmlInputElement = // some query to get input element;
+    # input;
+type_to(&input, "Hello, World!");
+assert_eq!("Hello, World!", input.value());
+# }
+```
+*/
+pub fn type_to(element: &EventTarget, value: &str) {
+    for c in value.chars() {
+        for &key_event_type in [
+            KeyEventType::KeyDown,
+            KeyEventType::KeyPress,
+            KeyEventType::KeyUp,
+        ]
+        .iter()
+        {
+            dispatch_key_event(element, key_event_type, c);
+        }
+        dispatch_input_event(element, &c.to_string());
+    }
+}
+
+/// Enables firing a `dblclick` [`MouseEvent`].
+pub trait DblClick {
+    /**
+    Fires a `dblclick` [`MouseEvent`] on this [`EventTarget`].
+
+    # Examples
+    ```
+    use sap::events::DblClick;
+    use web_sys::HtmlButtonElement;
+
+    # fn dbl_click_example(btn: HtmlButtonElement) {
+    let btn: HtmlButtonElement = // get button from query
+        # btn;
+    btn.dbl_click();
+    # }
+    ```
+    */
+    fn dbl_click(&self)
+    where
+        Self: AsRef<EventTarget>;
+}
+
+impl DblClick for EventTarget {
+    fn dbl_click(&self) {
+        let dbl_click_event = MouseEvent::new("dblclick").unwrap();
+        assert!(
+            self.dispatch_event(&dbl_click_event).unwrap(),
+            "expected dblclick event to be fired."
+        );
+    }
+}
+
+/**
+Dispatches a [`InputEvent`] with the `data` given, to the event target.
+
+Input events can only be fired on the following:
+- [`HtmlInputElement`]
+- [`HtmlSelectElement`]
+- [`HtmlTextAreaElement`]
+
+Using the function on other elements will do nothing!
+
+Only use this if you need to trigger an `oninput` event listener - if you want to change the value
+of the [`EventTarget`] you can just use the relative set value method.
+
+# Examples
+```
+use sap::events::dispatch_input_event;
+use web_sys::HtmlInputElement;
+
+# fn dispatch_input_event_example(input: HtmlInputElement) {
+let input: HtmlInputElement = // function to get input element
+    # input;
+// enter value into input
+dispatch_input_event(&input, "Hello, World!");
+assert_eq!("Hello, World!", input.value());
+# }
+```
+*/
+pub fn dispatch_input_event(element: &EventTarget, data: &str) {
+    let input = element.dyn_ref::<HtmlInputElement>().map(|input| {
+        let mut value = input.value();
+        value.push_str(data);
+        input.set_value(&value);
+        true
+    });
+
+    let select = element.dyn_ref::<HtmlSelectElement>().map(|select| {
+        let mut value = select.value();
+        value.push_str(data);
+        select.set_value(&value);
+        true
+    });
+
+    let text_area = element.dyn_ref::<HtmlTextAreaElement>().map(|text_area| {
+        let mut value = text_area.value();
+        value.push_str(data);
+        text_area.set_value(&value);
+        true
+    });
+
+    // Maybe this should panic if this is false?
+    if input.or(select).or(text_area).unwrap_or_default() {
+        let mut event_init = InputEventInit::new();
+        event_init.data(Some(data));
+        let input_event = InputEvent::new_with_event_init_dict("input", &event_init).unwrap();
+        assert!(element.dispatch_event(&input_event).unwrap());
+    }
+}
 
 macro_rules! key_impl {
     (
@@ -432,177 +646,6 @@ impl Into<&str> for KeyEventType {
     }
 }
 
-/**
-Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
-
-See the list of keys available [here](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
-
-# Examples
-## Control Keys
-```no_run
-let btn: HtmlButtonElement = // function to get button element
-// can confirm by pressing enter on button
-dispatch_key_event(&btn, KeyEventType::KeyPress, Key::Enter);
-```
-
-## Char literals
-```no_run
-let input: HtmlInputElement = // get input
-dispatch_key_event(&input, KeyEventType::KeyPress, 'a');
-```
-*/
-pub fn dispatch_key_event<K>(element: &EventTarget, event_type: KeyEventType, key: K)
-where
-    K: Into<Key>,
-{
-    let mut event_init = KeyboardEventInit::new();
-    event_init.key(&key.into().to_string());
-    let key_event =
-        KeyboardEvent::new_with_keyboard_event_init_dict(event_type.into(), &event_init).unwrap();
-
-    element.dispatch_event(&key_event).unwrap();
-}
-
-/**
-Simulates typing a single key to the [`EventTarget`].
-
-This will fire the following events on the target:
-- `keydown` [`KeyboardEvent`]
-- `keypress` [`KeyboardEvent`]
-- `keyup` [`KeyboardEvent`]
-- `input` [`InputEvent`]
-
-# Examples
-```no_run
-let input: HtmlInputElement = // some function to get input element;
-type_key(&input, 'A');
-assert_eq!("A", input.value());
-```
-*/
-pub fn type_key<K>(element: &EventTarget, key: K)
-where
-    K: Into<Key>,
-{
-    let key = key.into();
-    for &key_event_type in [
-        KeyEventType::KeyDown,
-        KeyEventType::KeyPress,
-        KeyEventType::KeyUp,
-    ]
-    .iter()
-    {
-        dispatch_key_event(element, key_event_type, key);
-    }
-    dispatch_input_event(element, &key.to_string());
-}
-
-/// Simulate typing a String to an implementation of this type.
-pub trait SimTyping {
-    /**
-    Simulates typing multiple characters to Self.
-
-    This will fire the following events for each character:
-    - `keydown` [`KeyboardEvent`]
-    - `keypress` [`KeyboardEvent`]
-    - `keyup` [`KeyboardEvent`]
-    - `input` [`InputEvent`]
-
-    # Examples
-    ```no_run
-    let input: HtmlInputElement = // ..
-    input.sim_typing("Hello, World!");
-    assert_eq!("Hello, World!", input.value());
-    ```
-    */
-    fn sim_typing(&self, value: &str)
-    where
-        Self: AsRef<EventTarget>;
-}
-
-impl SimTyping for EventTarget {
-    fn sim_typing(&self, value: &str) {
-        type_to(self, value);
-    }
-}
-
-/**
-Simulates typing multiple characters to the [`EventTarget`].
-
-This will fire the following events for each character:
-- `keydown` [`KeyboardEvent`]
-- `keypress` [`KeyboardEvent`]
-- `keyup` [`KeyboardEvent`]
-- `input` [`InputEvent`]
-*/
-pub fn type_to(element: &EventTarget, value: &str) {
-    for c in value.chars() {
-        for &key_event_type in [
-            KeyEventType::KeyDown,
-            KeyEventType::KeyPress,
-            KeyEventType::KeyUp,
-        ]
-        .iter()
-        {
-            dispatch_key_event(element, key_event_type, c);
-        }
-        dispatch_input_event(element, &c.to_string());
-    }
-}
-
-/// Enables firing a `dblclick` [`MouseEvent`].
-pub trait DblClick {
-    /**
-    Fires a `dblclick` [`MouseEvent`] on this [`EventTarget`].
-
-    # Examples
-    ```no_run
-    let btn: HtmlButtonElement = //..
-    btn.dbl_click();
-    ```
-    */
-    fn dbl_click(&self)
-    where
-        Self: AsRef<EventTarget>;
-}
-
-impl DblClick for EventTarget {
-    fn dbl_click(&self) {
-        let dbl_click_event = MouseEvent::new("dblclick").unwrap();
-        assert!(self.dispatch_event(&dbl_click_event).unwrap());
-    }
-}
-
-/**
-Dispatches a [`InputEvent`] with the `data` given, to the event target.
-
-Currently only supports [`HtmlInputElement`]!
-
-Only use this if you need to trigger an `oninput` event listener - if you want to change the value
-of the [`EventTarget`] you can just use the relative set method. For example the
-HtmlInputElement::set_value function
-
-_**Note:** Yew ignores [`InputEvent::data()`]_
-
-# Examples
-```no_run
-let input: HtmlInputElement = // function to get input element
-// enter value into input
-dispatch_input_event(&input, "Hello, World!");
-assert_eq!("Hello, World!", input.value());
-```
-*/
-pub fn dispatch_input_event(element: &EventTarget, data: &str) {
-    let input: &HtmlInputElement = element.unchecked_ref::<HtmlInputElement>();
-    let mut value = input.value();
-    value.push_str(data);
-    // Force value update as Yew uses HtmlInputElement::value instead of InputEvent::data for oninput
-    input.set_value(&value);
-    let mut event_init = InputEventInit::new();
-    event_init.data(Some(data));
-    let input_event = InputEvent::new_with_event_init_dict("input", &event_init).unwrap();
-    assert!(element.dispatch_event(&input_event).unwrap());
-}
-
 #[cfg(all(test, feature = "Yew"))]
 mod tests {
 
@@ -652,7 +695,7 @@ mod tests {
     use crate::{assert_text_content, test_render, TestRender};
 
     use super::*;
-    use crate::queries::*;
+    use crate::prelude::*;
 
     #[wasm_bindgen_test]
     fn sim_typing_to_input_and_enter_to_confirm() {
@@ -669,7 +712,7 @@ mod tests {
 
         assert_text_content!("Enter", last_key_value);
 
-        input.sim_typing("hello");
+        type_to(&input, "hello");
 
         assert_text_content!("o", last_key_value);
         assert_eq!("hello", input.value());

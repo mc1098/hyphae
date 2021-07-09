@@ -11,7 +11,7 @@ All Sap functions are assuming they will be in wasm-bindgen-tests:
 
 ```no_run
 use wasm_bindgen_test::*;
-wasm_bindgen_test_configuration!(run_in_browser);
+wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
 fn test() {
@@ -22,7 +22,7 @@ fn test() {
 Running wasm-bindgen-tests
 
 Multiple browsers can be used here or just one:
-```
+```bash
 $ wasm-pack test --headless --firefox --chrome
 ```
 */
@@ -30,7 +30,7 @@ $ wasm-pack test --headless --firefox --chrome
 use std::{marker::PhantomData, ops::Deref};
 
 use wasm_bindgen::JsCast;
-use web_sys::{Element, NodeList};
+use web_sys::{Element, HtmlElement, NodeList};
 
 mod asserts;
 #[doc(inline)]
@@ -41,7 +41,7 @@ mod utils;
 
 /// Wrapper around a root element which has been rendered.
 pub struct TestRender {
-    root_element: Element,
+    root_element: HtmlElement,
 }
 
 /// Iterator for [`Element`]s
@@ -50,6 +50,7 @@ pub struct ElementIter<'a, T: JsCast> {
     _marker: PhantomData<&'a T>,
 }
 
+#[allow(dead_code)]
 impl<T: JsCast> ElementIter<'_, T> {
     pub(crate) fn new(node_list: Option<NodeList>) -> Self {
         if let Some(node_list) = node_list {
@@ -144,13 +145,17 @@ impl TestRender {
     # Examples
     ```no_run
     use sap::prelude::*;
-
+    # use web_sys::Element;
+    # fn render(element: Element) {
     let rendered = TestRender::new(element);
     // .. use `rendered` to get elements and perform tests
+    # }
     ```
     */
     pub fn new(root_element: Element) -> Self {
-        Self { root_element }
+        Self {
+            root_element: root_element.unchecked_into(),
+        }
     }
 
     /**
@@ -160,13 +165,38 @@ impl TestRender {
     a by_* query instead.
 
     # Examples
+
+    Rendered html:
+    ```html
+    <div>
+        <div id="mydiv"></div>
+    </div>
+    ```
+    Code:
     ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
+    use web_sys::HtmlElement;
 
-    let rendered: TestRender = // ..
+    #[wasm_bindgen_test]
+    fn get_element_by_id() {
+        let rendered: TestRender = // feature dependent rendering
+            # test_render! {
+                # <div>
+                    # <div id="mydiv" />
+                # </div>
+            # };
 
-    let div: HtmlElement = rendered.get_by_id("mydiv").expect("only element has id of mydiv!");
-    assert_eq!("mydiv", div.id());
+        let div: HtmlElement = rendered
+            .get_by_id("mydiv")
+            .expect("only element has id of mydiv!");
+
+        assert_eq!("mydiv", div.id());
+    }
     ```
     */
     pub fn get_by_id<T>(&self, id: &str) -> Option<T>
@@ -187,14 +217,38 @@ impl TestRender {
     use a by_* query instead.
 
     # Examples
+
+    Rendered html:
+    ```html
+    <div>
+        <div>div without a class</div>
+        <div class="divclass">div with class</div>
+    </div>
+    ```
+    Code:
     ```no_run
+    # #[cfg(feature = "Yew")]
+    # fn main() {}
+    # use yew::prelude::*;
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
+    use web_sys::HtmlElement;
 
-    let rendered: TestRender = // ..
+    #[wasm_bindgen_test]
+    fn get_elements_by_class() {
+        let rendered: TestRender = // feature dependent rendering
+        # test_render! {
+            # <div>
+                # <div>{ "div without a class" }</div>
+                # <div class="divclass">{ "div with class" }</div>
+            # </div>
+        # };
+        let mut iter = rendered.query_by_class("divclass");
+        let div: HtmlElement = iter.next().expect("should be one element in this iterator!");
 
-    let iter = rendered.get_by_class("divclass");
-    let div: HtmlElement = iter.next().expect("should be one element in this iterator!");
-    assert!(iter.next().is_none());
+        assert!(iter.next().is_none());
+    }
     ```
     */
     pub fn query_by_class<T>(&'_ self, class: &str) -> impl Iterator<Item = T>
@@ -209,14 +263,14 @@ impl TestRender {
     }
 }
 
-impl From<Element> for TestRender {
-    fn from(root_element: Element) -> Self {
+impl From<HtmlElement> for TestRender {
+    fn from(root_element: HtmlElement) -> Self {
         Self { root_element }
     }
 }
 
 impl Deref for TestRender {
-    type Target = Element;
+    type Target = HtmlElement;
 
     fn deref(&self) -> &Self::Target {
         &self.root_element
@@ -236,7 +290,30 @@ _This API requires the following crate features to be activated: `Yew`_
 
 ## Components
 ```no_run
+use sap::prelude::*;
+use yew::prelude::*;
 // Counter component impl
+# struct Counter;
+# impl Component for Counter {
+#   type Message = ();
+#   type Properties = ();
+#
+#   fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+#       Self
+#   }
+#
+#   fn update(&mut self, _: Self::Message) -> ShouldRender {
+#       false
+#   }
+#
+#   fn change(&mut self, _: Self::Properties) -> ShouldRender {
+#       false
+#   }
+#
+#   fn view(&self) -> Html {
+#       Html::default()
+#   }
+# }
 let rendered = test_render! { <Counter /> };
 // use rendered to perform queries.
 ```
@@ -244,9 +321,10 @@ let rendered = test_render! { <Counter /> };
 ## Raw `html!` blocks
 This macro contains an arm that accepts the same input as Yew's `html!` macro:
 ```no_run
+use sap::prelude::*;
 let rendered = test_render! {
     <div>
-        <h1>{ Hello, World! }</h1>
+        <h1>{ "Hello, World!" }</h1>
     </div>
 };
 // use rendered to perform queries.
@@ -303,7 +381,13 @@ macro_rules! test_render {
 pub mod prelude {
     #[cfg(feature = "Yew")]
     pub use crate::test_render;
-    pub use crate::{assert_text_content, queries::*, TestRender};
+    pub use crate::{
+        assert_text_content,
+        queries::{
+            by_aria::*, by_display_value::*, by_label_text::*, by_placeholder_text::*, by_text::*,
+        },
+        TestRender,
+    };
     pub use web_sys::{Element, HtmlElement, Node};
 }
 

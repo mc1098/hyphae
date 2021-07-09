@@ -476,7 +476,7 @@ mod tests {
 
         // change back to 'All' filter to find checkbox_b
         rendered
-            .get_by_aria_role::<_, HtmlElement>(AriaRole::Link, "All")
+            .get_by_aria_role::<HtmlElement>(AriaRole::Link, "All")
             .expect("all filter")
             .click();
 

@@ -13,5 +13,5 @@ yew = { git = "https://github.com/yewstack/yew.git" }
 yew-services = { git = "https://github.com/yewstack/yew.git" }
 
 [dev-dependencies]
-sap = { path = "../.." }
+sap = { path = "../..", features = ["Yew"] }
 wasm-bindgen-test = "0.3.24"
