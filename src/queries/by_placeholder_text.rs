@@ -3,7 +3,7 @@ Supports finding: [`HtmlInputElement`] or [`HtmlTextAreaElement`] generically by
 
 Using this trait to assert that a `placeholder text` is correct is valid, however, placeholders are
 **not** accessible - consider whether you can find your element by the following (in the order given):
-1. [`get_by_aria_role`](super::by_role::ByAria::get_by_aria_role)
+1. [`get_by_aria_role`](crate::queries::by_aria::ByAria::get_by_aria_role)
 2. [`get_by_display_value`](super::by_display_value::ByDisplayValue::get_by_display_value)
 
 
