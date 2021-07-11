@@ -33,6 +33,12 @@ features = [
 default = []
 
 [workspace]
+# crates to document when using cargo doc
+default-members = [
+	"../sap",
+	"crates/sap-aria",
+	"crates/sap-yew",
+]
 members = [
 	"crates/sap-aria",
 	"crates/sap-yew",
