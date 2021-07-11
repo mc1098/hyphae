@@ -186,6 +186,7 @@ mod tests {
     wasm_bindgen_test_configure!(run_in_browser);
 
     use sap::prelude::*;
+    use sap_yew::test_render;
 
     #[wasm_bindgen_test]
     fn route_test() {

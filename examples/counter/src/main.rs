@@ -81,6 +81,7 @@ fn main() {
 mod tests {
 
     use sap::prelude::*;
+    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::{HtmlButtonElement, HtmlElement};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

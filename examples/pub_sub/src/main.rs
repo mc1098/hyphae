@@ -43,6 +43,7 @@ mod tests {
 
     use super::*;
     use sap::prelude::*;
+    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::HtmlButtonElement;
 

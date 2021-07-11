@@ -98,9 +98,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -142,9 +142,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -186,9 +186,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -271,9 +271,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -316,9 +316,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -360,9 +360,9 @@ pub trait ByLabelText {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -516,13 +516,14 @@ impl ByLabelText for TestRender {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 pub mod tests {
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
-    use crate::{test_render, TestRender};
+    use crate::TestRender;
+    use sap_yew::test_render;
     use web_sys::{HtmlElement, HtmlInputElement};
 
     fn input_label_text() -> TestRender {

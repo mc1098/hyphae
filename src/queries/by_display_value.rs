@@ -100,9 +100,9 @@ pub trait ByDisplayValue {
     The first element with the display value of "Welcome" is the textarea, however, this function
     will return the last element because of the [`HtmlInputElement`] generic.
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -134,9 +134,9 @@ pub trait ByDisplayValue {
     The first element with the display value of "Welcome" is the textarea, however, this function
     will return the second element because of the [`HtmlSelectElement`] generic.
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -169,9 +169,9 @@ pub trait ByDisplayValue {
     that will be returned by this function.
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -204,9 +204,9 @@ pub trait ByDisplayValue {
     first element which has the correct display value[^note].
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -294,7 +294,7 @@ impl ByDisplayValue for TestRender {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
     use wasm_bindgen_test::*;
@@ -303,7 +303,8 @@ mod tests {
     use super::*;
     use web_sys::{Element, HtmlInputElement};
 
-    use crate::{test_render, TestRender};
+    use crate::TestRender;
+    use sap_yew::test_render;
 
     #[wasm_bindgen_test]
     fn get_input_by_display_value() {

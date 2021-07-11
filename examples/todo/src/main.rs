@@ -269,6 +269,7 @@ mod tests {
 
     use super::*;
     use sap::{events::*, prelude::*};
+    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::HtmlButtonElement;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

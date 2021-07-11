@@ -1,0 +1,11 @@
+[package]
+name = "sap-yew"
+version = "0.1.0"
+edition = "2018"
+
+
+[dependencies]
+
+[dev-dependencies]
+sap = { path = "../../" }
+yew = { git = "https://github.com/yewstack/yew.git" }

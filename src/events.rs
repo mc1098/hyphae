@@ -646,7 +646,7 @@ impl Into<&str> for KeyEventType {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
     use web_sys::{HtmlElement, HtmlInputElement, KeyboardEvent};
@@ -692,7 +692,8 @@ mod tests {
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use crate::{assert_text_content, test_render, TestRender};
+    use crate::{assert_text_content, TestRender};
+    use sap_yew::test_render;
 
     use super::*;
     use crate::prelude::*;

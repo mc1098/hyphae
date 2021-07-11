@@ -217,9 +217,9 @@ pub trait ByAria {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -257,9 +257,9 @@ pub trait ByAria {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -327,9 +327,9 @@ pub trait ByAria {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -371,9 +371,9 @@ pub trait ByAria {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -436,9 +436,9 @@ pub trait ByAria {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -531,10 +531,10 @@ impl ByAria for TestRender {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
-    use crate::test_render;
+    use sap_yew::test_render;
 
     use super::*;
     use sap_aria::InvalidToken;

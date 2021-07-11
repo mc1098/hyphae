@@ -75,9 +75,9 @@ pub trait ByText {
     `T` being [`HtmlButtonElement`](web_sys::HtmlButtonElement).
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -108,9 +108,9 @@ pub trait ByText {
     [`HtmlLabelElement`](web_sys::HtmlLabelElement).
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -145,9 +145,9 @@ pub trait ByText {
     to be even more restrictive, however, it is not required in this case._
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -228,10 +228,10 @@ impl ByText for TestRender {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
-    use crate::test_render;
+    use sap_yew::test_render;
 
     use super::*;
     use wasm_bindgen_test::*;

@@ -173,9 +173,9 @@ impl TestRender {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -226,9 +226,9 @@ impl TestRender {
     ```
     Code:
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -276,100 +276,6 @@ impl Deref for TestRender {
     }
 }
 
-/**
-Convenience macro for test rendering of Yew components or raw html blocks.
-
-Note: A big limitation to this macro is that it cannot capture dynamic values - if
-you run into this problem then you may need to create a Wrapper component to
-provide the desired values.
-
-_This API requires the following crate features to be activated: `Yew`_
-
-# Examples
-
-## Components
-```no_run
-use sap::prelude::*;
-use yew::prelude::*;
-// Counter component impl
-# struct Counter;
-# impl Component for Counter {
-#   type Message = ();
-#   type Properties = ();
-#
-#   fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-#       Self
-#   }
-#
-#   fn update(&mut self, _: Self::Message) -> ShouldRender {
-#       false
-#   }
-#
-#   fn change(&mut self, _: Self::Properties) -> ShouldRender {
-#       false
-#   }
-#
-#   fn view(&self) -> Html {
-#       Html::default()
-#   }
-# }
-let rendered = test_render! { <Counter /> };
-// use rendered to perform queries.
-```
-
-## Raw `html!` blocks
-This macro contains an arm that accepts the same input as Yew's `html!` macro:
-```no_run
-use sap::prelude::*;
-let rendered = test_render! {
-    <div>
-        <h1>{ "Hello, World!" }</h1>
-    </div>
-};
-// use rendered to perform queries.
-```
-This macro uses the version of the `html!` that is currently in your project
-so will be in sync with your project.
-*/
-#[cfg(feature = "Yew")]
-#[macro_export]
-macro_rules! test_render {
-    (<$comp:ident />) => {{
-        let div = yew::utils::document().create_element("div").unwrap();
-        div.set_id("test-app");
-        yew::utils::document()
-            .body()
-            .unwrap()
-            .append_child(&div)
-            .unwrap();
-        yew::start_app_in_element::<$comp>(div.clone());
-        TestRender::new(div)
-    }};
-    ($($html:tt)+) => {{
-        pub struct TestComp;
-        impl yew::html::Component for TestComp {
-            type Properties = ();
-            type Message = ();
-
-            fn create(_: Self::Properties, _: yew::html::ComponentLink<Self>) -> Self {
-                Self
-            }
-
-            fn update(&mut self, _: Self::Message) -> yew::html::ShouldRender {
-                false
-            }
-            fn change(&mut self, _: Self::Properties) -> yew::html::ShouldRender {
-                false
-            }
-            fn view(&self) -> yew::html::Html {
-                yew::html! { $($html)+ }
-
-            }
-        }
-        test_render!(<TestComp />)
-    }};
-}
-
 /// Sap Prelude
 ///
 /// Convenient module to import the most used imports for yew_test.
@@ -378,8 +284,6 @@ macro_rules! test_render {
 /// use sap::prelude::*;
 /// ```
 pub mod prelude {
-    #[cfg(feature = "Yew")]
-    pub use crate::test_render;
     pub use crate::{
         assert_text_content,
         queries::{
@@ -391,10 +295,11 @@ pub mod prelude {
     pub use web_sys::{Element, HtmlElement, Node};
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
     use crate::prelude::*;
+    use sap_yew::test_render;
     use web_sys::HtmlButtonElement;
 
     use wasm_bindgen_test::*;

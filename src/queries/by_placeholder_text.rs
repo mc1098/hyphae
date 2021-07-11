@@ -80,9 +80,9 @@ pub trait ByPlaceholderText {
     even if `T` was [`HtmlElement`](web_sys::HtmlElement).
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -111,9 +111,9 @@ pub trait ByPlaceholderText {
     `T` being [`HtmlTextAreaElement`].
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -142,9 +142,9 @@ pub trait ByPlaceholderText {
     the first element which has the correct placeholder text[^note].
 
     ```no_run
-    # #[cfg(feature = "Yew")]
     # fn main() {}
     # use yew::prelude::*;
+    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -200,7 +200,7 @@ impl ByPlaceholderText for TestRender {
     }
 }
 
-#[cfg(all(test, feature = "Yew"))]
+#[cfg(test)]
 mod tests {
 
     use wasm_bindgen_test::*;
@@ -208,7 +208,8 @@ mod tests {
     use web_sys::{Element, HtmlElement};
 
     use super::*;
-    use crate::{test_render, TestRender};
+    use crate::TestRender;
+    use sap_yew::test_render;
 
     #[wasm_bindgen_test]
     fn get_input_by_placeholder_text() {
