@@ -561,10 +561,6 @@ mod tests {
     #[wasm_bindgen_test]
     fn multiple_aria_labelled_by() {
         // need to avoid whitespace between elements in string
-        // let element = make_element_with_html_string(
-        //     "<a id=\"file_row1\" href=\"./files/Documentation.pdf\">Documentation.pdf</a>
-        //     <span role=\"button\" tabindex=\"0\" id=\"del_row1\" aria-label=\"Delete\" aria-labelledby=\"del_row1 file_row1\"></span>"
-        // );
         let element = make_element_with_html_string(&format!(
             "{}{}",
             r#"<a id="file_row1" href="./files/Documentation.pdf">Documentation.pdf</a>"#,

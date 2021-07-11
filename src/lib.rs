@@ -26,7 +26,7 @@ Multiple browsers can be used here or just one:
 $ wasm-pack test --headless --firefox --chrome
 ```
 */
-
+// extern crate sap_aria;
 use std::{marker::PhantomData, ops::Deref};
 
 use wasm_bindgen::JsCast;
@@ -37,7 +37,6 @@ mod asserts;
 pub mod events;
 #[doc(inline)]
 pub mod queries;
-mod utils;
 
 /// Wrapper around a root element which has been rendered.
 pub struct TestRender {
@@ -388,6 +387,7 @@ pub mod prelude {
         },
         TestRender,
     };
+    pub use sap_aria::*;
     pub use web_sys::{Element, HtmlElement, Node};
 }
 

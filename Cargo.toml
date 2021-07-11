@@ -1,11 +1,12 @@
 [package]
 name = "sap"
 version = "0.1.0"
-authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
+authors = ["mc1098"]
 edition = "2018"
 license = "MIT"
 
 [dependencies]
+sap-aria = { path = "crates/sap-aria" }
 wasm-bindgen = "0.2.74"
 
 [dev-dependencies]
@@ -16,8 +17,6 @@ yew = { git = "https://github.com/yewstack/yew.git" }
 [dependencies.web-sys]
 version = "0.3.51"
 features = [
-	"CssStyleDeclaration",
-	"HtmlAreaElement",
 	"HtmlImageElement",
 	"HtmlLabelElement",
 	"InputEvent",
@@ -32,3 +31,15 @@ features = [
 [features]
 default = []
 Yew = []
+
+[workspace]
+members = [
+	"crates/sap-aria",
+	"examples/counter",
+	"examples/pub_sub",
+	"examples/router",
+	"examples/todo",
+]
+
+[patch.crates-io]
+sap-aria = { path = "crates/sap-aria" }
