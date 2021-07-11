@@ -2,7 +2,14 @@
 /*!
 # Sap
 
-Provides helper functions and traits for testing DOM nodes in Rust
+Sap is a testing library that provides abstractions on top of [`wasm_bindgen`] for testing DOM nodes.
+
+The main feature of this crate is using `queries` to find elements in the DOM and perform actions
+that simulate user behaviour to assert that your application behaves correctly.
+
+The recommended query set to use is in the [`by_aria`](crate::queries::by_aria) module - this queries
+by ARIA and using this will also help you consider the accessibility of your application.
+
 
 Requirements:
 - [`wasm-bindgen-test`](https://crates.io/crates/wasm-bindgen) in dev-dependencies
@@ -26,7 +33,6 @@ Multiple browsers can be used here or just one:
 $ wasm-pack test --headless --firefox --chrome
 ```
 */
-// extern crate sap_aria;
 use std::{marker::PhantomData, ops::Deref};
 
 use wasm_bindgen::JsCast;

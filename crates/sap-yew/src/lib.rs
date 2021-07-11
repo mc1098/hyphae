@@ -1,4 +1,4 @@
-/**!
+/*!
 A bridge crate between Sap and Yew, which exposes a single macro to help rendering a component
 for testing.
 */
@@ -81,7 +81,7 @@ use yew::prelude::*;
 # }
 let props = CounterProps { start: 0 };
 let rendered = test_render!{ <Counter with props /> };
-// use rendered to perform!{ <Counter with props /> };
+// use rendered to perform queries.
 
 ```
 
