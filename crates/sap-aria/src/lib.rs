@@ -1,5 +1,7 @@
-pub mod name;
+// pub mod name;
+mod name;
 
+pub use name::element_accessible_name;
 pub trait ToQueryString {
     fn to_query_string(&self) -> String;
 }

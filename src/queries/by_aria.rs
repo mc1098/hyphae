@@ -480,8 +480,7 @@ where
             let node = node_list.get(i).and_then(|node| node.dyn_into::<T>().ok());
 
             if let Some(element) = node {
-                let acc_name =
-                    sap_aria::name::element_accessible_name(&element.unchecked_ref()).ok()?;
+                let acc_name = sap_aria::element_accessible_name(&element.unchecked_ref()).ok()?;
                 if name == acc_name {
                     return Some(element);
                 }
