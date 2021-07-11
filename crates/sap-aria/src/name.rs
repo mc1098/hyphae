@@ -278,6 +278,7 @@ fn text_alternative_input(
             .get_attribute("aria-valuetext")
             .or_else(|| element.get_attribute("aria-valuenow"))
             .unwrap_or_else(|| element.value())),
+        "checkbox" => text_alternative_label_title(element, traversed, is_albt),
         _ => Ok(String::new()),
     }
 }
@@ -455,6 +456,18 @@ mod tests {
         let input = element.query_selector("#user-password").unwrap().unwrap();
 
         assert_eq!("Password:", element_accessible_name(&input).unwrap());
+    }
+
+    #[wasm_bindgen_test]
+    fn checkbox_name_from_label() {
+        let element = make_element_with_html_string(
+            "<input id=\"myinput\" type=\"checkbox\"/>
+            <label for=\"myinput\">My Input!</label>",
+        );
+
+        let input = element.query_selector("#myinput").unwrap().unwrap();
+
+        assert_eq!("My Input!", element_accessible_name(&input).unwrap());
     }
 
     #[wasm_bindgen_test]
