@@ -506,7 +506,7 @@ impl ByAria for TestRender {
         T: JsCast,
     {
         let name = name.into();
-        if let AriaProperty::Label(label) = prop {
+        if let AriaProperty::Label(ref label) = prop {
             // if someone specified the name while using label then they must match
             if name.map(|name| name != label).unwrap_or_default() {
                 None
@@ -569,7 +569,7 @@ mod tests {
         };
 
         let button: HtmlButtonElement = rendered
-            .get_by_aria_prop(AriaProperty::Label("ok"), None)
+            .get_by_aria_prop(AriaProperty::Label("ok".to_owned()), None)
             .unwrap();
 
         assert_eq!("mybtn", button.id());

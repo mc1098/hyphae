@@ -38,19 +38,19 @@ where
 }
 
 /// A list of one or more tokens.
-pub struct TokenList<'a, T>(&'a [T]);
+pub struct TokenList<T>(Vec<T>);
 
-impl<'a, S, T> From<&'a S> for TokenList<'a, T>
+impl<'a, S, T> From<&'a S> for TokenList<T>
 where
     S: AsRef<[T]>,
-    T: std::fmt::Display,
+    T: ToQueryString + Copy,
 {
     fn from(slice: &'a S) -> Self {
-        TokenList(slice.as_ref())
+        TokenList(slice.as_ref().iter().copied().collect())
     }
 }
 
-impl<T> ToQueryString for TokenList<'_, T>
+impl<T> ToQueryString for TokenList<T>
 where
     T: ToQueryString,
 {
@@ -70,7 +70,7 @@ where
 
 macro_rules! enum_to_lowercase_string_impl {
         ( $(#[$enum_comment:meta])+ $enum_name:ident {$( $(#[$var_comment:meta])+ $variant:ident,)*$(,)?}) => {
-            #[derive(Debug, PartialEq)]
+            #[derive(Copy, Clone, Debug, PartialEq)]
             $(#[$enum_comment])+
             pub enum $enum_name {
                 $(
@@ -221,37 +221,10 @@ enum_to_lowercase_string_impl! {
     }
 }
 
-macro_rules! aria_enum {
-        ($(#[$enum_comment:meta])+ $enum_name:ident {$(
-            $(#[$var_comment:meta])+ $var_name:ident($var_type:ty) => $implicit: expr
-        ),*$(,)?}) => {
+macro_rules! aria_property {
+    ($(#[$enum_comment:meta])+ $enum_name:ident {$( $(#[$var_comment:meta])+ $var_name:ident($var_type:ty)),*$(,)?}) => {
             $(#[$enum_comment])+
             pub enum $enum_name {
-                $(
-                    $(#[$var_comment])+
-                    #[allow(dead_code)]
-                    $var_name($var_type),
-                )*
-            }
-
-            #[allow(deprecated)]
-            impl ToQueryString for $enum_name {
-                fn to_query_string(&self) -> String {
-                    match self {
-                        $(
-                            $enum_name::$var_name(value) => format!("{}[aria-{}={}]",
-                                    $implicit(value),
-                                    stringify!($var_name).to_lowercase(),
-                                    value.to_query_string(),
-                                ),
-                        )*
-                    }
-                }
-            }
-        };
-        ($(#[$enum_comment:meta])+ $enum_name:ident<'a> {$( $(#[$var_comment:meta])+ $var_name:ident($var_type:ty)),*$(,)?}) => {
-            $(#[$enum_comment])+
-            pub enum $enum_name<'a> {
                 $(
                     $(#[$var_comment])+
                     #[allow(dead_code, deprecated)]
@@ -260,7 +233,7 @@ macro_rules! aria_enum {
             }
 
             #[allow(deprecated)]
-            impl ToQueryString for $enum_name<'_> {
+            impl ToQueryString for $enum_name {
                 fn to_query_string(&self) -> String {
                     match self {
                         $(
@@ -273,16 +246,16 @@ macro_rules! aria_enum {
                 }
             }
         };
-    }
+}
 
-aria_enum! {
+aria_property! {
     /// Attributes that are essential to the nature of a given object, or that represent a
     /// data value associated with the object. A change of a property may significantly
     /// impact the meaning or presentation of an object. Certain properties (for example,
     /// aria-multiline) are less likely to change than states, but note that the frequency of
     /// change difference is not a rule. A few properties, such as aria-activedescendant,
     /// aria-valuenow, and aria-valuetext are expected to change often.
-    AriaProperty<'a> {
+    AriaProperty {
         /// Indicates whether assistive technologies will present all, or only parts of,
         /// the changed region based on the change notifications defined by the aria-relevant
         /// attribute.
@@ -296,7 +269,7 @@ aria_enum! {
         Details(IdReference),
         #[deprecated(note = "Deprecated in ARIA 1.1")]
         /// Indicates what functions can be performed when a dragged object is released on the drop target.
-        DropEffect(TokenList<'a, DropEffectToken>), //(&'a [DropEffectToken]),
+        DropEffect(TokenList<DropEffectToken>), //(&'a [DropEffectToken]),
         /// Identifies the element that provides an error message for the object.
         ErrorMessage(IdReference),
         /// Identifies the currently active element when DOM focus is on a composite widget,
@@ -323,9 +296,9 @@ aria_enum! {
         HasPopup(HasPopupToken),
         /// Indicates keyboard shortcuts that an author has implemented to activate or give
         /// focus to an element.
-        KeyShortcuts(&'a str),
+        KeyShortcuts(String),
         /// Defines a string value that labels the current element.
-        Label(&'a str),
+        Label(String),
         /// Identifies the element (or elements) that labels the current element.
         LabelledBy(IdReferenceList),
         /// Defines the hierarchical level of an element within a structure.
@@ -350,7 +323,7 @@ aria_enum! {
         /// Defines a short hint (a word or short phrase) intended to aid the user with data
         /// entry when the control has no value. A hint could be a sample value or a brief
         /// description of the expected format.
-        Placeholder(&'a str),
+        Placeholder(String),
         /// Defines an element's number or position in the current set of listitems or
         /// treeitems. Not required if all elements in the set are present in the DOM.
         PosInSet(i32),
@@ -358,11 +331,11 @@ aria_enum! {
         ReadOnly(bool),
         /// Indicates what notifications the user agent will trigger when the accessibility
         /// tree within a live region is modified.
-        Relevant(TokenList<'a, RelevantToken>),//(&'a [RelevantToken]),
+        Relevant(TokenList<RelevantToken>),
         /// Indicates that user input is required on the element before a form may be submitted.
         Required(bool),
         /// Defines a human-readable, author-localized description for the role of an element.
-        RoleDescription(&'a str),
+        RoleDescription(String),
         /// Defines the total number of rows in a table, grid, or treegrid.
         RowCount(i32),
         /// Defines an element's row index or position with respect to the total number of rows
@@ -383,7 +356,7 @@ aria_enum! {
         /// Defines the current value for a range widget.
         ValueNow(f32),
         /// Defines the human readable text alternative of aria-valuenow for a range widget.
-        ValueText(&'a str),
+        ValueText(String),
     }
 }
 
@@ -692,6 +665,35 @@ enum_to_lowercase_string_impl! {
     }
 }
 
+macro_rules! aria_state {
+    ($(#[$enum_comment:meta])+ $enum_name:ident {$(
+        $(#[$var_comment:meta])+ $var_name:ident($var_type:ty) => $implicit: expr
+    ),*$(,)?}) => {
+        $(#[$enum_comment])+
+        pub enum $enum_name {
+            $(
+                $(#[$var_comment])+
+                #[allow(dead_code)]
+                $var_name($var_type),
+            )*
+        }
+        #[allow(deprecated)]
+        impl ToQueryString for $enum_name {
+            fn to_query_string(&self) -> String {
+                match self {
+                    $(
+                        $enum_name::$var_name(value) => format!("{}[aria-{}={}]",
+                                $implicit(value),
+                                stringify!($var_name).to_lowercase(),
+                                value.to_query_string(),
+                            ),
+                    )*
+                }
+            }
+        }
+    };
+}
+
 fn state_default<T>(_value: T) -> String {
     String::new()
 }
@@ -720,7 +722,7 @@ fn state_hidden(state: &DuoState) -> String {
     }
 }
 
-aria_enum! {
+aria_state! {
     /// A state is a dynamic property expressing characteristics of an object that may change
     /// in response to user action or automated processes.
     /// States do not affect the essential nature of the object, but represent data
