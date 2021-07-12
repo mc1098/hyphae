@@ -156,10 +156,10 @@ fn element_accessible_name_impl(
     traversed: &mut Vec<Node>,
     is_albt: bool,
 ) -> Result<String, JsValue> {
-    let mut accumlated_text = String::new();
+    let mut accumulated_text = String::new();
 
     if is_hidden_and_no_aria_idref_label(node)? {
-        return Ok(accumlated_text);
+        return Ok(accumulated_text);
     }
 
     if !is_presentational(node) {
@@ -179,7 +179,7 @@ fn element_accessible_name_impl(
                     let label = labels.get(i).unwrap();
                     if !is_node_part_of_traversal(&label, traversed) {
                         add_node_to_traversed(&label, traversed);
-                        accumlated_text
+                        accumulated_text
                             .push_str(&element_accessible_name_impl(&label, traversed, true)?);
                     }
                 }
@@ -191,10 +191,10 @@ fn element_accessible_name_impl(
             .and_then(|element| element.get_attribute("aria-label"))
             .map(|value| value.trim().to_owned())
         {
-            return if accumlated_text.is_empty() {
+            return if accumulated_text.is_empty() {
                 Ok(label)
             } else {
-                Ok(format!("{} {}", label, accumlated_text))
+                Ok(format!("{} {}", label, accumulated_text))
             };
         }
 
@@ -227,19 +227,19 @@ fn element_accessible_name_impl(
                 "area" => text_alternative_alt_title!(node as HtmlAreaElement),
                 _ => get_children_accessible_names(node, traversed, is_albt)?,
             };
-            accumlated_text.push_str(&name);
+            accumulated_text.push_str(&name);
         }
     }
 
     if is_presentational(node) {
-        accumlated_text.push_str(&get_children_accessible_names(node, traversed, is_albt)?);
+        accumulated_text.push_str(&get_children_accessible_names(node, traversed, is_albt)?);
     }
 
     if Node::TEXT_NODE == node.node_type() {
-        accumlated_text.push_str(&node.text_content().unwrap_or_default().trim().to_owned());
+        accumulated_text.push_str(&node.text_content().unwrap_or_default().trim().to_owned());
     }
 
-    Ok(accumlated_text)
+    Ok(accumulated_text)
 }
 
 fn text_alternative_input(
