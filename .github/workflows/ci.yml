@@ -49,4 +49,4 @@ jobs:
     - name: Install wasm-pack
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       
-    - run: cd sap && wasm-pack test --headless --firefox -- --all
+    - run: wasm-pack test --headless --firefox -- --all
