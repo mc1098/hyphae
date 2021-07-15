@@ -113,6 +113,8 @@ immediately.
 
 Mock a WebSocket that connects immediately:
 ```no_run
+use sap_mock::WebSocketController;
+
 let controller: WebSocketController = sap_mock::mock_ws(0);
 // `ws` is a mocked WebSocket
 let ws = web_sys::WebSocket::new("anyurl").unwrap();
@@ -123,6 +125,8 @@ assert!(controller.is_opened());
 Mock a WebSocket that takes 500ms to connect:
 ```no_run
 # async fn wait_for_ws() {
+use sap_mock::WebSocketController;
+
 // Mock a WebSocket that takes 500ms to connect
 let controller: WebSocketController = sap_mock::mock_ws(500);
 // `ws` is a mocked WebSocket
@@ -178,6 +182,9 @@ especially as you cannot use [sleep](std::thread::sleep) in a test using
 
 # Examples
 ```no_run
+
+use wasm_bindgen_test::*;
+
 #[wasm_bindgen_test]
 async fn some_test_that_requires_waiting() {
     // setup..
@@ -213,6 +220,12 @@ the u32 provided and will contain the string as the reason for this error.
 
 # Examples
 ```
+use wasm_bindgen_test::*;
+use wasm_bindgen::JsCast;
+use wasm_bindgen_futures::JsFuture;
+use serde::{Deserialize, Serialize};
+use web_sys::{window, Response};
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Model {
     value: usize,
@@ -223,7 +236,7 @@ async fn mock_fetch_usize() {
     let mock = Model { value: 32 };
 
     // Hold handle to keep mock alive
-    let _handle = mock_fetch(Ok(&mock));
+    let _handle = sap_mock::mock_fetch(Ok(&mock));
     let window = window().expect("No global window");
     // Wrap fetch call into a Future to await it
     let resp: Response = JsFuture::from(window.fetch_with_str("someurl"))

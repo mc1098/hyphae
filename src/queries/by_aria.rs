@@ -391,7 +391,7 @@ pub trait ByAria {
             # };
 
         let button: HtmlButtonElement = rendered
-            .get_by_aria_prop(AriaProperty::Label("ok"), None)
+            .get_by_aria_prop(AriaProperty::Label("ok".to_owned()), None)
             .expect("to get button by it's aria-label value");
 
         assert_eq!("mybtn", button.id());
