@@ -1,0 +1,28 @@
+[package]
+name = "sap-mock"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+serde = "1"
+wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"] }
+js-sys = "0.3.51"
+wasm-bindgen-futures = "0.4.24"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.24"
+
+[dev-dependencies.web-sys] 
+version = "0.3.51"
+features = [
+	"Blob",
+	"console",
+	"Element",
+	"Response",
+	"WebSocket",
+	"Window",
+]
+
+[dev-dependencies.serde]
+version = "1"
+features = ["derive"]

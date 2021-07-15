@@ -37,15 +37,18 @@ default = []
 default-members = [
 	"../sap",
 	"crates/sap-aria",
+	"crates/sap-mock",
 	"crates/sap-yew",
 ]
 members = [
 	"crates/sap-aria",
 	"crates/sap-yew",
+	"crates/sap-mock",
 	"examples/counter",
 	"examples/pub_sub",
 	"examples/router",
 	"examples/todo",
+	"examples/dashboard",
 ]
 
 [patch.crates-io]
