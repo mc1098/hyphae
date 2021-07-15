@@ -1,0 +1,5 @@
+status = [
+	"lint",
+	"test",
+	"wasm-test-in-browser"
+]
