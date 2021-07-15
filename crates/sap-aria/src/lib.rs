@@ -6,7 +6,7 @@ pub trait ToQueryString {
     fn to_query_string(&self) -> String;
 }
 
-// blanket impl for 'primative' types that have ToString.
+// blanket impl for 'primitive' types that have ToString.
 impl<S> ToQueryString for S
 where
     S: ToString,

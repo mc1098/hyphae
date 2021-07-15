@@ -171,7 +171,7 @@ pub trait ByText {
         assert_eq!("text-div", element.id());
     }
     ```
-    This might seem suprising but the outer div element contains a text node "Hello, " as the strong
+    This might seem surprising but the outer div element contains a text node "Hello, " as the strong
     element breaks the text node - take care trying to find elements by text.
     */
     fn get_by_text<T>(&self, search: &'_ str) -> Option<T>

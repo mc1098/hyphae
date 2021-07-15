@@ -10,7 +10,7 @@ find it?
 Accessible Rich Internet Applications (ARIA) is a set of attributes, implicit roles, that define
 ways to make web content and web applications more accessible to people with disabilities.
 
-It is important to consider accessiblility when designing a web application - one of the easiest ways
+It is important to consider accessibility when designing a web application - one of the easiest ways
 to do this is to use the correct semantic HTML 5 element as these come with built-in
 keyboard accessibility, roles and states.
 
@@ -56,7 +56,7 @@ The accessible name is derived as it traverses the
 
 So far no aria-* properties and this is due to normal elements having text alternatives which help
 build up accessible names even when no aria-* properties have been used, thus correct use of HTML
-semantics helps accessiblilty without you thinking about it.
+semantics helps accessibility without you thinking about it.
 
 The aria-label property can be used to provide a custom accessible name to an element and stops
 the traversal of the accessibility tree:
@@ -72,7 +72,7 @@ It's worth noting that the div's accessible name is "My very best link!" and yet
 accessible name is "A very Ok link".
 
 For a user who is tabbing through your website, they will skip the div and focus on the anchor which
-will read the anchors accessiblilty name. Keep this mind if adding some wrapper around an anchor,
+will read the anchors accessibility name. Keep this mind if adding some wrapper around an anchor,
 button or other embedded control element as this will behave differently for accessibility users.
 
 Accessible names will generally only be built up from visible elements:
@@ -283,7 +283,7 @@ pub trait ByAria {
     ```
     _Note: This comes from the todo example which has a toggle all checkbox but does not
     have an associated label which makes it not very accessible. The aria-label was added to help with
-    testing but also improved the accessiblity of the todo example in the process._
+    testing but also improved the accessibility of the todo example in the process._
     */
     fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Option<T>
     where
@@ -408,7 +408,7 @@ pub trait ByAria {
     Get a generic element by ARIA state and optional accessible name.
 
     Some [`AriaState`] can be so descriptive in subsections of the DOM that an accessible name is
-    not requried to identify a single element, such is the case with [`AriaState::Selected`] on a
+    not required to identify a single element, such is the case with [`AriaState::Selected`] on a
     subsection that can only have a single selected item. When the accessible name is not required
     the value can be [`None`].
 
@@ -424,7 +424,7 @@ pub trait ByAria {
 
     ## Get input with invalid spelling
 
-    One input element has a mispelled animal value which has been validated and the
+    One input element has a misspelled animal value which has been validated and the
     "aria-invalid=spelling" state has been applied.
 
     Rendered html:
