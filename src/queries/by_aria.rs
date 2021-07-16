@@ -62,6 +62,7 @@ The aria-label property can be used to provide a custom accessible name to an el
 the traversal of the accessibility tree:
 
 ```html
+<!-- DON'T DO THIS -->
 <div aria-label="My very best link!">
     <a href="someurlhere">A very Ok link</a>
 </div>
@@ -72,8 +73,9 @@ It's worth noting that the div's accessible name is "My very best link!" and yet
 accessible name is "A very Ok link".
 
 For a user who is tabbing through your website, they will skip the div and focus on the anchor which
-will read the anchors accessibility name. Keep this mind if adding some wrapper around an anchor,
-button or other embedded control element as this will behave differently for accessibility users.
+will read the anchors accessibility name. Keep this in mind if adding some wrapper around an anchor,
+button or other embedded control element as this might not add to the accessible name of the controlling
+element.
 
 Accessible names will generally only be built up from visible elements:
 
@@ -116,9 +118,9 @@ accessible name:
 _Accessible name: "Password: Input typed in this field is hidden."_
 
 The steps are the same until we get to the div with aria-hidden="false" which includes this element
-as part of the accessible name. This means that this information is only for accessibility users -
-this is a silly example but using this technique you can provide extra information to provide a much
-better experience for accessibility users.
+as part of the accessible name. This means that this information is only for assistive technologies -
+this is a silly example but using this technique; you can provide extra information to improve the
+experience for users using assistive technologies.
 
 The above example used was bit contrived so we could cover aria-labelledby too, the example would be
 better written using the label element instead of the div:
