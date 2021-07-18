@@ -98,7 +98,7 @@ pub trait ByText {
             # };
         let button: HtmlButtonElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements to find the button by text");
+            .unwrap();
 
         assert_eq!("text-button", button.id());
     }
@@ -131,7 +131,7 @@ pub trait ByText {
             # };
         let label: HtmlLabelElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements and the button to find the label by text");
+            .unwrap();
 
         assert_eq!("text-label", label.id());
     }
@@ -168,7 +168,7 @@ pub trait ByText {
             # };
         let element: HtmlElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements and the button to find the label by text");
+            .unwrap();
 
         assert_eq!("text-div", element.id());
     }
@@ -224,7 +224,6 @@ impl ByText for TestRender {
 
             let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
                 .filter(|node| node.text_content().is_some());
-            // .filter_map(|node| node.text_content());
 
             if let Some(closest) = util::closest(search, iter, |node| node.text_content().unwrap())
             {
