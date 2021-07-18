@@ -684,7 +684,7 @@ mod tests {
                 <>
                     <p>{ last_key_value }</p>
                     <label for="input">{ "input label" }</label>
-                    <input id="input" placeholder="key" type="text" onkeydown=self.link.callback(|e| e) />
+                    <input id="input" placeholder="key" type="text" onkeydown={self.link.callback(|e| e)} />
                 </>
             }
         }
@@ -752,7 +752,7 @@ mod tests {
             let cb = |e| e;
             html! {
                 <>
-                    <input value=self.value.clone() placeholder="key" type="text" oninput=self.link.callback(cb) />
+                    <input value={self.value.clone()} placeholder="key" type="text" oninput={self.link.callback(cb)} />
                 </>
             }
         }

@@ -10,7 +10,7 @@ strum_macros = "0.21"
 serde = "1"
 serde_derive = "1"
 yew = { git = "https://github.com/yewstack/yew.git" }
-yew-services = { git = "https://github.com/yewstack/yew.git" }
+gloo = { git = "https://github.com/rustwasm/gloo.git" }
 
 [dev-dependencies]
 sap = { path = "../.." }

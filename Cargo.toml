@@ -48,7 +48,6 @@ members = [
 	"examples/pub_sub",
 	"examples/router",
 	"examples/todo",
-	"examples/dashboard",
 ]
 
 [patch.crates-io]
