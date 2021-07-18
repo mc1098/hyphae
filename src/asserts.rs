@@ -78,7 +78,7 @@ mod tests {
         };
 
         let not_found = rendered.get_by_text::<Element>("text content is broken up!");
-        assert!(not_found.is_none());
+        assert!(not_found.is_err());
 
         let result = rendered.get_by_id::<Element>("mydiv").unwrap();
         assert_text_content!("text content is broken up!", result);
