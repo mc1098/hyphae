@@ -43,15 +43,15 @@ impl Component for Model {
             <div>
                 <div class="panel">
                     // A button to send the Increment message
-                    <button class="button" onclick=self.link.callback(|_| Msg::Increment)>
+                    <button class="button" onclick={self.link.callback(|_| Msg::Increment)}>
                         { "+1" }
                     </button>
                     // A button to send the Decrement message
-                    <button class="button" onclick=self.link.callback(|_| Msg::Decrement)>
+                    <button class="button" onclick={self.link.callback(|_| Msg::Decrement)}>
                         { "-1" }
                     </button>
                     // A button to send the two Increment messages
-                    <button class="button" onclick=self.link.batch_callback(|_| vec![Msg::Increment, Msg::Increment])>
+                    <button class="button" onclick={self.link.batch_callback(|_| vec![Msg::Increment, Msg::Increment])}>
                         { "+1, +1" }
                     </button>
 

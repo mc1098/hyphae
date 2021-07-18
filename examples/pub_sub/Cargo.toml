@@ -6,6 +6,8 @@ edition = "2018"
 
 [dependencies]
 yew = { git = "https://github.com/yewstack/yew.git" }
+yew-agent = { git = "https://github.com/yewstack/yew.git" }
+
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]

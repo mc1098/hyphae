@@ -265,7 +265,7 @@ mod tests {
             html! {
                 <div>
                     <p>{ format!("Count: {}", self.count) }</p>
-                    <button onclick=self.link.callback(|_| ())>{ "Click me!" }</button>
+                    <button onclick={self.link.callback(|_| ())}>{ "Click me!" }</button>
                 </div>
             }
         }
