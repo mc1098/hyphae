@@ -63,10 +63,10 @@ pub trait ByLabelText {
 
     # Errors
 
-    - [`LabelByTextError::LabelNotFound`]
+    - [`ByLabelTextError::LabelNotFound`]
 
         When no matching label text can be found.
-    - [`LabelByTextError::NoElementFound`]
+    - [`ByLabelTextError::NoElementFound`]
 
         When at least a single label was found with the correct text but no associated element was
         found, this could happen for the following reasons:
@@ -128,7 +128,7 @@ pub trait ByLabelText {
     ## Label not found
 
     When the searched text doesn't match any labels then a [`Result::Err`] will be returned
-    with the value of [`LabelByTextError::LabelNotFound`].
+    with the value of [`ByLabelTextError::LabelNotFound`].
 
     Rendered html:
     ```html
@@ -165,14 +165,14 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
     }
     ```
     ## Label found but `for` value doesn't match input `id`
 
     When a label element is found with the search text, however, the `for` value doesn't match the
     input element's `id`. This will return a [`Result::Err`] with a value of
-    [`LabelByTextError::NoElementFound`].
+    [`ByLabelTextError::NoElementFound`].
 
     Rendered html:
     ```html
@@ -209,14 +209,14 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
     }
     ```
     */
     fn get_by_label_text<'search, T>(
         &self,
         search: &'search str,
-    ) -> Result<T, LabelByTextError<'search>>
+    ) -> Result<T, ByLabelTextError<'search>>
     where
         T: JsCast,
     {
@@ -236,10 +236,10 @@ pub trait ByLabelText {
 
     # Errors
 
-    - [`LabelByTextError::LabelNotFound`]
+    - [`ByLabelTextError::LabelNotFound`]
 
         When no matching label text can be found.
-    - [`LabelByTextError::NoElementFound`]
+    - [`ByLabelTextError::NoElementFound`]
 
         When at least a single label was found with the correct text but no associated element was
         found, this could happen for the following reasons:
@@ -302,7 +302,7 @@ pub trait ByLabelText {
     ## Label not found
 
     When the searched text doesn't match any labels then a [`Result::Err`] will be returned
-    with the value of [`LabelByTextError::LabelNotFound`].
+    with the value of [`ByLabelTextError::LabelNotFound`].
 
     Rendered html:
     ```html
@@ -339,14 +339,14 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
     }
     ```
     ## Label found but `for` value doesn't match input `id`
 
     When a label element is found with the search text, however, the `for` value doesn't match the
     input element's `id`. This will return a [`Result::Err`] with a value of
-    [`LabelByTextError::NoElementFound`].
+    [`ByLabelTextError::NoElementFound`].
 
     Rendered html:
     ```html
@@ -383,14 +383,14 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
     }
     ```
     */
     fn get_by_label_text_inc<'search, T>(
         &self,
         search: &'search str,
-    ) -> Result<(T, HtmlLabelElement), LabelByTextError<'search>>
+    ) -> Result<(T, HtmlLabelElement), ByLabelTextError<'search>>
     where
         T: JsCast;
 }
@@ -398,7 +398,7 @@ pub trait ByLabelText {
 /**
 The label text was not found or no element could be found associated with the label element found.
 */
-pub enum LabelByTextError<'search> {
+pub enum ByLabelTextError<'search> {
     /// No [`HtmlLabelElement`] could be found with a text content that matches the search term.
     LabelNotFound(&'search str),
     /**
@@ -419,13 +419,13 @@ pub enum LabelByTextError<'search> {
     NoElementFound((&'search str, usize, Vec<String>)),
 }
 
-impl std::fmt::Debug for LabelByTextError<'_> {
+impl std::fmt::Debug for ByLabelTextError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LabelByTextError::LabelNotFound(text) => {
+            ByLabelTextError::LabelNotFound(text) => {
                 writeln!(f, "No label found with text: '{}'.", text)
             }
-            LabelByTextError::NoElementFound((text, no_of_labels, ids)) => {
+            ByLabelTextError::NoElementFound((text, no_of_labels, ids)) => {
                 if *no_of_labels == 1 {
                     write!(f, "Found a label ")?;
                 } else {
@@ -466,13 +466,13 @@ impl ByLabelText for TestRender {
     fn get_by_label_text_inc<'search, T>(
         &self,
         search: &'search str,
-    ) -> Result<(T, HtmlLabelElement), LabelByTextError<'search>>
+    ) -> Result<(T, HtmlLabelElement), ByLabelTextError<'search>>
     where
         T: JsCast,
     {
         let labels = match self.root_element.query_selector_all("label") {
             Ok(labels) => labels,
-            Err(_) => return Err(LabelByTextError::LabelNotFound(search)),
+            Err(_) => return Err(ByLabelTextError::LabelNotFound(search)),
         };
 
         let mut labels_matching_search = 0;
@@ -505,9 +505,9 @@ impl ByLabelText for TestRender {
         }
 
         if labels_matching_search == 0 {
-            Err(LabelByTextError::LabelNotFound(search))
+            Err(ByLabelTextError::LabelNotFound(search))
         } else {
-            Err(LabelByTextError::NoElementFound((
+            Err(ByLabelTextError::NoElementFound((
                 search,
                 labels_matching_search,
                 ids_matching,
@@ -593,7 +593,7 @@ pub mod tests {
         };
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
-        assert!(matches!(result, Err(LabelByTextError::NoElementFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
     }
 
     #[wasm_bindgen_test]
@@ -610,7 +610,7 @@ pub mod tests {
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(LabelByTextError::LabelNotFound(_))));
+        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
     }
 
     #[wasm_bindgen_test]
