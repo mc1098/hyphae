@@ -43,6 +43,7 @@ mod asserts;
 pub mod events;
 #[doc(inline)]
 pub mod queries;
+mod util;
 
 /// Wrapper around a root element which has been rendered.
 pub struct TestRender {

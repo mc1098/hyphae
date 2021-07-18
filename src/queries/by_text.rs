@@ -35,10 +35,12 @@ or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
 performing checked and unchecked casting between JS types.
  */
-use wasm_bindgen::{prelude::Closure, JsCast};
-use web_sys::{Node, NodeFilter};
+use std::{fmt::Debug, ops::Deref};
 
-use crate::TestRender;
+use wasm_bindgen::{prelude::Closure, JsCast};
+use web_sys::{Node, NodeFilter, TreeWalker};
+
+use crate::{util, TestRender};
 
 /**
 Enables queries by text node.
@@ -96,7 +98,7 @@ pub trait ByText {
             # };
         let button: HtmlButtonElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements to find the button by text");
+            .unwrap();
 
         assert_eq!("text-button", button.id());
     }
@@ -129,7 +131,7 @@ pub trait ByText {
             # };
         let label: HtmlLabelElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements and the button to find the label by text");
+            .unwrap();
 
         assert_eq!("text-label", label.id());
     }
@@ -166,7 +168,7 @@ pub trait ByText {
             # };
         let element: HtmlElement = rendered
             .get_by_text("Hello, World!")
-            .expect("skip the div elements and the button to find the label by text");
+            .unwrap();
 
         assert_eq!("text-div", element.id());
     }
@@ -174,9 +176,102 @@ pub trait ByText {
     This might seem surprising but the outer div element contains a text node "Hello, " as the strong
     element breaks the text node - take care trying to find elements by text.
     */
-    fn get_by_text<T>(&self, search: &'_ str) -> Option<T>
+    fn get_by_text<'search, T>(&self, search: &'search str) -> Result<T, ByTextError<'search>>
     where
         T: JsCast;
+}
+
+impl ByText for TestRender {
+    fn get_by_text<'search, T>(&self, search: &'search str) -> Result<T, ByTextError<'search>>
+    where
+        T: JsCast,
+    {
+        let search_string = search.to_owned();
+
+        let filter_on_text_value = move |node: Node| {
+            if node
+                .parent_element()
+                .and_then(|e| e.dyn_into::<T>().ok())
+                .is_some()
+            {
+                node.text_content()
+                    .map(|text| text == search_string)
+                    .unwrap_or_default()
+            } else {
+                false
+            }
+        };
+
+        let walker = create_filtered_tree_walker(
+            &self.root_element,
+            WhatToShow::ShowText,
+            filter_on_text_value,
+        );
+
+        if let Some(node) = walker.next_node().unwrap() {
+            Ok(node.parent_element().unwrap().unchecked_into())
+        } else {
+            // nothing found - lets go back over each text node and find 'close' matches
+            let walker = create_filtered_tree_walker(
+                &self.root_element,
+                WhatToShow::ShowText,
+                move |node: Node| {
+                    node.parent_element()
+                        .and_then(|e| e.dyn_into::<T>().ok())
+                        .is_some()
+                },
+            );
+
+            let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
+                .filter(|node| node.text_content().is_some());
+
+            if let Some(closest) = util::closest(search, iter, |node| node.text_content().unwrap())
+            {
+                Err(ByTextError::Closest((search, closest)))
+            } else {
+                Err(ByTextError::NotFound(search))
+            }
+        }
+    }
+}
+
+/**
+An error indicating that no text node was an equal match for a given search term.
+*/
+pub enum ByTextError<'search> {
+    /// No text node could be found with the given search term.
+    NotFound(&'search str),
+    /**
+    No text node with an exact match for the search term could be found, however, a text node
+    with a similar content as the search term was found.
+
+    This should help find elements when a user has made a typo in either the test or the
+    implementation being tested or when trying to find text with a dynamic number that may be
+    incorrect
+    */
+    Closest((&'search str, Node)),
+}
+
+impl Debug for ByTextError<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ByTextError::NotFound(search) => {
+                write!(
+                    f,
+                    "\nNo text node found with text equal or similar to '{}'\n",
+                    search
+                )
+            }
+            ByTextError::Closest((search, closest)) => {
+                write!(
+                    f,
+                    "\nNo exact match found for the text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    search,
+                    closest.parent_element().unwrap().outer_html()
+                )
+            }
+        }
+    }
 }
 
 #[non_exhaustive]
@@ -192,39 +287,42 @@ impl From<WhatToShow> for u32 {
     }
 }
 
-impl ByText for TestRender {
-    fn get_by_text<T>(&self, search: &'_ str) -> Option<T>
-    where
-        T: JsCast,
-    {
-        let mut filter = NodeFilter::new();
-        let search = search.to_owned();
+struct FilteredTreeWalker {
+    walker: TreeWalker,
+    _filter_cb: Closure<dyn Fn(Node) -> bool>,
+}
 
-        let filter_on_text_value = move |node: Node| {
-            node.text_content()
-                .map(|text| text == search)
-                .unwrap_or_default()
-        };
+impl Deref for FilteredTreeWalker {
+    type Target = TreeWalker;
 
-        let cb = Closure::wrap(Box::new(filter_on_text_value) as Box<dyn Fn(Node) -> bool>);
-        filter.accept_node(cb.as_ref().unchecked_ref());
-        let document = web_sys::Document::new().ok()?;
-        let walker = document
-            .create_tree_walker_with_what_to_show_and_filter(
-                &self.root_element,
-                WhatToShow::ShowText.into(),
-                Some(&filter),
-            )
-            .unwrap();
+    fn deref(&self) -> &Self::Target {
+        &self.walker
+    }
+}
 
-        // loop until we find a parent element which is of type T or return None when we run out of
-        // nodes.
-        loop {
-            let node = walker.next_node().ok().flatten()?;
-            if let Some(result) = node.parent_element().and_then(|e| e.dyn_into().ok()) {
-                break Some(result);
-            }
-        }
+fn create_filtered_tree_walker<F>(
+    root: &Node,
+    what_to_show: WhatToShow,
+    filter: F,
+) -> FilteredTreeWalker
+where
+    F: Fn(Node) -> bool + 'static,
+{
+    let mut node_filter = NodeFilter::new();
+    let cb = Closure::wrap(Box::new(filter) as Box<dyn Fn(Node) -> bool>);
+    node_filter.accept_node(cb.as_ref().unchecked_ref());
+    let document = web_sys::Document::new().expect("No global 'document' object!");
+    let walker = document
+        .create_tree_walker_with_what_to_show_and_filter(
+            root,
+            what_to_show.into(),
+            Some(&node_filter),
+        )
+        .expect("Unable to create a TreeWalker object!");
+
+    FilteredTreeWalker {
+        walker,
+        _filter_cb: cb,
     }
 }
 
@@ -282,7 +380,7 @@ mod tests {
         };
 
         let result = test.get_by_text::<Element>("Hello, World!");
-        assert!(result.is_some());
+        assert!(result.is_ok());
     }
 
     #[wasm_bindgen_test]
@@ -315,10 +413,10 @@ mod tests {
         };
         // can't find `Hello, World!` as they are two distinct text nodes :(
         let not_found = rendered.get_by_text::<Element>("Hello, World!");
-        assert!(not_found.is_none());
+        assert!(not_found.is_err());
 
         let found = rendered.get_by_text::<Element>("Hello, ");
-        assert!(found.is_some())
+        assert!(found.is_ok())
     }
 
     #[wasm_bindgen_test]
@@ -331,10 +429,52 @@ mod tests {
         button.click();
 
         let count = rendered.get_by_text::<Element>("Count: 1");
-        assert!(count.is_some());
+        assert!(count.is_ok());
 
         button.click();
         let count = rendered.get_by_text::<Element>("Count: 2");
-        assert!(count.is_some());
+        assert!(count.is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    fn find_close_match() {
+        let rendered = test_render! {
+            <button>{ "Click me!" }</button>
+        };
+
+        let result = rendered.get_by_text::<HtmlButtonElement>("Click me");
+
+        match result {
+            Ok(_) => panic!("Should not have found the button as the text is not an exact match!"),
+            Err(error) => {
+                let expected = format!(
+                    "\nNo exact match found for the text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "Click me",
+                    "<button>Click me!</button>"
+                );
+
+                assert_eq!(expected, format!("{:?}", error));
+            }
+        }
+
+        drop(rendered);
+
+        let rendered = test_render! {
+            <div>
+                { "Click me!" }
+            </div>
+        };
+
+        let result = rendered.get_by_text::<HtmlButtonElement>("Click me");
+
+        match result {
+            Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
+            Err(err) => {
+                let expected = format!("\nNo text node found with text equal or similar to '{}'\n",
+                    "Click me"
+                );
+                assert_eq!(expected, format!("{:?}", err));
+            }
+        }
     }
 }
