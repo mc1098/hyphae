@@ -35,7 +35,7 @@ pub(crate) fn lev_distance(me: &str, t: &str) -> usize {
 pub(crate) fn closest<T, I, F>(search: &str, iter: I, to_key: F) -> Option<T>
 where
     I: Iterator<Item = T>,
-    F: Fn(&T) -> String,
+    F: Fn(&T) -> &String,
 {
     iter.map(|e| (lev_distance(search, &to_key(&e)), e))
         .filter(|&(d, _)| d < 4)
@@ -52,9 +52,9 @@ mod tests {
     fn test_probable_typos() {
         assert_eq!(lev_distance("Click me", "Click me!"), 1);
 
-        let element_text_content = "Click Me!";
+        let element_text_content = "Click Me!".to_owned();
 
-        closest("Clik Me", [element_text_content].iter(), |s| s.to_string())
+        closest("Clik Me", [element_text_content].iter(), |s| s)
             .expect("'Clik Me' to find 'Click Me!' as a recommendation");
     }
 }

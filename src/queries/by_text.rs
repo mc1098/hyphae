@@ -223,11 +223,10 @@ impl ByText for TestRender {
             );
 
             let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
-                .filter(|node| node.text_content().is_some());
+                .filter_map(|node| node.text_content().map(|text| (text, node)));
 
-            if let Some(closest) = util::closest(search, iter, |node| node.text_content().unwrap())
-            {
-                Err(ByTextError::Closest((search, closest)))
+            if let Some(closest) = util::closest(search, iter, |(key, _)| key) {
+                Err(ByTextError::Closest((search, closest.1)))
             } else {
                 Err(ByTextError::NotFound(search))
             }
