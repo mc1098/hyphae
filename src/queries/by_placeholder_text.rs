@@ -296,4 +296,48 @@ mod tests {
             .get_by_placeholder_text::<Element>("Enter life story")
             .is_err());
     }
+
+    #[wasm_bindgen_test]
+    fn get_errors() {
+        let rendered = test_render! {
+            <input type="text" placeholder="Username" />
+        };
+
+        let result = rendered.get_by_placeholder_text::<HtmlInputElement>("usrname");
+
+        match result {
+            Ok(_) => {
+                panic!("Should not have found the input as the placeholder is not an exact match!")
+            }
+            Err(error) => {
+                let expected = format!(
+                    "\nNo exact match found for the placeholder text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "usrname",
+                    "<input placeholder=\"Username\" type=\"text\">"
+                );
+
+                assert_eq!(expected, format!("{:?}", error));
+            }
+        }
+
+        drop(rendered);
+
+        let rendered = test_render! {
+            <div>
+                { "Click me!" }
+            </div>
+        };
+
+        let result = rendered.get_by_placeholder_text::<HtmlTextAreaElement>("Enter bio");
+
+        match result {
+            Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
+            Err(err) => {
+                let expected = format!("\nNo element found with placeholder text equal or similar to '{}'\n",
+                    "Enter bio"
+                );
+                assert_eq!(expected, format!("{:?}", err));
+            }
+        }
+    }
 }
