@@ -127,12 +127,16 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let node_list = self.node_list.as_ref()?;
 
-        if self.index < node_list.length() {
-            let node = node_list.get(self.index)?;
-            self.index += 1;
-            node.dyn_into().ok()
-        } else {
-            None
+        loop {
+            if self.index < node_list.length() {
+                let node = node_list.get(self.index)?;
+                self.index += 1;
+                if let Ok(value) = node.dyn_into() {
+                    break Some(value);
+                }
+            } else {
+                break None;
+            }
         }
     }
 
