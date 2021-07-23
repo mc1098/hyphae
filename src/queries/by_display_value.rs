@@ -55,10 +55,12 @@ The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_
 performing checked and unchecked casting between JS types.
 
 */
-use wasm_bindgen::JsCast;
-use web_sys::{HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement};
+use std::fmt::Debug;
 
-use crate::TestRender;
+use wasm_bindgen::JsCast;
+use web_sys::{Element, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node};
+
+use crate::{util, RawNodeListIter, TestRender};
 
 /**
 Enables querying elements by `display value`.
@@ -123,7 +125,7 @@ pub trait ByDisplayValue {
         # };
         let input: HtmlInputElement = rendered
             .get_by_display_value("Welcome")
-            .expect("To skip the textarea and select element and find the input element");
+            .unwrap();
 
         assert_eq!("greeting-input", input.id());
     }
@@ -157,7 +159,7 @@ pub trait ByDisplayValue {
         # };
         let select = rendered
             .get_by_display_value::<HtmlSelectElement>("Welcome") // can use turbo fish
-            .expect("To skip the textarea and find the select element");
+            .unwrap();
 
         assert_eq!("greeting-select", select.id());
     }
@@ -192,7 +194,7 @@ pub trait ByDisplayValue {
         # };
         let text_area: HtmlTextAreaElement = rendered
             .get_by_display_value("Welcome")
-            .expect("To find the first element, the textarea element");
+            .unwrap();
 
         assert_eq!("greeting-textarea", text_area.id());
     }
@@ -227,7 +229,7 @@ pub trait ByDisplayValue {
             # };
         let element: HtmlElement = rendered
             .get_by_display_value("Welcome")
-            .expect("To find the first element");
+            .unwrap();
 
         assert_eq!("greeting-textarea", element.id());
     }
@@ -235,62 +237,89 @@ pub trait ByDisplayValue {
     [^note] _Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
     find the first element with a display value regardless of it's type._
     */
-    fn get_by_display_value<T>(&self, search: &'_ str) -> Option<T>
+    fn get_by_display_value<'search, T>(
+        &self,
+        search: &'search str,
+    ) -> Result<T, ByDisplayValueError<'search>>
     where
         T: JsCast;
 }
 
+// @TODO: binding to JS to evaluate whether 'value' exists on the object and return Option
+macro_rules! display_value {
+    ($element: ident as $type:ty) => {
+        $element.dyn_ref::<$type>().map(|e| e.value())
+    };
+}
+
 impl ByDisplayValue for TestRender {
-    fn get_by_display_value<T>(&self, search: &'_ str) -> Option<T>
+    fn get_by_display_value<'search, T>(
+        &self,
+        search: &'search str,
+    ) -> Result<T, ByDisplayValueError<'search>>
     where
         T: JsCast,
     {
-        let displays = self
+        let elements = self
             .root_element
             .query_selector_all("input, select, textarea")
-            .ok()?;
+            .ok();
 
-        for i in 0..displays.length() {
-            let display = displays.get(i)?;
+        let display_values = RawNodeListIter::<T>::new(elements).filter_map(|element| {
+            display_value!(element as HtmlInputElement)
+                .or_else(|| display_value!(element as HtmlTextAreaElement))
+                .or_else(|| display_value!(element as HtmlSelectElement))
+                .map(|dv| (dv, element))
+        });
 
-            /*
-            T is an unknown type so can't call T::value().
-            So convert to input, textarea, select for the value method to check if it matches
-            search.
+        if let Some((dv, e)) = util::closest(search, display_values, |(k, _)| k) {
+            if search == dv {
+                Ok(e)
+            } else {
+                Err(ByDisplayValueError::Closest((search, e.unchecked_into())))
+            }
+        } else {
+            Err(ByDisplayValueError::NotFound(search))
+        }
+    }
+}
 
-            A node might match an element type and have the correct value but if it can not be
-            converted to T, using JsCast::dyn_into, then it is skipped and we continue looking.
-            This behaviour allows a user to narrow the search based on the type they provide.
-            */
+/**
+An error indicating that no element with a display value was an equal match for a given search term.
+*/
+pub enum ByDisplayValueError<'search> {
+    /// No element could be found with the given search term.
+    NotFound(&'search str),
+    /**
+    No element display value was an exact match for the search term could be found, however, an
+    element with a similar display value as the search term was found.
 
-            let display = match display.dyn_into::<HtmlInputElement>() {
-                Ok(input) if input.value() == search => match input.dyn_into() {
-                    Ok(result) => return Some(result),
-                    Err(node) => node.unchecked_into(),
-                },
-                Err(node) => node,
-                _ => continue,
-            };
+    This should help find elements when a user has made a typo in either the test or the
+    implementation being tested or when trying to find text with a dynamic number that may be
+    incorrect
+    */
+    Closest((&'search str, Node)),
+}
 
-            let display = match display.dyn_into::<HtmlTextAreaElement>() {
-                Ok(area) if area.value() == search => match area.dyn_into() {
-                    Ok(result) => return Some(result),
-                    Err(node) => node.unchecked_into(),
-                },
-                Err(node) => node,
-                _ => continue,
-            };
-
-            if let Ok(select) = display.dyn_into::<HtmlSelectElement>() {
-                if select.value() == search {
-                    if let Ok(result) = select.dyn_into() {
-                        return Some(result);
-                    }
-                }
+impl Debug for ByDisplayValueError<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ByDisplayValueError::NotFound(search) => {
+                write!(
+                    f,
+                    "\nNo element found with a display value equal or similar to '{}'\n",
+                    search
+                )
+            }
+            ByDisplayValueError::Closest((search, closest)) => {
+                write!(
+                    f,
+                    "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    search,
+                    closest.unchecked_ref::<Element>().outer_html()
+                )
             }
         }
-
-        None
     }
 }
 
@@ -333,5 +362,51 @@ mod tests {
 
         let first: Element = rendered.get_by_display_value("hello").unwrap();
         assert_eq!("input", first.id());
+    }
+
+    #[wasm_bindgen_test]
+    fn get_errors() {
+        let rendered = test_render! {
+            <input type="text" value="this is it!" />
+        };
+
+        let result = rendered.get_by_display_value::<HtmlInputElement>("this isn't it!");
+
+        match result {
+            Ok(_) => {
+                panic!(
+                    "Should not have found the input as the display value is not an exact match!"
+                )
+            }
+            Err(error) => {
+                let expected = format!(
+                    "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "this isn't it!",
+                    "<input type=\"text\">"
+                );
+
+                assert_eq!(expected, format!("{:?}", error));
+            }
+        }
+
+        drop(rendered);
+
+        let rendered = test_render! {
+            <div>
+                { "Click me!" }
+            </div>
+        };
+
+        let result = rendered.get_by_display_value::<HtmlTextAreaElement>("My bio!");
+
+        match result {
+            Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
+            Err(err) => {
+                let expected = format!("\nNo element found with a display value equal or similar to '{}'\n",
+                    "My bio!"
+                );
+                assert_eq!(expected, format!("{:?}", err));
+            }
+        }
     }
 }
