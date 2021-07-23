@@ -1,4 +1,4 @@
-use gloo::storage::{LocalStorage, Storage};
+use gloo_storage::{LocalStorage, Storage};
 use state::{Entry, Filter, State};
 use strum::IntoEnumIterator;
 use yew::{prelude::*, web_sys::HtmlInputElement};
