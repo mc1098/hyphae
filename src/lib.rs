@@ -183,6 +183,15 @@ impl Deref for TestRender {
     }
 }
 
+// Removing the element is useful to avoid conflicts when a test module has multiple
+// #[wasm_bindgen_test]s, however, it does mean that everything is removed from the DOM when a
+// user is performing wasm-pack test without --headless.
+impl Drop for TestRender {
+    fn drop(&mut self) {
+        self.root_element.remove();
+    }
+}
+
 /// Sap Prelude
 ///
 /// Convenient module to import the most used imports for yew_test.

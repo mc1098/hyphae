@@ -175,11 +175,13 @@ version does not need to be explicitly set.
 [A table of native HTML features aria-* attribute parity.](https://www.w3.org/TR/html-aria/#docconformance-attr)
 
  */
-use sap_aria::{AriaProperty, AriaRole, AriaState, ToQueryString};
-use wasm_bindgen::JsCast;
-use web_sys::Element;
 
-use crate::TestRender;
+use sap_aria::{AriaProperty, AriaRole, AriaState, ToQueryString};
+use std::fmt::Debug;
+use wasm_bindgen::JsCast;
+use web_sys::{Element, Node};
+
+use crate::{util, RawNodeListIter, TestRender};
 
 /**
 Enables querying elements generically by ARIA roles, properties, and state.
@@ -287,7 +289,11 @@ pub trait ByAria {
     have an associated label which makes it not very accessible. The aria-label was added to help with
     testing but also improved the accessibility of the todo example in the process._
     */
-    fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Option<T>
+    fn get_by_aria_role<'name, T>(
+        &self,
+        role: AriaRole,
+        name: &'name str,
+    ) -> Result<T, ByAriaError<'name>>
     where
         T: JsCast;
 
@@ -400,9 +406,13 @@ pub trait ByAria {
     }
     ```
     */
-    fn get_by_aria_prop<'a, S, T>(&self, property: AriaProperty, name: S) -> Option<T>
+    fn get_by_aria_prop<'name, S, T>(
+        &self,
+        property: AriaProperty,
+        name: S,
+    ) -> Result<T, ByAriaError<'name>>
     where
-        S: Into<Option<&'a str>>,
+        S: Into<Option<&'name str>>,
         T: JsCast;
 
     /**
@@ -464,71 +474,131 @@ pub trait ByAria {
     }
     ```
     */
-    fn get_by_aria_state<'a, S, T>(&self, state: AriaState, name: S) -> Option<T>
+    fn get_by_aria_state<'name, S, T>(
+        &self,
+        state: AriaState,
+        name: S,
+    ) -> Result<T, ByAriaError<'name>>
     where
-        S: Into<Option<&'a str>>,
+        S: Into<Option<&'name str>>,
         T: JsCast;
 }
 
 #[inline]
-fn get_by_aria_impl<S, T>(root: &Element, aria: S, name: Option<&str>) -> Option<T>
+fn get_by_aria_impl<'search, S, T>(
+    root: &Element,
+    aria: S,
+    name: Option<&'search str>,
+) -> Result<T, ByAriaError<'search>>
 where
     S: ToQueryString,
     T: JsCast,
 {
-    let node_list = root.query_selector_all(&aria.to_query_string()).ok()?;
+    let node_list = root.query_selector_all(&aria.to_query_string()).ok();
+    let mut node_iter = RawNodeListIter::<T>::new(node_list);
     if let Some(name) = name {
-        for i in 0..node_list.length() {
-            let node = node_list.get(i).and_then(|node| node.dyn_into::<T>().ok());
+        let elements = node_iter.filter_map(|element| {
+            Some((
+                sap_aria::element_accessible_name(&element.unchecked_ref()).ok()?,
+                element,
+            ))
+        });
 
-            if let Some(element) = node {
-                let acc_name = sap_aria::element_accessible_name(&element.unchecked_ref()).ok()?;
-                if name == acc_name {
-                    return Some(element);
-                }
+        return if let Some((an, e)) = util::closest(name, elements, |(k, _)| k) {
+            if an == name {
+                Ok(e)
+            } else {
+                Err(ByAriaError::Closest((name, e.unchecked_into())))
             }
-        }
-        None
+        } else {
+            Err(ByAriaError::NotFound(name))
+        };
+    } else if let Some(element) = node_iter.next() {
+        Ok(element)
     } else {
-        node_list.get(0).and_then(|e| e.dyn_into().ok())
+        Err(ByAriaError::NotFound(""))
     }
 }
 
 impl ByAria for TestRender {
-    fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Option<T>
+    fn get_by_aria_role<'name, T>(
+        &self,
+        role: AriaRole,
+        name: &'name str,
+    ) -> Result<T, ByAriaError<'name>>
     where
         T: JsCast,
     {
         get_by_aria_impl(self, role, name.into())
     }
 
-    fn get_by_aria_prop<'a, S, T>(&self, prop: AriaProperty, name: S) -> Option<T>
+    fn get_by_aria_prop<'name, S, T>(
+        &self,
+        prop: AriaProperty,
+        name: S,
+    ) -> Result<T, ByAriaError<'name>>
     where
-        S: Into<Option<&'a str>>,
+        S: Into<Option<&'name str>>,
         T: JsCast,
     {
-        let name = name.into();
-        if let AriaProperty::Label(ref label) = prop {
-            // if someone specified the name while using label then they must match
-            if name.map(|name| name != label).unwrap_or_default() {
-                None
-            } else {
-                self.query_selector(&prop.to_query_string())
-                    .ok()
-                    .flatten()
-                    .and_then(|e| e.dyn_into().ok())
-            }
-        } else {
-            get_by_aria_impl(self, prop, name)
-        }
+        get_by_aria_impl(self, prop, name.into())
     }
 
-    fn get_by_aria_state<'a, S, T>(&self, state: AriaState, name: S) -> Option<T>
+    fn get_by_aria_state<'name, S, T>(
+        &self,
+        state: AriaState,
+        name: S,
+    ) -> Result<T, ByAriaError<'name>>
     where
-        S: Into<Option<&'a str>>,
+        S: Into<Option<&'name str>>,
         T: JsCast,
     {
         get_by_aria_impl(self, state, name.into())
+    }
+}
+
+/**
+An error indicating that no element with an accessible name was an equal match for a given search term.
+*/
+pub enum ByAriaError<'name> {
+    /// No element could be found with the given search term.
+    NotFound(&'name str),
+    /**
+    No element accessible name was an exact match for the search term could be found, however, an
+    element with a similar accessible name as the search term was found.
+
+    This should help find elements when a user has made a typo in either the test or the
+    implementation being tested or when trying to find text with a dynamic number that may be
+    incorrect
+    */
+    Closest((&'name str, Node)),
+}
+
+impl Debug for ByAriaError<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ByAriaError::NotFound("") => {
+                write!(
+                    f,
+                    "\nNo element found and no accessible name was provided, does the element you are searching for match the ARIA type and the generic type provided?",
+                )
+            }
+            ByAriaError::NotFound(name) => {
+                write!(
+                    f,
+                    "\nNo element found with an accessible name equal or similar to '{}'\n",
+                    name
+                )
+            }
+            ByAriaError::Closest((name, closest)) => {
+                write!(
+                    f,
+                    "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    name,
+                    closest.unchecked_ref::<Element>().outer_html()
+                )
+            }
+        }
     }
 }
 
@@ -675,5 +745,49 @@ mod tests {
             .unwrap();
 
         assert_eq!("yes", img.id());
+    }
+
+    #[wasm_bindgen_test]
+    fn get_errors() {
+        let rendered = test_render! {
+            <label for="my-input">
+                { "My Input" }
+                <input id="my-input" type="text" />
+            </label>
+        };
+
+        let result = rendered.get_by_aria_role::<HtmlInputElement>(AriaRole::TextBox, "my input");
+
+        match result {
+            Ok(_) => {
+                panic!(
+                    "Should not have found the input as the accessible name is not an exact match!"
+                )
+            }
+            Err(error) => {
+                let expected = format!(
+                    "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "my input",
+                    "<input id=\"my-input\" type=\"text\">"
+                );
+
+                assert_eq!(expected, format!("{:?}", error));
+            }
+        }
+
+        let result = rendered
+            .get_by_aria_role::<HtmlInputElement>(AriaRole::TextBox, "this name doesn't exist!");
+
+        match result {
+            Ok(_) => todo!(),
+            Err(error) => {
+                let expected = format!(
+                    "\nNo element found with an accessible name equal or similar to '{}'\n",
+                    "this name doesn't exist!"
+                );
+
+                assert_eq!(expected, format!("{:?}", error));
+            }
+        }
     }
 }
