@@ -508,15 +508,19 @@ where
             if an == name {
                 Ok(e)
             } else {
-                Err(ByAriaError::Closest((name, e.unchecked_into())))
+                Err(ByAriaError::Closest((
+                    name,
+                    root.inner_html(),
+                    e.unchecked_into(),
+                )))
             }
         } else {
-            Err(ByAriaError::NotFound(name))
+            Err(ByAriaError::NotFound((name, root.inner_html())))
         };
     } else if let Some(element) = node_iter.next() {
         Ok(element)
     } else {
-        Err(ByAriaError::NotFound(""))
+        Err(ByAriaError::NotFound(("", root.inner_html())))
     }
 }
 
@@ -562,7 +566,7 @@ An error indicating that no element with an accessible name was an equal match f
 */
 pub enum ByAriaError<'name> {
     /// No element could be found with the given search term.
-    NotFound(&'name str),
+    NotFound((&'name str, String)),
     /**
     No element accessible name was an exact match for the search term could be found, however, an
     element with a similar accessible name as the search term was found.
@@ -571,31 +575,37 @@ pub enum ByAriaError<'name> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'name str, Node)),
+    Closest((&'name str, String, Node)),
 }
 
 impl Debug for ByAriaError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByAriaError::NotFound("") => {
+            ByAriaError::NotFound(("", html)) => {
                 write!(
                     f,
-                    "\nNo element found and no accessible name was provided, does the element you are searching for match the ARIA type and the generic type provided?",
+                    "\nNo element found with the aria type provided in the following HTML:{}. \
+                    Is the element you are searching for match the ARIA type and generic type \
+                    provided?
+                    Note: ARIA type variants comments provide information on which element, \
+                    properties or state they match.",
+                    util::format_html(html)
                 )
             }
-            ByAriaError::NotFound(name) => {
+            ByAriaError::NotFound((name, html)) => {
                 write!(
                     f,
-                    "\nNo element found with an accessible name equal or similar to '{}'\n",
-                    name
-                )
-            }
-            ByAriaError::Closest((name, closest)) => {
-                write!(
-                    f,
-                    "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
                     name,
-                    closest.unchecked_ref::<Element>().outer_html()
+                    util::format_html(html)
+                )
+            }
+            ByAriaError::Closest((name, html, closest)) => {
+                write!(
+                    f,
+                    "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
+                    name,
+                    util::format_html_with_closest(html, closest.unchecked_ref())
                 )
             }
         }
@@ -766,9 +776,16 @@ mod tests {
             }
             Err(error) => {
                 let expected = format!(
-                    "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
+                    // "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
                     "my input",
-                    "<input id=\"my-input\" type=\"text\">"
+                    r#"
+<label for="my-input">My Input
+  <input id="my-input" type="text">
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
+</label>
+"#
+                    // "<input id=\"my-input\" type=\"text\">"
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -782,8 +799,14 @@ mod tests {
             Ok(_) => todo!(),
             Err(error) => {
                 let expected = format!(
-                    "\nNo element found with an accessible name equal or similar to '{}'\n",
-                    "this name doesn't exist!"
+                    "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
+                    // "\nNo element found with an accessible name equal or similar to '{}'\n",
+                    "this name doesn't exist!",
+                    r#"
+<label for="my-input">My Input
+  <input id="my-input" type="text">
+</label>
+"#
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
