@@ -58,7 +58,7 @@ performing checked and unchecked casting between JS types.
 use std::fmt::Debug;
 
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node};
+use web_sys::{HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node};
 
 use crate::{util, RawNodeListIter, TestRender};
 
@@ -276,10 +276,14 @@ impl ByDisplayValue for TestRender {
             if search == dv {
                 Ok(e)
             } else {
-                Err(ByDisplayValueError::Closest((search, e.unchecked_into())))
+                Err(ByDisplayValueError::Closest((
+                    search,
+                    self.inner_html(),
+                    e.unchecked_into(),
+                )))
             }
         } else {
-            Err(ByDisplayValueError::NotFound(search))
+            Err(ByDisplayValueError::NotFound((search, self.inner_html())))
         }
     }
 }
@@ -289,7 +293,7 @@ An error indicating that no element with a display value was an equal match for 
 */
 pub enum ByDisplayValueError<'search> {
     /// No element could be found with the given search term.
-    NotFound(&'search str),
+    NotFound((&'search str, String)),
     /**
     No element display value was an exact match for the search term could be found, however, an
     element with a similar display value as the search term was found.
@@ -298,25 +302,26 @@ pub enum ByDisplayValueError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, Node)),
+    Closest((&'search str, String, Node)),
 }
 
 impl Debug for ByDisplayValueError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByDisplayValueError::NotFound(search) => {
+            ByDisplayValueError::NotFound((search, html)) => {
                 write!(
                     f,
-                    "\nNo element found with a display value equal or similar to '{}'\n",
-                    search
+                    "\nNo element found with a display value equal or similar to '{}' in the following HTML:{}",
+                    search,
+                    util::format_html(html)
                 )
             }
-            ByDisplayValueError::Closest((search, closest)) => {
+            ByDisplayValueError::Closest((search, html, closest)) => {
                 write!(
                     f,
-                    "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for a display value of: '{}'.\nA similar match was found in the following HTML:{}",
                     search,
-                    closest.unchecked_ref::<Element>().outer_html()
+                    util::format_html_with_closest(html, closest.unchecked_ref()),
                 )
             }
         }
@@ -380,9 +385,14 @@ mod tests {
             }
             Err(error) => {
                 let expected = format!(
-                    "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for a display value of: '{}'.\nA similar match was found in the following HTML:{}",
+                    // "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
                     "this isn't it!",
-                    "<input type=\"text\">"
+                    r#"
+<input type="text">
+^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
+"#
+                    // "<input type=\"text\">"
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -392,9 +402,9 @@ mod tests {
         drop(rendered);
 
         let rendered = test_render! {
-            <div>
-                { "Click me!" }
-            </div>
+            <span>
+                { "Not my bio!" }
+            </span>
         };
 
         let result = rendered.get_by_display_value::<HtmlTextAreaElement>("My bio!");
@@ -402,8 +412,13 @@ mod tests {
         match result {
             Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
             Err(err) => {
-                let expected = format!("\nNo element found with a display value equal or similar to '{}'\n",
-                    "My bio!"
+                let expected = format!(
+                    "\nNo element found with a display value equal or similar to '{}' in the following HTML:{}",
+                    // "\nNo element found with a display value equal or similar to '{}'\n",
+                    "My bio!",
+                    r#"
+<span>Not my bio!</span>
+"#
                 );
                 assert_eq!(expected, format!("{:?}", err));
             }

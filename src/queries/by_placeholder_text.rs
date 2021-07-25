@@ -42,7 +42,7 @@ performing checked and unchecked casting between JS types.
 */
 use std::fmt::Debug;
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlInputElement, HtmlTextAreaElement, Node};
+use web_sys::{HtmlInputElement, HtmlTextAreaElement, Node};
 
 use crate::{
     util::{self},
@@ -210,11 +210,15 @@ impl ByPlaceholderText for TestRender {
             } else {
                 Err(ByPlaceholderTextError::Closest((
                     search,
+                    self.inner_html(),
                     e.unchecked_into(),
                 )))
             }
         } else {
-            Err(ByPlaceholderTextError::NotFound(search))
+            Err(ByPlaceholderTextError::NotFound((
+                search,
+                self.inner_html(),
+            )))
         }
     }
 }
@@ -224,7 +228,7 @@ An error indicating that no element with a placeholder text was an equal match f
 */
 pub enum ByPlaceholderTextError<'search> {
     /// No element could be found with the given search term.
-    NotFound(&'search str),
+    NotFound((&'search str, String)),
     /**
     No element placeholder text was an exact match for the search term could be found, however, an
     element with a similar placeholder text as the search term was found.
@@ -233,25 +237,26 @@ pub enum ByPlaceholderTextError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, Node)),
+    Closest((&'search str, String, Node)),
 }
 
 impl Debug for ByPlaceholderTextError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByPlaceholderTextError::NotFound(search) => {
+            ByPlaceholderTextError::NotFound((search, html)) => {
                 write!(
                     f,
-                    "\nNo element found with placeholder text equal or similar to '{}'\n",
-                    search
+                    "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
+                    search,
+                    util::format_html(html)
                 )
             }
-            ByPlaceholderTextError::Closest((search, closest)) => {
+            ByPlaceholderTextError::Closest((search, html, closest)) => {
                 write!(
                     f,
-                    "\nNo exact match found for the placeholder text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for the placeholder text: '{}'.\nA similar match was found in the following HTML:{}",
                     search,
-                    closest.unchecked_ref::<Element>().outer_html()
+                    util::format_html_with_closest(html, closest.unchecked_ref())
                 )
             }
         }
@@ -311,9 +316,12 @@ mod tests {
             }
             Err(error) => {
                 let expected = format!(
-                    "\nNo exact match found for the placeholder text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for the placeholder text: '{}'.\nA similar match was found in the following HTML:{}",
                     "usrname",
-                    "<input placeholder=\"Username\" type=\"text\">"
+                    r#"
+<input placeholder="Username" type="text">
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
+"#
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -333,8 +341,13 @@ mod tests {
         match result {
             Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
             Err(err) => {
-                let expected = format!("\nNo element found with placeholder text equal or similar to '{}'\n",
-                    "Enter bio"
+                let expected = format!(
+                    "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
+                    // "\nNo element found with placeholder text equal or similar to '{}'\n",
+                    "Enter bio",
+                    r#"
+<div>Click me!</div>
+"#
                 );
                 assert_eq!(expected, format!("{:?}", err));
             }

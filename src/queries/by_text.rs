@@ -226,9 +226,9 @@ impl ByText for TestRender {
                 .filter_map(|node| node.text_content().map(|text| (text, node)));
 
             if let Some(closest) = util::closest(search, iter, |(key, _)| key) {
-                Err(ByTextError::Closest((search, closest.1)))
+                Err(ByTextError::Closest((search, self.inner_html(), closest.1)))
             } else {
-                Err(ByTextError::NotFound(search))
+                Err(ByTextError::NotFound(search, self.inner_html()))
             }
         }
     }
@@ -239,7 +239,7 @@ An error indicating that no text node was an equal match for a given search term
 */
 pub enum ByTextError<'search> {
     /// No text node could be found with the given search term.
-    NotFound(&'search str),
+    NotFound(&'search str, String),
     /**
     No text node with an exact match for the search term could be found, however, a text node
     with a similar content as the search term was found.
@@ -248,25 +248,27 @@ pub enum ByTextError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, Node)),
+    Closest((&'search str, String, Node)),
 }
 
 impl Debug for ByTextError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByTextError::NotFound(search) => {
+            ByTextError::NotFound(search, html) => {
                 write!(
                     f,
-                    "\nNo text node found with text equal or similar to '{}'\n",
-                    search
+                    "\nNo text node found with text equal or similar to '{}' in the following HTML:{}",
+                    search,
+                    util::format_html(html),
                 )
             }
-            ByTextError::Closest((search, closest)) => {
+            ByTextError::Closest((search, html, closest)) => {
+                let html = util::format_html_with_closest(html, &closest.parent_element().unwrap());
                 write!(
                     f,
-                    "\nNo exact match found for the text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for the text: '{}'.\nA similar match was found in the following HTML:{}",
                     search,
-                    closest.parent_element().unwrap().outer_html()
+                    html,
                 )
             }
         }
@@ -447,9 +449,12 @@ mod tests {
             Ok(_) => panic!("Should not have found the button as the text is not an exact match!"),
             Err(error) => {
                 let expected = format!(
-                    "\nNo exact match found for the text: '{}'\nDid you mean to find this Element:\n\t{}\n",
+                    "\nNo exact match found for the text: '{}'.\nA similar match was found in the following HTML:{}",
                     "Click me",
-                    "<button>Click me!</button>"
+                    r#"
+<button>Click me!</button>
+^^^^^^^^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
+"#
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -469,8 +474,12 @@ mod tests {
         match result {
             Ok(_) => panic!("Should not have found the div as the text is not a match and the generic type is too restrictive"),
             Err(err) => {
-                let expected = format!("\nNo text node found with text equal or similar to '{}'\n",
-                    "Click me"
+                let expected = format!(
+                    "\nNo text node found with text equal or similar to '{}' in the following HTML:{}",
+                    "Click me",
+                    r#"
+<div>Click me!</div>
+"#
                 );
                 assert_eq!(expected, format!("{:?}", err));
             }
