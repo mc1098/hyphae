@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::iter::repeat;
 
 use wasm_bindgen::prelude::*;
