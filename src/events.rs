@@ -7,7 +7,7 @@ helper functions and traits for medium/high level actions.
 use wasm_bindgen::JsCast;
 use web_sys::{
     EventTarget, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, InputEvent,
-    InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent,
+    InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent, MouseEventInit,
 };
 
 /**
@@ -52,6 +52,7 @@ where
     K: Into<Key>,
 {
     let mut event_init = KeyboardEventInit::new();
+    event_init.bubbles(true);
     event_init.key(&key.into().to_string());
     let key_event =
         KeyboardEvent::new_with_keyboard_event_init_dict(event_type.into(), &event_init).unwrap();
@@ -158,6 +159,8 @@ pub trait DblClick {
 
 impl DblClick for EventTarget {
     fn dbl_click(&self) {
+        let mut event_init = MouseEventInit::new();
+        event_init.bubbles(true);
         let dbl_click_event = MouseEvent::new("dblclick").unwrap();
         assert!(
             self.dispatch_event(&dbl_click_event).unwrap(),
@@ -219,6 +222,7 @@ pub fn dispatch_input_event(element: &EventTarget, data: &str) {
     if input.or(select).or(text_area).unwrap_or_default() {
         let mut event_init = InputEventInit::new();
         event_init.data(Some(data));
+        event_init.bubbles(true);
         let input_event = InputEvent::new_with_event_init_dict("input", &event_init).unwrap();
         assert!(element.dispatch_event(&input_event).unwrap());
     }
@@ -723,25 +727,18 @@ mod tests {
         assert_text_content!('🎉', last_key_value);
     }
 
-    struct InputDemo {
-        link: ComponentLink<Self>,
-        value: String,
-    }
+    struct InputDemo;
 
     impl Component for InputDemo {
         type Message = InputData;
         type Properties = ();
 
-        fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-            Self {
-                link,
-                value: String::new(),
-            }
+        fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+            Self
         }
 
-        fn update(&mut self, msg: Self::Message) -> ShouldRender {
-            self.value = msg.value;
-            true
+        fn update(&mut self, _: Self::Message) -> ShouldRender {
+            false
         }
 
         fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -749,10 +746,9 @@ mod tests {
         }
 
         fn view(&self) -> Html {
-            let cb = |e| e;
             html! {
                 <>
-                    <input value={self.value.clone()} placeholder="key" type="text" oninput={self.link.callback(cb)} />
+                    <input placeholder="key" type="text" />
                 </>
             }
         }

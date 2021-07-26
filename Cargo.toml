@@ -24,6 +24,7 @@ features = [
 	"InputEventInit",
 	"KeyboardEvent",
 	"KeyboardEventInit",
+	"MouseEventInit",
 	"NodeFilter",
 	"NodeList",
 	"TreeWalker",
