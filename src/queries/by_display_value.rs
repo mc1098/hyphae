@@ -60,10 +60,8 @@ use std::fmt::Debug;
 use wasm_bindgen::JsCast;
 use web_sys::Node;
 
-use crate::{
-    util::{self, get_element_value},
-    RawNodeListIter, TestRender,
-};
+use crate::{RawNodeListIter, TestRender};
+use sap_utils::get_element_value;
 
 /**
 Enables querying elements by `display value`.
@@ -264,7 +262,7 @@ impl ByDisplayValue for TestRender {
         let display_values = RawNodeListIter::<T>::new(elements)
             .filter_map(|element| get_element_value(&element).map(|value| (value, element)));
 
-        if let Some((dv, e)) = util::closest(search, display_values, |(k, _)| k) {
+        if let Some((dv, e)) = sap_utils::closest(search, display_values, |(k, _)| k) {
             if search == dv {
                 Ok(e)
             } else {
@@ -305,7 +303,7 @@ impl Debug for ByDisplayValueError<'_> {
                     f,
                     "\nNo element found with a display value equal or similar to '{}' in the following HTML:{}",
                     search,
-                    util::format_html(html)
+                    sap_utils::format_html(html)
                 )
             }
             ByDisplayValueError::Closest((search, html, closest)) => {
@@ -313,7 +311,7 @@ impl Debug for ByDisplayValueError<'_> {
                     f,
                     "\nNo exact match found for a display value of: '{}'.\nA similar match was found in the following HTML:{}",
                     search,
-                    util::format_html_with_closest(html, closest.unchecked_ref()),
+                    sap_utils::format_html_with_closest(html, closest.unchecked_ref()),
                 )
             }
         }

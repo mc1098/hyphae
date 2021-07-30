@@ -32,7 +32,6 @@ export function get_value(element) {
 export function set_value(element, value) {
 	if (element.value !== undefined) {
 		element.value = value;
-		// element.setAttribute("value", value);
 		return true;
 	} else {
 		return false;

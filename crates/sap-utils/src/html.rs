@@ -1,11 +1,11 @@
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Element;
 
-#[wasm_bindgen(module = "/js/utils.js")]
+#[wasm_bindgen(module = "/js/sap-utils.js")]
 extern "C" {
-    fn format(str: JsValue) -> JsValue;
     fn get_value(element: &Element) -> JsValue;
     fn set_value(element: &Element, value: JsValue) -> JsValue;
+    fn format(str: JsValue) -> JsValue;
 }
 
 pub fn get_element_value<T: JsCast>(element: &T) -> Option<String> {

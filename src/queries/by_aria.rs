@@ -181,7 +181,7 @@ use std::fmt::Debug;
 use wasm_bindgen::JsCast;
 use web_sys::{Element, Node};
 
-use crate::{util, RawNodeListIter, TestRender};
+use crate::{RawNodeListIter, TestRender};
 
 /**
 Enables querying elements generically by ARIA roles, properties, and state.
@@ -504,7 +504,7 @@ where
             ))
         });
 
-        return if let Some((an, e)) = util::closest(name, elements, |(k, _)| k) {
+        return if let Some((an, e)) = sap_utils::closest(name, elements, |(k, _)| k) {
             if an == name {
                 Ok(e)
             } else {
@@ -589,7 +589,7 @@ impl Debug for ByAriaError<'_> {
                     provided?
                     Note: ARIA type variants comments provide information on which element, \
                     properties or state they match.",
-                    util::format_html(html)
+                    sap_utils::format_html(html)
                 )
             }
             ByAriaError::NotFound((name, html)) => {
@@ -597,7 +597,7 @@ impl Debug for ByAriaError<'_> {
                     f,
                     "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
                     name,
-                    util::format_html(html)
+                    sap_utils::format_html(html)
                 )
             }
             ByAriaError::Closest((name, html, closest)) => {
@@ -605,7 +605,7 @@ impl Debug for ByAriaError<'_> {
                     f,
                     "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
                     name,
-                    util::format_html_with_closest(html, closest.unchecked_ref())
+                    sap_utils::format_html_with_closest(html, closest.unchecked_ref())
                 )
             }
         }
