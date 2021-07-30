@@ -41,7 +41,6 @@ use web_sys::{Element, HtmlElement, NodeList};
 mod asserts;
 pub mod events;
 pub mod queries;
-mod util;
 
 /// Wrapper around a root element which has been rendered.
 pub struct TestRender {

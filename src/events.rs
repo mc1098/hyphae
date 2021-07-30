@@ -9,7 +9,7 @@ use web_sys::{
     MouseEventInit,
 };
 
-use crate::util::{get_element_value, set_element_value};
+use sap_utils::{get_element_value, set_element_value};
 
 /**
 Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.

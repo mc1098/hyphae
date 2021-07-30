@@ -7,6 +7,7 @@ license = "MIT"
 
 [dependencies]
 sap-aria = { path = "crates/sap-aria" }
+sap-utils = { path = "crates/sap-utils" }
 wasm-bindgen = "0.2.74"
 
 [dev-dependencies]
@@ -39,12 +40,14 @@ default-members = [
 	"../sap",
 	"crates/sap-aria",
 	"crates/sap-mock",
+	"crates/sap-utils",
 	"crates/sap-yew",
 ]
 members = [
 	"crates/sap-aria",
-	"crates/sap-yew",
 	"crates/sap-mock",
+	"crates/sap-utils",
+	"crates/sap-yew",
 	"examples/counter",
 	"examples/pub_sub",
 	"examples/router",

@@ -40,7 +40,7 @@ use std::{fmt::Debug, ops::Deref};
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{Node, NodeFilter, TreeWalker};
 
-use crate::{util, TestRender};
+use crate::TestRender;
 
 /**
 Enables queries by text node.
@@ -225,7 +225,7 @@ impl ByText for TestRender {
             let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
                 .filter_map(|node| node.text_content().map(|text| (text, node)));
 
-            if let Some(closest) = util::closest(search, iter, |(key, _)| key) {
+            if let Some(closest) = sap_utils::closest(search, iter, |(key, _)| key) {
                 Err(ByTextError::Closest((search, self.inner_html(), closest.1)))
             } else {
                 Err(ByTextError::NotFound(search, self.inner_html()))
@@ -259,11 +259,12 @@ impl Debug for ByTextError<'_> {
                     f,
                     "\nNo text node found with text equal or similar to '{}' in the following HTML:{}",
                     search,
-                    util::format_html(html),
+                    sap_utils::format_html(html),
                 )
             }
             ByTextError::Closest((search, html, closest)) => {
-                let html = util::format_html_with_closest(html, &closest.parent_element().unwrap());
+                let html =
+                    sap_utils::format_html_with_closest(html, &closest.parent_element().unwrap());
                 write!(
                     f,
                     "\nNo exact match found for the text: '{}'.\nA similar match was found in the following HTML:{}",

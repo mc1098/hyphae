@@ -44,10 +44,7 @@ use std::fmt::Debug;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement, Node};
 
-use crate::{
-    util::{self},
-    RawNodeListIter, TestRender,
-};
+use crate::{RawNodeListIter, TestRender};
 
 /**
 Enables querying by `placeholder text`.
@@ -204,7 +201,7 @@ impl ByPlaceholderText for TestRender {
                 .map(|e| (e.placeholder(), e.unchecked_into::<T>()))
                 .ok(),
         });
-        if let Some((ph, e)) = util::closest(search, holders, |(k, _)| k) {
+        if let Some((ph, e)) = sap_utils::closest(search, holders, |(k, _)| k) {
             if search == ph {
                 Ok(e)
             } else {
@@ -248,7 +245,7 @@ impl Debug for ByPlaceholderTextError<'_> {
                     f,
                     "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
                     search,
-                    util::format_html(html)
+                    sap_utils::format_html(html)
                 )
             }
             ByPlaceholderTextError::Closest((search, html, closest)) => {
@@ -256,7 +253,7 @@ impl Debug for ByPlaceholderTextError<'_> {
                     f,
                     "\nNo exact match found for the placeholder text: '{}'.\nA similar match was found in the following HTML:{}",
                     search,
-                    util::format_html_with_closest(html, closest.unchecked_ref())
+                    sap_utils::format_html_with_closest(html, closest.unchecked_ref())
                 )
             }
         }
