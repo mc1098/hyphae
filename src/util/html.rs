@@ -1,9 +1,25 @@
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Element;
 
 #[wasm_bindgen(module = "/js/utils.js")]
 extern "C" {
     fn format(str: JsValue) -> JsValue;
+    fn get_value(element: &Element) -> JsValue;
+    fn set_value(element: &Element, value: JsValue) -> JsValue;
+}
+
+pub fn get_element_value<T: JsCast>(element: &T) -> Option<String> {
+    element
+        .dyn_ref::<Element>()
+        .and_then(|e| get_value(e).as_string())
+}
+
+pub fn set_element_value<T: JsCast>(element: &T, value: &str) -> bool {
+    if let Some(element) = element.dyn_ref::<Element>() {
+        JsValue::TRUE == set_value(element, value.into())
+    } else {
+        false
+    }
 }
 
 pub fn format_html(html: &str) -> String {

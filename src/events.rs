@@ -4,11 +4,12 @@ Convenience module for firing events to [`EventTarget`].
 The goal of this module is to remove the boilerplate from firing [`web_sys`] events by providing
 helper functions and traits for medium/high level actions.
 */
-use wasm_bindgen::JsCast;
 use web_sys::{
-    EventTarget, HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, InputEvent,
-    InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent, MouseEventInit,
+    EventTarget, InputEvent, InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent,
+    MouseEventInit,
 };
+
+use crate::util::{get_element_value, set_element_value};
 
 /**
 Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
@@ -197,29 +198,14 @@ assert_eq!("Hello, World!", input.value());
 ```
 */
 pub fn dispatch_input_event(element: &EventTarget, data: &str) {
-    let input = element.dyn_ref::<HtmlInputElement>().map(|input| {
-        let mut value = input.value();
-        value.push_str(data);
-        input.set_value(&value);
-        true
-    });
+    let value_updated = get_element_value(element)
+        .map(|mut value| {
+            value.push_str(data);
+            set_element_value(element, &value)
+        })
+        .unwrap_or_default();
 
-    let select = element.dyn_ref::<HtmlSelectElement>().map(|select| {
-        let mut value = select.value();
-        value.push_str(data);
-        select.set_value(&value);
-        true
-    });
-
-    let text_area = element.dyn_ref::<HtmlTextAreaElement>().map(|text_area| {
-        let mut value = text_area.value();
-        value.push_str(data);
-        text_area.set_value(&value);
-        true
-    });
-
-    // Maybe this should panic if this is false?
-    if input.or(select).or(text_area).unwrap_or_default() {
+    if value_updated {
         let mut event_init = InputEventInit::new();
         event_init.data(Some(data));
         event_init.bubbles(true);

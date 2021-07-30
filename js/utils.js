@@ -24,3 +24,17 @@ function format_raw(node, level) {
 
 	return node;
 }
+
+export function get_value(element) {
+	return element.value
+}
+
+export function set_value(element, value) {
+	if (element.value !== undefined) {
+		element.value = value;
+		// element.setAttribute("value", value);
+		return true;
+	} else {
+		return false;
+	}
+}
