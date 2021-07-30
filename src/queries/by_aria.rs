@@ -499,7 +499,7 @@ where
     if let Some(name) = name {
         let elements = node_iter.filter_map(|element| {
             Some((
-                sap_aria::element_accessible_name(&element.unchecked_ref()).ok()?,
+                sap_aria::element_accessible_name(element.unchecked_ref()).ok()?,
                 element,
             ))
         });

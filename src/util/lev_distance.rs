@@ -37,7 +37,7 @@ where
     I: Iterator<Item = T>,
     F: Fn(&T) -> &String,
 {
-    iter.map(|e| (lev_distance(search, &to_key(&e)), e))
+    iter.map(|e| (lev_distance(search, to_key(&e)), e))
         .filter(|&(d, _)| d < 4)
         .min_by_key(|t| t.0)
         .map(|t| t.1)

@@ -1,5 +1,3 @@
-use std::iter::repeat;
-
 use wasm_bindgen::prelude::*;
 use web_sys::Element;
 
@@ -38,13 +36,11 @@ fn preceding_space(value: &str, idx: usize) -> String {
 }
 
 pub fn format_html_with_closest(html: &str, closest: &Element) -> String {
-    let mut html = format_html(&html);
+    let mut html = format_html(html);
     let closest_opening_tag = element_selection_string(closest);
     let closest_pos = html.find(&closest_opening_tag).unwrap();
     let ws = preceding_space(&html, closest_pos);
-    let selection = repeat('^')
-        .take(closest_opening_tag.len())
-        .collect::<String>();
+    let selection = "^".repeat(closest_opening_tag.len());
     html.insert_str(
         closest_pos + 1 + closest_opening_tag.len(),
         &format!(

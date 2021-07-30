@@ -353,7 +353,7 @@ mod tests {
             assert_eq!("hi", e.data().as_string().unwrap())
         }) as Box<dyn Fn(MessageEvent)>);
 
-        ws.add_event_listener_with_callback("message", &cb.as_ref().unchecked_ref())
+        ws.add_event_listener_with_callback("message", cb.as_ref().unchecked_ref())
             .unwrap();
 
         controller.send_with_str("hi");
