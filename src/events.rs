@@ -4,9 +4,10 @@ Convenience module for firing events to [`EventTarget`].
 The goal of this module is to remove the boilerplate from firing [`web_sys`] events by providing
 helper functions and traits for medium/high level actions.
 */
+
 use web_sys::{
-    EventTarget, InputEvent, InputEventInit, KeyboardEvent, KeyboardEventInit, MouseEvent,
-    MouseEventInit,
+    Event, EventInit, EventTarget, InputEvent, InputEventInit, KeyboardEvent, KeyboardEventInit,
+    MouseEvent, MouseEventInit,
 };
 
 /**
@@ -209,6 +210,36 @@ pub fn dispatch_input_event(element: &EventTarget, data: &str) {
         event_init.bubbles(true);
         let input_event = InputEvent::new_with_event_init_dict("input", &event_init).unwrap();
         assert!(element.dispatch_event(&input_event).unwrap());
+    }
+}
+
+/// Enables dispatching a bubbling `change` event from an EventTarget
+pub trait EventTargetChanged {
+    /**
+    Dispatches a change [`Event`] on this [`EventTarget`]
+
+    # Examples
+    ```
+    use sap::events::EventTargetChanged;
+    use web_sys::HtmlInputElement;
+
+    # fn dispatch_input_event_example(input: HtmlInputElement) {
+    let input: HtmlInputElement = // function to get input element
+        # input;
+    // dispatch "change" event
+    input.changed();
+    # }
+    ```
+    */
+    fn changed(&self);
+}
+
+impl EventTargetChanged for EventTarget {
+    fn changed(&self) {
+        let mut event_init = EventInit::new();
+        event_init.bubbles(true);
+        let change_event = Event::new_with_event_init_dict("change", &event_init).unwrap();
+        assert!(self.dispatch_event(&change_event).unwrap());
     }
 }
 
@@ -637,6 +668,9 @@ impl Into<&str> for KeyEventType {
 #[cfg(test)]
 mod tests {
 
+    use std::cell::Cell;
+
+    use wasm_bindgen::{prelude::Closure, JsCast};
     use web_sys::{HtmlElement, HtmlInputElement, KeyboardEvent};
     use yew::prelude::*;
 
@@ -748,5 +782,34 @@ mod tests {
         type_to(&input, "hello");
 
         assert_eq!("hello", input.value());
+    }
+
+    #[wasm_bindgen_test]
+    fn trigger_on_change_event() {
+        thread_local! {
+            static FLAG: Cell<bool> = Default::default();
+        }
+
+        let rendered = test_render! {
+            <InputDemo />
+        };
+
+        let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
+
+        let listener =
+            Closure::wrap(Box::new(move |_| FLAG.with(|v| v.set(true))) as Box<dyn Fn(Event)>);
+
+        rendered
+            .add_event_listener_with_callback("change", listener.as_ref().unchecked_ref())
+            .unwrap();
+
+        input.changed();
+
+        assert!(FLAG.with(|v| v.get()));
+
+        // clean up
+        rendered
+            .remove_event_listener_with_callback("change", listener.as_ref().unchecked_ref())
+            .unwrap();
     }
 }
