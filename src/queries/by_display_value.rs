@@ -61,7 +61,6 @@ use wasm_bindgen::JsCast;
 use web_sys::Node;
 
 use crate::{RawNodeListIter, TestRender};
-use sap_utils::get_element_value;
 
 /**
 Enables querying elements by `display value`.
@@ -259,8 +258,9 @@ impl ByDisplayValue for TestRender {
             .query_selector_all("input, select, textarea")
             .ok();
 
-        let display_values = RawNodeListIter::<T>::new(elements)
-            .filter_map(|element| get_element_value(&element).map(|value| (value, element)));
+        let display_values = RawNodeListIter::<T>::new(elements).filter_map(|element| {
+            sap_utils::get_element_value(&element).map(|value| (value, element))
+        });
 
         if let Some((dv, e)) = sap_utils::closest(search, display_values, |(k, _)| k) {
             if search == dv {

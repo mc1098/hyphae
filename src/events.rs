@@ -9,8 +9,6 @@ use web_sys::{
     MouseEventInit,
 };
 
-use sap_utils::{get_element_value, set_element_value};
-
 /**
 Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
 
@@ -198,10 +196,10 @@ assert_eq!("Hello, World!", input.value());
 ```
 */
 pub fn dispatch_input_event(element: &EventTarget, data: &str) {
-    let value_updated = get_element_value(element)
+    let value_updated = sap_utils::get_element_value(element)
         .map(|mut value| {
             value.push_str(data);
-            set_element_value(element, &value)
+            sap_utils::set_element_value(element, &value)
         })
         .unwrap_or_default();
 
