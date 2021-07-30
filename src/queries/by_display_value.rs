@@ -58,9 +58,12 @@ performing checked and unchecked casting between JS types.
 use std::fmt::Debug;
 
 use wasm_bindgen::JsCast;
-use web_sys::{HtmlInputElement, HtmlSelectElement, HtmlTextAreaElement, Node};
+use web_sys::Node;
 
-use crate::{util, RawNodeListIter, TestRender};
+use crate::{
+    util::{self, get_element_value},
+    RawNodeListIter, TestRender,
+};
 
 /**
 Enables querying elements by `display value`.
@@ -245,13 +248,6 @@ pub trait ByDisplayValue {
         T: JsCast;
 }
 
-// @TODO: binding to JS to evaluate whether 'value' exists on the object and return Option
-macro_rules! display_value {
-    ($element: ident as $type:ty) => {
-        $element.dyn_ref::<$type>().map(|e| e.value())
-    };
-}
-
 impl ByDisplayValue for TestRender {
     fn get_by_display_value<'search, T>(
         &self,
@@ -265,12 +261,8 @@ impl ByDisplayValue for TestRender {
             .query_selector_all("input, select, textarea")
             .ok();
 
-        let display_values = RawNodeListIter::<T>::new(elements).filter_map(|element| {
-            display_value!(element as HtmlInputElement)
-                .or_else(|| display_value!(element as HtmlTextAreaElement))
-                .or_else(|| display_value!(element as HtmlSelectElement))
-                .map(|dv| (dv, element))
-        });
+        let display_values = RawNodeListIter::<T>::new(elements)
+            .filter_map(|element| get_element_value(&element).map(|value| (value, element)));
 
         if let Some((dv, e)) = util::closest(search, display_values, |(k, _)| k) {
             if search == dv {
@@ -335,7 +327,7 @@ mod tests {
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     use super::*;
-    use web_sys::{Element, HtmlInputElement};
+    use web_sys::{Element, HtmlInputElement, HtmlTextAreaElement};
 
     use crate::TestRender;
     use sap_yew::test_render;
