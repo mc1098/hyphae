@@ -39,9 +39,7 @@ use wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement, NodeList};
 
 mod asserts;
-#[doc(inline)]
 pub mod events;
-#[doc(inline)]
 pub mod queries;
 mod util;
 
