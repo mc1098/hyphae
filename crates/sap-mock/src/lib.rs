@@ -7,18 +7,15 @@ Provides simple mocks for JS APIs.
 _Work in Progress_
 */
 
-use js_sys::{Function, Uint8Array};
+use js_sys::Uint8Array;
 use serde::Serialize;
-use wasm_bindgen::{prelude::*, JsCast};
-use wasm_bindgen_futures::JsFuture;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(module = "/js/mock.js")]
 extern "C" {
     fn mock_fetch_resolve(value: JsValue) -> JsValue;
     fn mock_fetch_error(code: JsValue, reason: JsValue) -> JsValue;
     fn restore_fetch(original_fetch: &JsValue);
-    fn wait_promise(ms: JsValue) -> js_sys::Promise;
-    fn until_mutation(element: &JsValue, action: &Function, timeout: JsValue) -> js_sys::Promise;
 
     fn mock_websocket(conn_delay: JsValue) -> RawWebSocketController;
 
@@ -136,7 +133,7 @@ let ws = web_sys::WebSocket::new("anyurl").unwrap();
 assert!(!controller.is_opened());
 
 // Need to be in an async fn here to await
-sap_mock::wait_ms(500).await.unwrap();
+sap_utils::wait_ms(500).await.unwrap();
 // After 500ms mock WebSocket will be opened
 assert!(controller.is_opened());
 # }
@@ -144,59 +141,6 @@ assert!(controller.is_opened());
 */
 pub fn mock_ws(conn_delay: u32) -> WebSocketController {
     WebSocketController(mock_websocket(conn_delay.into()))
-}
-
-/**
-Perform an action and await a DOM change with an optional timeout.
-
-This function uses the MutationObserver in JS to track whether a change in the DOM has occurred
-for the element given or it's subtree, this includes attribute changes.
-
-When a timeout is given, the Future will wait until the allotted time for a change in the DOM
-to occur. If no DOM change occurs then this function will panic.
-
-*/
-pub fn effect_dom<F>(element: &JsValue, action: F, timeout_ms: Option<u32>) -> JsFuture
-where
-    F: Fn() + 'static,
-{
-    let timeout = match timeout_ms {
-        Some(ms) => ms.into(),
-        None => JsValue::UNDEFINED,
-    };
-    let function = Closure::wrap(Box::new(action) as Box<dyn Fn()>);
-    JsFuture::from(until_mutation(
-        element,
-        function.as_ref().unchecked_ref(),
-        timeout,
-    ))
-}
-
-/**
-Asynchronous wait for a given amount of ms.
-
-This is a Rust Future which uses an underlying JS Promise and Timeout.
-This can be useful to assert something has occurred, or not, after a given amount of time -
-especially as you cannot use [sleep](std::thread::sleep) in a test using
-[`wasm_bindgen_test`](wasm_bindgen_testhttps://crates.io/crates/wasm-bindgen-test/).
-
-# Examples
-```no_run
-
-use wasm_bindgen_test::*;
-
-#[wasm_bindgen_test]
-async fn some_test_that_requires_waiting() {
-    // setup..
-    // wait 500ms - unwrap required
-    sap_mock::wait_ms(500).await.expect("Underlying JS not to throw exception");
-    // some asserts..
-}
-```
-*/
-pub async fn wait_ms(ms: u32) -> Result<(), JsValue> {
-    let _ = JsFuture::from(wait_promise(ms.into())).await?;
-    Ok(())
 }
 
 /// A handle that keeps the current fetch mock living.
@@ -338,7 +282,7 @@ mod tests {
         // connection is not open yet!
         assert!(!controller.is_opened());
         // wait for connection
-        wait_ms(100).await.unwrap();
+        sap_utils::wait_ms(100).await.unwrap();
 
         assert!(controller.is_opened());
 

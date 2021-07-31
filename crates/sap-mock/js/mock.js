@@ -42,36 +42,6 @@ export function restore_fetch(original_fetch) {
 	fetch = original_fetch;
 }
 
-export function wait_promise(ms) {
-	return new Promise((resolve) => {
-		let wait = setTimeout(() => {
-			clearTimeout(wait);
-			resolve();
-		}, ms)
-	})
-}
-
-export function until_mutation(element, action, timeout) {
-	return new Promise((resolve, reject) => {
-		const observerOptions = {
-			childList: true,
-			attributes: true,
-			subtree: true,
-			characterData: true,
-		};
-
-		const observer = new MutationObserver(() => { resolve() });
-		observer.observe(element, observerOptions);
-		action()
-		if (timeout) {
-			let wait = setTimeout(() => {
-				clearTimeout(wait);
-				reject(`No change observed within the allotted time: ${timeout}ms.`);
-			}, timeout)
-		}
-	});
-}
-
 export function mock_websocket(conn_delay) {
 	let mock_controller = {
 		is_opened: false,

@@ -37,3 +37,33 @@ export function set_value(element, value) {
 		return false;
 	}
 }
+
+export function wait_promise(ms) {
+	return new Promise((resolve) => {
+		let wait = setTimeout(() => {
+			clearTimeout(wait);
+			resolve();
+		}, ms)
+	})
+}
+
+export function until_mutation(element, action, timeout) {
+	return new Promise((resolve, reject) => {
+		const observerOptions = {
+			childList: true,
+			attributes: true,
+			subtree: true,
+			characterData: true,
+		};
+
+		const observer = new MutationObserver(() => { resolve() });
+		observer.observe(element, observerOptions);
+		action()
+		if (timeout) {
+			let wait = setTimeout(() => {
+				clearTimeout(wait);
+				reject(`No change observed within the allotted time: ${timeout}ms.`);
+			}, timeout)
+		}
+	});
+}
