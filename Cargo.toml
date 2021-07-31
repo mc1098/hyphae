@@ -51,6 +51,7 @@ members = [
 	"crates/sap-utils",
 	"crates/sap-yew",
 	"examples/counter",
+	"examples/dashboard",
 	"examples/pub_sub",
 	"examples/router",
 	"examples/todo",
