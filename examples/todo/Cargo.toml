@@ -14,5 +14,5 @@ gloo-storage = { git = "https://github.com/rustwasm/gloo.git" }
 
 [dev-dependencies]
 sap = { path = "../.." }
-sap-yew = { path = "../../crates/sap-yew" }
+sap-yew = { git = "https://github.com/mc1098/sap-yew" }
 wasm-bindgen-test = "0.3.24"

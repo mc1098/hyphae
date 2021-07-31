@@ -13,7 +13,7 @@ yew-services = { git = "https://github.com/yewstack/yew.git", rev = "94b4752" }
 
 [dev-dependencies]
 sap = { path = "../../" }
-sap-yew = { path = "../../crates/sap-yew" }
+sap-yew = { git = "https://github.com/mc1098/sap-yew" }
 sap-mock = { path = "../../crates/sap-mock" }
 sap-utils = { path = "../../crates/sap-utils" }
 wasm-bindgen-test = "0.3.24"
