@@ -13,7 +13,7 @@ wasm-bindgen = "0.2.74"
 [dev-dependencies]
 wasm-bindgen-test = "0.3.24"
 yew = { git = "https://github.com/yewstack/yew.git" }
-sap-yew = { path = "crates/sap-yew" }
+sap-yew = { git = "https://github.com/mc1098/sap-yew.git" }
 
 
 [dependencies.web-sys]
@@ -43,13 +43,11 @@ default-members = [
 	"crates/sap-aria",
 	"crates/sap-mock",
 	"crates/sap-utils",
-	"crates/sap-yew",
 ]
 members = [
 	"crates/sap-aria",
 	"crates/sap-mock",
 	"crates/sap-utils",
-	"crates/sap-yew",
 	"examples/counter",
 	"examples/dashboard",
 	"examples/pub_sub",
