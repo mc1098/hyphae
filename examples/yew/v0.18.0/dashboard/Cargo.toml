@@ -11,10 +11,10 @@ serde_derive = "1"
 yew = { version = "0.18.0", features = ["toml"] }
 
 [dev-dependencies]
-sap = { path = "../../" }
+sap = { path = "../../../.." }
 sap-yew = { git = "https://github.com/mc1098/sap-yew", branch = "v0.18.0" }
-sap-mock = { path = "../../crates/sap-mock" }
-sap-utils = { path = "../../crates/sap-utils" }
+sap-mock = { path = "../../../../crates/sap-mock" }
+sap-utils = { path = "../../../../crates/sap-utils" }
 wasm-bindgen-test = "0.3.24"
 wasm-bindgen = "0.2.74"
 wasm-bindgen-futures = "0.4.24"

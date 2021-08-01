@@ -1,16 +1,18 @@
 [package]
-name = "pub_sub"
+name = "todo"
 version = "0.1.0"
 authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
 
 [dependencies]
+strum = "0.21"
+strum_macros = "0.21"
+serde = "1"
+serde_derive = "1"
 yew = { git = "https://github.com/yewstack/yew.git" }
-yew-agent = { git = "https://github.com/yewstack/yew.git" }
-
-serde = { version = "1.0", features = ["derive"] }
+gloo-storage = { git = "https://github.com/rustwasm/gloo.git" }
 
 [dev-dependencies]
-sap = { path = "../.." }
+sap = { path = "../../.." }
 sap-yew = { git = "https://github.com/mc1098/sap-yew" }
 wasm-bindgen-test = "0.3.24"
