@@ -8,12 +8,11 @@ edition = "2018"
 anyhow = "1"
 serde = "1"
 serde_derive = "1"
-yew = { git = "https://github.com/yewstack/yew.git", rev = "94b4752", features = ["toml"] }
-yew-services = { git = "https://github.com/yewstack/yew.git", rev = "94b4752" }
+yew = { version = "0.18.0", features = ["toml"] }
 
 [dev-dependencies]
 sap = { path = "../../" }
-sap-yew = { git = "https://github.com/mc1098/sap-yew" }
+sap-yew = { git = "https://github.com/mc1098/sap-yew", branch = "v0.18.0" }
 sap-mock = { path = "../../crates/sap-mock" }
 sap-utils = { path = "../../crates/sap-utils" }
 wasm-bindgen-test = "0.3.24"
