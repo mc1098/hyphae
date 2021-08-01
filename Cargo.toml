@@ -48,11 +48,11 @@ members = [
 	"crates/sap-aria",
 	"crates/sap-mock",
 	"crates/sap-utils",
-	"examples/counter",
-	"examples/dashboard",
-	"examples/pub_sub",
-	"examples/router",
-	"examples/todo",
+	"examples/yew/counter",
+	"examples/yew/v0.18.0/dashboard",
+	"examples/yew/pub_sub",
+	"examples/yew/router",
+	"examples/yew/todo",
 ]
 
 [patch.crates-io]
