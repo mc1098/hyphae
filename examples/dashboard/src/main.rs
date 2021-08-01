@@ -1,10 +1,12 @@
 use anyhow::Error;
 use serde_derive::{Deserialize, Serialize};
-use yew::format::{Json, Nothing, Toml};
-use yew::prelude::*;
-use yew_services::{
-    fetch::{FetchService, FetchTask, Request, Response},
-    websocket::{WebSocketService, WebSocketStatus, WebSocketTask},
+use yew::{
+    format::{Json, Nothing, Toml},
+    prelude::*,
+    services::{
+        fetch::{FetchService, FetchTask, Request, Response},
+        websocket::{WebSocketService, WebSocketStatus, WebSocketTask},
+    },
 };
 
 type AsBinary = bool;
