@@ -6,15 +6,23 @@ extern "C" {
     fn format(str: JsValue) -> JsValue;
 }
 
-pub fn get_element_value<T: JsCast>(element: &T) -> Option<String> {
-    js_sys::Reflect::get(&element.into(), &"value".into())
-        .ok()
-        .and_then(|v| v.as_string())
+macro_rules! get_js_property_impl {
+    ($getter:ident, $setter:ident, $property_name:literal) => {
+        pub fn $getter<T: JsCast>(element: &T) -> Option<String> {
+            js_sys::Reflect::get(&element.into(), &$property_name.into())
+                .ok()
+                .and_then(|v| v.as_string())
+        }
+
+        pub fn $setter<T: JsCast>(element: &T, value: &str) -> bool {
+            js_sys::Reflect::set(&element.into(), &$property_name.into(), &value.into())
+                .expect("implementations of JsCast should be Objects")
+        }
+    };
 }
 
-pub fn set_element_value<T: JsCast>(element: &T, value: &str) -> bool {
-    js_sys::Reflect::set(&element.into(), &"value".into(), &value.into())
-        .expect("implementations of JsCast should be Objects")
+get_js_property_impl! {
+    get_element_value, set_element_value, "value"
 }
 
 pub fn format_html(html: &str) -> String {
