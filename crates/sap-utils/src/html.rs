@@ -3,23 +3,18 @@ use web_sys::Element;
 
 #[wasm_bindgen(module = "/js/sap-utils.js")]
 extern "C" {
-    fn get_value(element: &Element) -> JsValue;
-    fn set_value(element: &Element, value: JsValue) -> JsValue;
     fn format(str: JsValue) -> JsValue;
 }
 
 pub fn get_element_value<T: JsCast>(element: &T) -> Option<String> {
-    element
-        .dyn_ref::<Element>()
-        .and_then(|e| get_value(e).as_string())
+    js_sys::Reflect::get(&element.into(), &"value".into())
+        .ok()
+        .and_then(|v| v.as_string())
 }
 
 pub fn set_element_value<T: JsCast>(element: &T, value: &str) -> bool {
-    if let Some(element) = element.dyn_ref::<Element>() {
-        JsValue::TRUE == set_value(element, value.into())
-    } else {
-        false
-    }
+    js_sys::Reflect::set(&element.into(), &"value".into(), &value.into())
+        .expect("implementations of JsCast should be Objects")
 }
 
 pub fn format_html(html: &str) -> String {
