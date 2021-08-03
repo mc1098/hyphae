@@ -223,6 +223,15 @@ pub trait ByLabelText {
         self.get_by_label_text_inc(search).map(|(e, _)| e)
     }
 
+    /// A convenient method which unwraps the result of
+    /// [`get_by_label_text`](ByLabelText::get_by_label_text).
+    fn assert_by_label_text<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        self.get_by_label_text(search).unwrap()
+    }
+
     /**
     Get a generic element and it's associated label, by the first label element which matches the
     label text and has the correct associated element type.
@@ -393,6 +402,15 @@ pub trait ByLabelText {
     ) -> Result<(T, HtmlLabelElement), ByLabelTextError<'search>>
     where
         T: JsCast;
+
+    /// A convenient method which unwraps the result of
+    /// [`get_by_label_text_inc`](ByLabelText::get_by_label_text_inc).
+    fn assert_by_label_text_inc<T>(&self, search: &str) -> (T, HtmlLabelElement)
+    where
+        T: JsCast,
+    {
+        self.get_by_label_text_inc(search).unwrap()
+    }
 }
 
 /**
