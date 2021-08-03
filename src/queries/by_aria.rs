@@ -297,6 +297,14 @@ pub trait ByAria {
     where
         T: JsCast;
 
+    /// A convenient method which unwraps the result of [`get_by_aria_role`](ByAria::get_by_aria_role).
+    fn assert_by_aria_role<T>(&self, role: AriaRole, name: &str) -> T
+    where
+        T: JsCast,
+    {
+        self.get_by_aria_role(role, name).unwrap()
+    }
+
     /**
 
     Get a generic element by ARIA property and optional accessible name.
@@ -415,6 +423,15 @@ pub trait ByAria {
         S: Into<Option<&'name str>>,
         T: JsCast;
 
+    /// A convenient method which unwraps the result of [`get_by_aria_prop`](ByAria::get_by_aria_prop).
+    fn assert_by_aria_prop<'name, S, T>(&self, property: AriaProperty, name: S) -> T
+    where
+        S: Into<Option<&'name str>>,
+        T: JsCast,
+    {
+        self.get_by_aria_prop(property, name).unwrap()
+    }
+
     /**
 
     Get a generic element by ARIA state and optional accessible name.
@@ -482,6 +499,15 @@ pub trait ByAria {
     where
         S: Into<Option<&'name str>>,
         T: JsCast;
+
+    /// A convenient method which unwraps the result of [`get_by_aria_state`](ByAria::get_by_aria_state).
+    fn assert_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> T
+    where
+        S: Into<Option<&'name str>>,
+        T: JsCast,
+    {
+        self.get_by_aria_state(state, name).unwrap()
+    }
 }
 
 #[inline]
