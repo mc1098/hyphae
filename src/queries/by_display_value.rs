@@ -243,6 +243,15 @@ pub trait ByDisplayValue {
     ) -> Result<T, ByDisplayValueError<'search>>
     where
         T: JsCast;
+
+    /// A convenient method which unwraps the result of
+    /// [`get_by_display_value`](ByDisplayValue::get_by_display_value).
+    fn assert_by_display_value<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        self.get_by_display_value(search).unwrap()
+    }
 }
 
 impl ByDisplayValue for TestRender {
