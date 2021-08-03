@@ -177,6 +177,15 @@ pub trait ByPlaceholderText {
     ) -> Result<T, ByPlaceholderTextError<'search>>
     where
         T: JsCast;
+
+    /// A convenient method which unwraps the result of
+    /// [`get_by_placeholder_text`](ByPlaceholderText::get_by_placeholder_text).
+    fn assert_by_placeholder_text<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        self.get_by_placeholder_text(search).unwrap()
+    }
 }
 
 impl ByPlaceholderText for TestRender {
