@@ -179,6 +179,15 @@ pub trait ByText {
     fn get_by_text<'search, T>(&self, search: &'search str) -> Result<T, ByTextError<'search>>
     where
         T: JsCast;
+
+    /// A convenient method which unwraps the result of [`get_by_text`](ByText::get_by_text).
+    #[inline]
+    fn assert_by_text<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        self.get_by_text(search).unwrap()
+    }
 }
 
 impl ByText for TestRender {
