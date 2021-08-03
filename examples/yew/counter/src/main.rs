@@ -91,12 +91,12 @@ mod tests {
     fn test_counter() {
         let rendered = test_render! { <Model /> };
 
-        let inc_btn: HtmlButtonElement = rendered.get_by_text("+1").unwrap();
-        let dec_btn: HtmlButtonElement = rendered.get_by_text("-1").unwrap();
-        let dbl_inc_btn: HtmlButtonElement = rendered.get_by_text("+1, +1").unwrap();
+        let inc_btn: HtmlButtonElement = rendered.assert_by_text("+1");
+        let dec_btn: HtmlButtonElement = rendered.assert_by_text("-1");
+        let dbl_inc_btn: HtmlButtonElement = rendered.assert_by_text("+1, +1");
 
         // Keep counter as it will be updated
-        let counter: HtmlElement = rendered.get_by_text("0").unwrap();
+        let counter: HtmlElement = rendered.assert_by_text("0");
 
         // Confirm that the counter is at 0
         assert_text_content!(0, counter);
