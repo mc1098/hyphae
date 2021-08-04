@@ -259,7 +259,7 @@ fn main() {
 mod tests {
 
     use super::*;
-    use sap::{events::*, prelude::*};
+    use sap::{events::*, prelude::*, type_to};
     use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::HtmlButtonElement;
@@ -274,11 +274,8 @@ mod tests {
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
-        // type 'Gardening' into input
-        type_to(&input, "Gardening");
-
-        // press enter to confirm
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        // type 'Gardening' into input and confirm
+        type_to!(input, "Gardening", Key::Enter);
 
         // 'Gardening' todo item has been rendered - lets just get the completed checkbox
         let checkbox: HtmlInputElement = rendered.assert_by_label_text("Gardening");
@@ -308,8 +305,7 @@ mod tests {
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter a new todo - oops pressed enter before finishing to type 'car'!
-        type_to(&input, "Wash the c");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "Wash the c", Key::Enter);
 
         // get the label for the new todo item
         let label: HtmlElement = rendered.assert_by_text("Wash the c");
@@ -319,7 +315,7 @@ mod tests {
         // edit todo input is different - so go find it by the current value
         let edit_input: HtmlInputElement = rendered.assert_by_display_value("Wash the c");
         // finish typing 'car'
-        type_to(&edit_input, "ar");
+        type_to!(edit_input, "ar");
         // confirm edit
         dispatch_key_event(&edit_input, KeyEventType::KeyPress, Key::Enter);
 
@@ -346,12 +342,10 @@ mod tests {
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter first todo
-        type_to(&input, "A");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "A", Key::Enter);
 
         // enter second todo
-        type_to(&input, "B");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "B", Key::Enter);
 
         // get clear completed button
         let clear_completed_btn: HtmlButtonElement =
@@ -379,8 +373,7 @@ mod tests {
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter todo item
-        type_to(&input, "Some todo item");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "Some todo item", Key::Enter);
 
         // get todo item
         let todo_item: HtmlElement =
@@ -404,15 +397,13 @@ mod tests {
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter todo item
-        type_to(&input, "A");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "A", Key::Enter);
 
         // get todo item input
         let checkbox_a: HtmlInputElement = rendered.assert_by_label_text("A");
 
         // enter todo item
-        type_to(&input, "B");
-        dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+        type_to!(input, "B", Key::Enter);
 
         // complete todo 'A'
         checkbox_a.click();
