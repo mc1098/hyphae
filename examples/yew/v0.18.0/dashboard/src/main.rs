@@ -253,9 +253,8 @@ mod tests {
         // mock fetch to return mock value
         let _handle = sap_mock::mock_fetch(Ok(&mock));
 
-        let button: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "Fetch Data")
-            .unwrap();
+        let button: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Fetch Data");
 
         // We need to wait for a bit here because fetch is async
         // even with a Promise that resolves immediately it will be delayed
@@ -265,9 +264,7 @@ mod tests {
             .unwrap();
 
         // check that mock value has been added to the DOM.
-        rendered
-            .get_by_text::<HtmlElement>("20")
-            .expect("expect value to change");
+        rendered.assert_by_text::<HtmlElement>("20");
     }
 
     #[wasm_bindgen_test]
@@ -278,16 +275,13 @@ mod tests {
         let _handle = sap_mock::mock_fetch(Ok(&mock));
 
         let button = rendered
-            .get_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [binary]")
-            .unwrap();
+            .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [binary]");
 
         sap_utils::effect_dom(&rendered, move || button.click(), Some(100))
             .await
             .unwrap();
 
-        rendered
-            .get_by_text::<HtmlElement>("50")
-            .expect("expect value to change");
+        rendered.assert_by_text::<HtmlElement>("50");
     }
 
     #[wasm_bindgen_test]
@@ -298,16 +292,13 @@ mod tests {
         let _handle = sap_mock::mock_fetch(Ok(&mock.unwrap()));
 
         let button = rendered
-            .get_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [toml]")
-            .unwrap();
+            .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [toml]");
 
         sap_utils::effect_dom(&rendered, move || button.click(), Some(100))
             .await
             .unwrap();
 
-        rendered
-            .get_by_text::<HtmlElement>("230")
-            .expect("expect value to change");
+        rendered.assert_by_text::<HtmlElement>("230");
     }
 
     #[wasm_bindgen_test]
@@ -316,12 +307,10 @@ mod tests {
         let controller = sap_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered
-            .get_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket")
-            .unwrap();
+            .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket");
 
-        let send_to_ws_btn: HtmlButtonElement = rendered
-            .get_by_aria_state(AriaState::Disabled(true), "Send To WebSocket")
-            .expect("WebSocket is not connected so this should be disabled");
+        let send_to_ws_btn: HtmlButtonElement =
+            rendered.assert_by_aria_state(AriaState::Disabled(true), "Send To WebSocket");
 
         // connect to ws
         connect_to_ws_btn.click();
@@ -347,9 +336,7 @@ mod tests {
         controller.send_with_str(&response.unwrap());
 
         // Confirm that the app actually received our mocked response and updated the value.
-        rendered
-            .get_by_text::<HtmlElement>("444")
-            .expect("expect value to change");
+        rendered.assert_by_text::<HtmlElement>("444");
 
         // Drop controller which causes the WebSocket to close
         drop(controller);
@@ -363,12 +350,10 @@ mod tests {
         let controller = sap_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered
-            .get_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket")
-            .unwrap();
+            .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket");
 
-        let send_to_ws_btn: HtmlButtonElement = rendered
-            .get_by_aria_state(AriaState::Disabled(true), "Send To WebSocket [binary]")
-            .expect("WebSocket is not connected so this should be disabled");
+        let send_to_ws_btn: HtmlButtonElement =
+            rendered.assert_by_aria_state(AriaState::Disabled(true), "Send To WebSocket [binary]");
 
         // connect to ws
         connect_to_ws_btn.click();
@@ -390,8 +375,6 @@ mod tests {
         controller.send_with_u8_array(&response.unwrap());
 
         // Confirm that the app received our mock response and updated the value
-        rendered
-            .get_by_text::<HtmlElement>("987")
-            .expect("expect value to change");
+        rendered.assert_by_text::<HtmlElement>("987");
     }
 }

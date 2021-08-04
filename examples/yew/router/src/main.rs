@@ -192,28 +192,29 @@ mod tests {
     fn route_test() {
         let rendered: TestRender = test_render! { <Model /> };
 
-        let _: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Heading, "Home")
-            .expect("default route should be 'home' with the 'Home' heading");
+        // Confirm that the Home component is loaded by checking for the "Home" heading.
+        rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Heading, "Home");
 
-        let posts_link: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Link, "Posts")
-            .expect("`Posts` link should always be available");
-
+        // Get the link to the post page.
+        let posts_link: HtmlElement = rendered.assert_by_aria_role(AriaRole::Link, "Posts");
+        // Click link to change to post page
         posts_link.click();
 
-        let _: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Heading, "Post List")
-            .expect("should be on the posts page");
+        // Confirm that the Post component is loaded by checking for the "Post List" heading.
+        rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Heading, "Post List");
 
-        let authors_link: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Link, "Meet the authors")
-            .expect("More menu should be open so should be able to find authors link");
+        // Confirm that the Home component is no longer loaded and the "Home" heading cannot be found!
+        assert!(rendered
+            .get_by_aria_role::<HtmlElement>(AriaRole::Heading, "Home")
+            .is_err());
+
+        // Same as above with the link to the authors page and confirming that it loads
+
+        let authors_link: HtmlElement =
+            rendered.assert_by_aria_role(AriaRole::Link, "Meet the authors");
 
         authors_link.click();
 
-        let _: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Heading, "Author List")
-            .expect("should be on the authors page");
+        rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Heading, "Author List");
     }
 }
