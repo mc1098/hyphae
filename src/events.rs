@@ -112,13 +112,13 @@ where
 /// - `input` [`InputEvent`]
 ///
 /// ```
-/// use sap::events::*;
+/// use sap::{events::*, type_to};
 /// use web_sys::HtmlInputElement;
 ///
 /// # fn type_to_example(input: HtmlInputElement) {
 /// let input: HtmlInputElement = // some query to get input element
 ///     # input;
-/// type_to!(&input, "Hello,", " World!");
+/// type_to!(input, "Hello,", " World!");
 /// assert_eq!("Hello, World!", input.value());
 /// # }
 ///
