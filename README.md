@@ -37,7 +37,7 @@ One of the tests found in the `todo` example.
 
 ```rust
 use super::*;
-use sap::{events::*, prelude::*};
+use sap::{events::*, prelude::*, type_to};
 use sap_yew::test_render;
 use wasm_bindgen_test::*;
 use yew::web_sys::HtmlButtonElement;
@@ -52,11 +52,8 @@ fn make_new_todo_item_complete_it_then_clear_completed() {
     // get todo input
     let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
-    // type 'Gardening' into input
-    type_to(&input, "Gardening");
-
-    // press enter to confirm
-    dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
+    // type 'Gardening' into input and confirm
+    type_to!(input, "Gardening", Key::Enter);
 
     // 'Gardening' todo item has been rendered - lets just get the completed checkbox
     let checkbox: HtmlInputElement = rendered.assert_by_label_text("Gardening");
