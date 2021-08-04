@@ -3,4 +3,4 @@ status = [
 	"test",
 	"wasm-test-in-browser"
 ]
-use_squash_merge = true
+delete_merged_branches = true
