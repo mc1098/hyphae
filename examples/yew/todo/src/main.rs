@@ -272,9 +272,7 @@ mod tests {
         };
 
         // get todo input
-        let input: HtmlInputElement = rendered
-            .get_by_placeholder_text("What needs to be done?")
-            .unwrap();
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // type 'Gardening' into input
         type_to(&input, "Gardening");
@@ -283,16 +281,13 @@ mod tests {
         dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // 'Gardening' todo item has been rendered - lets just get the completed checkbox
-        let checkbox: HtmlInputElement = rendered
-            .get_by_label_text("Gardening")
-            .expect("Input should be found by it's label text");
+        let checkbox: HtmlInputElement = rendered.assert_by_label_text("Gardening");
         // confirm that our new todo items is not completed
         assert!(!checkbox.checked());
 
         // get clear completed button
-        let clear_completed_btn: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "Clear completed (0)")
-            .expect("clear completed button should be found by text_content");
+        let clear_completed_btn: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Clear completed (0)");
 
         // click the todo checkbox - marking it complete
         checkbox.click();
@@ -310,21 +305,19 @@ mod tests {
         let rendered = test_render! { <Model /> };
 
         // get todo input
-        let input: HtmlInputElement = rendered
-            .get_by_placeholder_text("What needs to be done?")
-            .unwrap();
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter a new todo - oops pressed enter before finishing to type 'car'!
         type_to(&input, "Wash the c");
         dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get the label for the new todo item
-        let label: HtmlElement = rendered.get_by_text("Wash the c").unwrap();
+        let label: HtmlElement = rendered.assert_by_text("Wash the c");
         // double click label to edit todo
         label.dbl_click();
 
         // edit todo input is different - so go find it by the current value
-        let edit_input: HtmlInputElement = rendered.get_by_display_value("Wash the c").unwrap();
+        let edit_input: HtmlInputElement = rendered.assert_by_display_value("Wash the c");
         // finish typing 'car'
         type_to(&edit_input, "ar");
         // confirm edit
@@ -334,16 +327,14 @@ mod tests {
         assert_text_content!("Wash the car", label);
 
         // get todo checkbox to complete it
-        let checkbox: HtmlInputElement = rendered
-            .get_by_aria_role(AriaRole::Checkbox, "Wash the car")
-            .unwrap();
+        let checkbox: HtmlInputElement =
+            rendered.assert_by_aria_role(AriaRole::Checkbox, "Wash the car");
         // complete todo
         checkbox.click();
 
         // get clear completed button
-        let clear_completed_btn: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "Clear completed (1)")
-            .unwrap();
+        let clear_completed_btn: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Clear completed (1)");
         clear_completed_btn.click();
     }
 
@@ -352,9 +343,7 @@ mod tests {
         let rendered = test_render! { <Model /> };
 
         // get todo input
-        let input: HtmlInputElement = rendered
-            .get_by_placeholder_text("What needs to be done?")
-            .unwrap();
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter first todo
         type_to(&input, "A");
@@ -365,14 +354,12 @@ mod tests {
         dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get clear completed button
-        let clear_completed_btn: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "Clear completed (0)")
-            .unwrap();
+        let clear_completed_btn: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Clear completed (0)");
 
         // get toggle all checkbox
-        let toggle_all_checkbox: HtmlInputElement = rendered
-            .get_by_aria_role(AriaRole::Checkbox, "toggle all todo items")
-            .expect("toggle all checkbox should be found by it's aria-label value");
+        let toggle_all_checkbox: HtmlInputElement =
+            rendered.assert_by_aria_role(AriaRole::Checkbox, "toggle all todo items");
 
         // set all items to completed
         toggle_all_checkbox.click();
@@ -389,23 +376,19 @@ mod tests {
         let rendered = test_render! { <Model /> };
 
         // get todo input
-        let input: HtmlInputElement = rendered
-            .get_by_placeholder_text("What needs to be done?")
-            .unwrap();
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter todo item
         type_to(&input, "Some todo item");
         dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get todo item
-        let todo_item: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::ListItem, "Some todo item")
-            .unwrap();
+        let todo_item: HtmlElement =
+            rendered.assert_by_aria_role(AriaRole::ListItem, "Some todo item");
 
         // get single controlling element of checkbox using it's id
-        let remove_button: HtmlButtonElement = rendered
-            .get_by_aria_prop(AriaProperty::Controls([todo_item.id()].into()), None)
-            .unwrap();
+        let remove_button: HtmlButtonElement =
+            rendered.assert_by_aria_prop(AriaProperty::Controls([todo_item.id()].into()), None);
 
         // click and remove todo item
         remove_button.click();
@@ -418,18 +401,14 @@ mod tests {
         let rendered = test_render! { <Model /> };
 
         // get todo input
-        let input: HtmlInputElement = rendered
-            .get_by_placeholder_text("What needs to be done?")
-            .unwrap();
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
 
         // enter todo item
         type_to(&input, "A");
         dispatch_key_event(&input, KeyEventType::KeyPress, Key::Enter);
 
         // get todo item input
-        let checkbox_a: HtmlInputElement = rendered
-            .get_by_label_text("A")
-            .expect("Input should be found by it's label text");
+        let checkbox_a: HtmlInputElement = rendered.assert_by_label_text("A");
 
         // enter todo item
         type_to(&input, "B");
@@ -439,23 +418,20 @@ mod tests {
         checkbox_a.click();
 
         // find active filter link
-        let active_filter: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Link, "Active")
-            .expect("couldn't find 'Active' link");
+        let active_filter: HtmlElement = rendered.assert_by_aria_role(AriaRole::Link, "Active");
         active_filter.click();
 
         // 'A' is completed so is not active
         assert!(rendered.get_by_label_text::<HtmlInputElement>("A").is_err());
 
         // find completed filter link
-        let completed_filter: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Link, "Completed")
-            .expect("couldn't find 'Completed' link");
+        let completed_filter: HtmlElement =
+            rendered.assert_by_aria_role(AriaRole::Link, "Completed");
 
         completed_filter.click();
 
         // 'A' is completed so should now be able to find it!
-        assert!(rendered.get_by_label_text::<HtmlInputElement>("A").is_ok());
+        rendered.assert_by_label_text::<HtmlInputElement>("A");
         // 'B' is active so can not be found in completed filter
         assert!(rendered.get_by_label_text::<HtmlInputElement>("B").is_err());
 
@@ -468,22 +444,19 @@ mod tests {
 
         // change back to 'All' filter to find checkbox_b
         rendered
-            .get_by_aria_role::<HtmlElement>(AriaRole::Link, "All")
-            .expect("all filter")
+            .assert_by_aria_role::<HtmlElement>(AriaRole::Link, "All")
             .click();
 
         // set b as completed -
         // Note: even if we had a previous reference to the 'B' input that would be invalid after
         // changing the filter so getting a new reference to 'B' would always be required!
         rendered
-            .get_by_label_text::<HtmlInputElement>("B")
-            .unwrap()
+            .assert_by_label_text::<HtmlInputElement>("B")
             .click();
 
         // get clear completed button
-        let clear_completed_btn: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "Clear completed (2)")
-            .expect("clear button");
+        let clear_completed_btn: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Clear completed (2)");
 
         clear_completed_btn.click();
     }

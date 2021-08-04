@@ -54,14 +54,11 @@ mod tests {
         let rendered = test_render! { <Model /> };
 
         // get subscriber heading message
-        let sub_message: HtmlElement = rendered
-            .get_by_aria_role(AriaRole::Heading, "No message yet.")
-            .expect("subscriber heading should have a default of 'No message yet.'");
+        let sub_message: HtmlElement =
+            rendered.assert_by_aria_role(AriaRole::Heading, "No message yet.");
 
         // get producer button
-        let button: HtmlButtonElement = rendered
-            .get_by_aria_role(AriaRole::Button, "PRESS ME")
-            .unwrap();
+        let button: HtmlButtonElement = rendered.assert_by_aria_role(AriaRole::Button, "PRESS ME");
 
         // click the producer button which will send a message to the subscriber through an agent.
         button.click();
