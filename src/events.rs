@@ -5,6 +5,8 @@ The goal of this module is to remove the boilerplate from firing [`web_sys`] eve
 helper functions and traits for medium/high level actions.
 */
 
+use std::ops::{Deref, DerefMut};
+
 use web_sys::{
     Event, EventInit, EventTarget, InputEvent, InputEventInit, KeyboardEvent, KeyboardEventInit,
     MouseEvent, MouseEventInit,
@@ -96,42 +98,78 @@ where
     {
         dispatch_key_event(element, key_event_type, key);
     }
-    dispatch_input_event(element, &key.to_string());
+    if key.is_visible() {
+        dispatch_input_event(element, &key.to_string());
+    }
 }
 
-/**
-A simple simulation of typing multiple characters to the [`EventTarget`].
-
-This will fire the following events, in this order, for each character:
-- `keydown` [`KeyboardEvent`]
-- `keypress` [`KeyboardEvent`]
-- `keyup` [`KeyboardEvent`]
-- `input` [`InputEvent`]
-
-```
-use sap::events::*;
-use web_sys::HtmlInputElement;
-
-# fn type_to_example(input: HtmlInputElement) {
-let input: HtmlInputElement = // some query to get input element;
-    # input;
-type_to(&input, "Hello, World!");
-assert_eq!("Hello, World!", input.value());
-# }
-```
-*/
-pub fn type_to(element: &EventTarget, value: &str) {
-    for c in value.chars() {
-        for &key_event_type in [
-            KeyEventType::KeyDown,
-            KeyEventType::KeyPress,
-            KeyEventType::KeyUp,
-        ]
-        .iter()
-        {
-            dispatch_key_event(element, key_event_type, c);
+/// A simple simulation of typing multiple [`Key`]s to the [`EventTarget`].
+///
+/// This will fire the following events, in this order, for each [`Key`]:
+/// - `keydown` [`KeyboardEvent`]
+/// - `keypress` [`KeyboardEvent`]
+/// - `keyup` [`KeyboardEvent`]
+/// - `input` [`InputEvent`]
+///
+/// ```
+/// use sap::events::*;
+/// use web_sys::HtmlInputElement;
+///
+/// # fn type_to_example(input: HtmlInputElement) {
+/// let input: HtmlInputElement = // some query to get input element
+///     # input;
+/// type_to!(&input, "Hello,", " World!");
+/// assert_eq!("Hello, World!", input.value());
+/// # }
+///
+/// ```
+#[macro_export]
+macro_rules! type_to {
+    ($element: ident, $($into_keys:expr),+) => {
+        let mut keys: Vec<Key> = vec![];
+        $(
+            let mut ks: Keys = $into_keys.into();
+            keys.append(&mut ks);
+        )+
+        for key in keys {
+            type_key(&$element, key);
         }
-        dispatch_input_event(element, &c.to_string());
+    };
+}
+
+/// A newtype around a [`Vec<Key>`] for use with [`type_to!`] macro.
+pub struct Keys(Vec<Key>);
+
+impl Deref for Keys {
+    type Target = Vec<Key>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Keys {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl From<&str> for Keys {
+    fn from(value: &str) -> Self {
+        Self(value.chars().map(Key::Lit).collect())
+    }
+}
+
+impl From<String> for Keys {
+    fn from(value: String) -> Self {
+        let value: &str = &value;
+        value.into()
+    }
+}
+
+impl From<Key> for Keys {
+    fn from(key: Key) -> Self {
+        Self(vec![key])
     }
 }
 
@@ -264,6 +302,15 @@ macro_rules! key_impl {
                 $(#[$($variant_doc)+])?
                 $variant,
             )*
+        }
+
+        impl Key {
+            fn is_visible(&self) -> bool {
+                match self {
+                    Key::Lit(_) => true,
+                    _ => false,
+                }
+            }
         }
 
         impl std::fmt::Display for Key {
@@ -735,7 +782,7 @@ mod tests {
 
         assert_text_content!("Enter", last_key_value);
 
-        type_to(&input, "hello");
+        type_to!(input, "hello");
 
         assert_text_content!("o", last_key_value);
         assert_eq!("hello", input.value());
@@ -779,7 +826,8 @@ mod tests {
         };
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
-        type_to(&input, "hello");
+
+        type_to!(input, "hello");
 
         assert_eq!("hello", input.value());
     }
