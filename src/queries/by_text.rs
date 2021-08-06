@@ -35,12 +35,15 @@ or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
 performing checked and unchecked casting between JS types.
  */
-use std::{fmt::Debug, ops::Deref};
+use std::{
+    fmt::{Debug, Display},
+    ops::Deref,
+};
 
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{Node, NodeFilter, TreeWalker};
 
-use crate::TestRender;
+use crate::{Error, TestRender};
 
 /**
 Enables queries by text node.
@@ -176,7 +179,7 @@ pub trait ByText {
     This might seem surprising but the outer div element contains a text node "Hello, " as the strong
     element breaks the text node - take care trying to find elements by text.
     */
-    fn get_by_text<'search, T>(&self, search: &'search str) -> Result<T, ByTextError<'search>>
+    fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast;
 
@@ -191,7 +194,7 @@ pub trait ByText {
 }
 
 impl ByText for TestRender {
-    fn get_by_text<'search, T>(&self, search: &'search str) -> Result<T, ByTextError<'search>>
+    fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
@@ -235,9 +238,16 @@ impl ByText for TestRender {
                 .filter_map(|node| node.text_content().map(|text| (text, node)));
 
             if let Some(closest) = sap_utils::closest(search, iter, |(key, _)| key) {
-                Err(ByTextError::Closest((search, self.inner_html(), closest.1)))
+                Err(Box::new(ByTextError::Closest((
+                    search.to_owned(),
+                    self.inner_html(),
+                    closest.1,
+                ))))
             } else {
-                Err(ByTextError::NotFound(search, self.inner_html()))
+                Err(Box::new(ByTextError::NotFound(
+                    search.to_owned(),
+                    self.inner_html(),
+                )))
             }
         }
     }
@@ -246,9 +256,9 @@ impl ByText for TestRender {
 /**
 An error indicating that no text node was an equal match for a given search term.
 */
-pub enum ByTextError<'search> {
+pub enum ByTextError {
     /// No text node could be found with the given search term.
-    NotFound(&'search str, String),
+    NotFound(String, String),
     /**
     No text node with an exact match for the search term could be found, however, a text node
     with a similar content as the search term was found.
@@ -257,10 +267,10 @@ pub enum ByTextError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, String, Node)),
+    Closest((String, String, Node)),
 }
 
-impl Debug for ByTextError<'_> {
+impl Debug for ByTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ByTextError::NotFound(search, html) => {
@@ -282,6 +292,18 @@ impl Debug for ByTextError<'_> {
                 )
             }
         }
+    }
+}
+
+impl Display for ByTextError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ByTextError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
     }
 }
 
