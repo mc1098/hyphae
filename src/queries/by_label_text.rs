@@ -167,7 +167,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
+        assert!(result.is_err());
     }
     ```
     ## Label found but `for` value doesn't match input `id`
@@ -211,7 +211,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
+        assert!(result.is_err());
     }
     ```
     */
@@ -347,7 +347,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
+        assert!(result.is_err());
     }
     ```
     ## Label found but `for` value doesn't match input `id`
@@ -391,7 +391,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
+        assert!(result.is_err());
     }
     ```
     */
