@@ -40,11 +40,11 @@ or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
 performing checked and unchecked casting between JS types.
 */
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement, Node};
 
-use crate::{RawNodeListIter, TestRender};
+use crate::{Error, RawNodeListIter, TestRender};
 
 /**
 Enables querying by `placeholder text`.
@@ -171,10 +171,7 @@ pub trait ByPlaceholderText {
     find the first element with a display value regardless of it’s type._
 
     */
-    fn get_by_placeholder_text<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, ByPlaceholderTextError<'search>>
+    fn get_by_placeholder_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast;
 
@@ -189,10 +186,7 @@ pub trait ByPlaceholderText {
 }
 
 impl ByPlaceholderText for TestRender {
-    fn get_by_placeholder_text<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, ByPlaceholderTextError<'search>>
+    fn get_by_placeholder_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
@@ -214,17 +208,17 @@ impl ByPlaceholderText for TestRender {
             if search == ph {
                 Ok(e)
             } else {
-                Err(ByPlaceholderTextError::Closest((
-                    search,
+                Err(Box::new(ByPlaceholderTextError::Closest((
+                    search.to_owned(),
                     self.inner_html(),
                     e.unchecked_into(),
-                )))
+                ))))
             }
         } else {
-            Err(ByPlaceholderTextError::NotFound((
-                search,
+            Err(Box::new(ByPlaceholderTextError::NotFound((
+                search.to_owned(),
                 self.inner_html(),
-            )))
+            ))))
         }
     }
 }
@@ -232,9 +226,9 @@ impl ByPlaceholderText for TestRender {
 /**
 An error indicating that no element with a placeholder text was an equal match for a given search term.
 */
-pub enum ByPlaceholderTextError<'search> {
+pub enum ByPlaceholderTextError {
     /// No element could be found with the given search term.
-    NotFound((&'search str, String)),
+    NotFound((String, String)),
     /**
     No element placeholder text was an exact match for the search term could be found, however, an
     element with a similar placeholder text as the search term was found.
@@ -243,10 +237,10 @@ pub enum ByPlaceholderTextError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, String, Node)),
+    Closest((String, String, Node)),
 }
 
-impl Debug for ByPlaceholderTextError<'_> {
+impl Debug for ByPlaceholderTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ByPlaceholderTextError::NotFound((search, html)) => {
@@ -266,6 +260,18 @@ impl Debug for ByPlaceholderTextError<'_> {
                 )
             }
         }
+    }
+}
+
+impl Display for ByPlaceholderTextError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ByPlaceholderTextError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
     }
 }
 
@@ -349,7 +355,6 @@ mod tests {
             Err(err) => {
                 let expected = format!(
                     "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
-                    // "\nNo element found with placeholder text equal or similar to '{}'\n",
                     "Enter bio",
                     r#"
 <div>Click me!</div>

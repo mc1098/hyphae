@@ -42,6 +42,9 @@ mod asserts;
 pub mod events;
 pub mod queries;
 
+/// Alias for boxed error
+pub type Error = Box<dyn std::error::Error>;
+
 /// Wrapper around a root element which has been rendered.
 pub struct TestRender {
     root_element: HtmlElement,
@@ -202,7 +205,7 @@ pub mod prelude {
         queries::{
             by_aria::*, by_display_value::*, by_label_text::*, by_placeholder_text::*, by_text::*,
         },
-        TestRender,
+        Error, TestRender,
     };
     pub use sap_aria::*;
     pub use web_sys::{Element, HtmlElement, Node};

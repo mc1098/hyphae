@@ -36,10 +36,12 @@ The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_
 performing checked and unchecked casting between JS types.
 
 */
+use std::fmt::Display;
+
 use wasm_bindgen::JsCast;
 use web_sys::HtmlLabelElement;
 
-use crate::TestRender;
+use crate::{Error, TestRender};
 
 /**
 Enables queries by `label text`.
@@ -165,7 +167,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
+        assert!(result.is_err());
     }
     ```
     ## Label found but `for` value doesn't match input `id`
@@ -209,14 +211,11 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
+        assert!(result.is_err());
     }
     ```
     */
-    fn get_by_label_text<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, ByLabelTextError<'search>>
+    fn get_by_label_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
@@ -348,7 +347,7 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
+        assert!(result.is_err());
     }
     ```
     ## Label found but `for` value doesn't match input `id`
@@ -392,14 +391,11 @@ pub trait ByLabelText {
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
+        assert!(result.is_err());
     }
     ```
     */
-    fn get_by_label_text_inc<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<(T, HtmlLabelElement), ByLabelTextError<'search>>
+    fn get_by_label_text_inc<T>(&self, search: &str) -> Result<(T, HtmlLabelElement), Error>
     where
         T: JsCast;
 
@@ -413,12 +409,72 @@ pub trait ByLabelText {
     }
 }
 
+impl ByLabelText for TestRender {
+    fn get_by_label_text_inc<T>(&self, search: &str) -> Result<(T, HtmlLabelElement), Error>
+    where
+        T: JsCast,
+    {
+        let labels = match self.root_element.query_selector_all("label") {
+            Ok(labels) => labels,
+            Err(_) => {
+                return Err(Box::new(ByLabelTextError::LabelNotFound((
+                    search.to_owned(),
+                    self.inner_html(),
+                ))))
+            }
+        };
+
+        let mut labels_matching_search = 0;
+        let mut ids_matching = vec![];
+
+        for i in 0..labels.length() {
+            let label = labels.get(i).unwrap();
+            if label
+                .text_content()
+                .map(|text| text == search)
+                .unwrap_or_default()
+            {
+                labels_matching_search += 1;
+                let label_element: HtmlLabelElement = label.unchecked_into();
+                if let Some(id) = label_element.get_attribute("for") {
+                    let node_list = self
+                        .query_selector_all(&format!("output[id={0}], input[id={0}]", id))
+                        .unwrap();
+
+                    for j in 0..node_list.length() {
+                        let node = node_list.get(j).unwrap();
+                        if let Ok(element) = node.dyn_into() {
+                            return Ok((element, label_element));
+                        }
+                    }
+                    // only push at the end - happy path == no allocation for vec
+                    ids_matching.push(id);
+                }
+            }
+        }
+
+        if labels_matching_search == 0 {
+            Err(Box::new(ByLabelTextError::LabelNotFound((
+                search.to_owned(),
+                self.inner_html(),
+            ))))
+        } else {
+            Err(Box::new(ByLabelTextError::NoElementFound((
+                search.to_owned(),
+                labels_matching_search,
+                ids_matching,
+                self.inner_html(),
+            ))))
+        }
+    }
+}
+
 /**
 The label text was not found or no element could be found associated with the label element found.
 */
-pub enum ByLabelTextError<'search> {
+pub enum ByLabelTextError {
     /// No [`HtmlLabelElement`] could be found with a text content that matches the search term.
-    LabelNotFound((&'search str, String)),
+    LabelNotFound((String, String)),
     /**
     A [`HtmlLabelElement`] was found but either had `for` attribute or no
     [`Element`](web_sys::Element) could be found with an `id` matching the value of the `for`
@@ -434,10 +490,10 @@ pub enum ByLabelTextError<'search> {
     Note: The number of labels found and the number of ids can differ when a label with the correct
     search term doesn't have a 'for' attribute
      */
-    NoElementFound((&'search str, usize, Vec<String>, String)),
+    NoElementFound((String, usize, Vec<String>, String)),
 }
 
-impl std::fmt::Debug for ByLabelTextError<'_> {
+impl std::fmt::Debug for ByLabelTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ByLabelTextError::LabelNotFound((text, html)) => {
@@ -487,58 +543,15 @@ impl std::fmt::Debug for ByLabelTextError<'_> {
     }
 }
 
-impl ByLabelText for TestRender {
-    fn get_by_label_text_inc<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<(T, HtmlLabelElement), ByLabelTextError<'search>>
-    where
-        T: JsCast,
-    {
-        let labels = match self.root_element.query_selector_all("label") {
-            Ok(labels) => labels,
-            Err(_) => return Err(ByLabelTextError::LabelNotFound((search, self.inner_html()))),
-        };
+impl Display for ByLabelTextError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
 
-        let mut labels_matching_search = 0;
-        let mut ids_matching = vec![];
-
-        for i in 0..labels.length() {
-            let label = labels.get(i).unwrap();
-            if label
-                .text_content()
-                .map(|text| text == search)
-                .unwrap_or_default()
-            {
-                labels_matching_search += 1;
-                let label_element: HtmlLabelElement = label.unchecked_into();
-                if let Some(id) = label_element.get_attribute("for") {
-                    let node_list = self
-                        .query_selector_all(&format!("output[id={0}], input[id={0}]", id))
-                        .unwrap();
-
-                    for j in 0..node_list.length() {
-                        let node = node_list.get(j).unwrap();
-                        if let Ok(element) = node.dyn_into() {
-                            return Ok((element, label_element));
-                        }
-                    }
-                    // only push at the end - happy path == no allocation for vec
-                    ids_matching.push(id);
-                }
-            }
-        }
-
-        if labels_matching_search == 0 {
-            Err(ByLabelTextError::LabelNotFound((search, self.inner_html())))
-        } else {
-            Err(ByLabelTextError::NoElementFound((
-                search,
-                labels_matching_search,
-                ids_matching,
-                self.inner_html(),
-            )))
-        }
+impl std::error::Error for ByLabelTextError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
     }
 }
 
@@ -619,7 +632,7 @@ pub mod tests {
         };
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
-        assert!(matches!(result, Err(ByLabelTextError::NoElementFound(_))));
+        assert!(result.is_err());
     }
 
     #[wasm_bindgen_test]
@@ -636,7 +649,7 @@ pub mod tests {
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
 
-        assert!(matches!(result, Err(ByLabelTextError::LabelNotFound(_))));
+        assert!(result.is_err());
     }
 
     #[wasm_bindgen_test]

@@ -176,8 +176,9 @@ version does not need to be explicitly set.
 
  */
 
+use crate::Error;
 use sap_aria::{AriaProperty, AriaRole, AriaState, ToQueryString};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::{Element, Node};
 
@@ -289,11 +290,7 @@ pub trait ByAria {
     have an associated label which makes it not very accessible. The aria-label was added to help with
     testing but also improved the accessibility of the todo example in the process._
     */
-    fn get_by_aria_role<'name, T>(
-        &self,
-        role: AriaRole,
-        name: &'name str,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Result<T, Error>
     where
         T: JsCast;
 
@@ -414,11 +411,7 @@ pub trait ByAria {
     }
     ```
     */
-    fn get_by_aria_prop<'name, S, T>(
-        &self,
-        property: AriaProperty,
-        name: S,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_prop<'name, S, T>(&self, property: AriaProperty, name: S) -> Result<T, Error>
     where
         S: Into<Option<&'name str>>,
         T: JsCast;
@@ -491,11 +484,7 @@ pub trait ByAria {
     }
     ```
     */
-    fn get_by_aria_state<'name, S, T>(
-        &self,
-        state: AriaState,
-        name: S,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> Result<T, Error>
     where
         S: Into<Option<&'name str>>,
         T: JsCast;
@@ -511,11 +500,7 @@ pub trait ByAria {
 }
 
 #[inline]
-fn get_by_aria_impl<'search, S, T>(
-    root: &Element,
-    aria: S,
-    name: Option<&'search str>,
-) -> Result<T, ByAriaError<'search>>
+fn get_by_aria_impl<S, T>(root: &Element, aria: S, name: Option<&str>) -> Result<T, Error>
 where
     S: ToQueryString,
     T: JsCast,
@@ -530,43 +515,41 @@ where
             ))
         });
 
-        return if let Some((an, e)) = sap_utils::closest(name, elements, |(k, _)| k) {
+        if let Some((an, e)) = sap_utils::closest(name, elements, |(k, _)| k) {
             if an == name {
                 Ok(e)
             } else {
-                Err(ByAriaError::Closest((
-                    name,
+                Err(Box::new(ByAriaError::Closest((
+                    name.to_owned(),
                     root.inner_html(),
                     e.unchecked_into(),
-                )))
+                ))))
             }
         } else {
-            Err(ByAriaError::NotFound((name, root.inner_html())))
-        };
+            Err(Box::new(ByAriaError::NotFound((
+                name.to_owned(),
+                root.inner_html(),
+            ))))
+        }
     } else if let Some(element) = node_iter.next() {
         Ok(element)
     } else {
-        Err(ByAriaError::NotFound(("", root.inner_html())))
+        Err(Box::new(ByAriaError::NotFound((
+            "".to_owned(),
+            root.inner_html(),
+        ))))
     }
 }
 
 impl ByAria for TestRender {
-    fn get_by_aria_role<'name, T>(
-        &self,
-        role: AriaRole,
-        name: &'name str,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
         get_by_aria_impl(self, role, name.into())
     }
 
-    fn get_by_aria_prop<'name, S, T>(
-        &self,
-        prop: AriaProperty,
-        name: S,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_prop<'name, S, T>(&self, prop: AriaProperty, name: S) -> Result<T, Error>
     where
         S: Into<Option<&'name str>>,
         T: JsCast,
@@ -574,11 +557,7 @@ impl ByAria for TestRender {
         get_by_aria_impl(self, prop, name.into())
     }
 
-    fn get_by_aria_state<'name, S, T>(
-        &self,
-        state: AriaState,
-        name: S,
-    ) -> Result<T, ByAriaError<'name>>
+    fn get_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> Result<T, Error>
     where
         S: Into<Option<&'name str>>,
         T: JsCast,
@@ -590,9 +569,9 @@ impl ByAria for TestRender {
 /**
 An error indicating that no element with an accessible name was an equal match for a given search term.
 */
-pub enum ByAriaError<'name> {
+pub enum ByAriaError {
     /// No element could be found with the given search term.
-    NotFound((&'name str, String)),
+    NotFound((String, String)),
     /**
     No element accessible name was an exact match for the search term could be found, however, an
     element with a similar accessible name as the search term was found.
@@ -601,13 +580,13 @@ pub enum ByAriaError<'name> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'name str, String, Node)),
+    Closest((String, String, Node)),
 }
 
-impl Debug for ByAriaError<'_> {
+impl Debug for ByAriaError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByAriaError::NotFound(("", html)) => {
+            ByAriaError::NotFound((s, html)) if s.is_empty() => {
                 write!(
                     f,
                     "\nNo element found with the aria type provided in the following HTML:{}. \
@@ -635,6 +614,18 @@ impl Debug for ByAriaError<'_> {
                 )
             }
         }
+    }
+}
+
+impl Display for ByAriaError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ByAriaError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
     }
 }
 
@@ -803,7 +794,6 @@ mod tests {
             Err(error) => {
                 let expected = format!(
                     "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
-                    // "\nNo exact match found for an accessible name of: '{}'\nDid you mean to find this Element:\n\t{}\n",
                     "my input",
                     r#"
 <label for="my-input">My Input
@@ -811,7 +801,6 @@ mod tests {
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
 </label>
 "#
-                    // "<input id=\"my-input\" type=\"text\">"
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -826,7 +815,6 @@ mod tests {
             Err(error) => {
                 let expected = format!(
                     "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
-                    // "\nNo element found with an accessible name equal or similar to '{}'\n",
                     "this name doesn't exist!",
                     r#"
 <label for="my-input">My Input

@@ -55,12 +55,12 @@ The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_
 performing checked and unchecked casting between JS types.
 
 */
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use wasm_bindgen::JsCast;
 use web_sys::Node;
 
-use crate::{RawNodeListIter, TestRender};
+use crate::{Error, RawNodeListIter, TestRender};
 
 /**
 Enables querying elements by `display value`.
@@ -237,10 +237,7 @@ pub trait ByDisplayValue {
     [^note] _Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
     find the first element with a display value regardless of it's type._
     */
-    fn get_by_display_value<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, ByDisplayValueError<'search>>
+    fn get_by_display_value<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast;
 
@@ -255,10 +252,7 @@ pub trait ByDisplayValue {
 }
 
 impl ByDisplayValue for TestRender {
-    fn get_by_display_value<'search, T>(
-        &self,
-        search: &'search str,
-    ) -> Result<T, ByDisplayValueError<'search>>
+    fn get_by_display_value<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
@@ -275,14 +269,17 @@ impl ByDisplayValue for TestRender {
             if search == dv {
                 Ok(e)
             } else {
-                Err(ByDisplayValueError::Closest((
-                    search,
+                Err(Box::new(ByDisplayValueError::Closest((
+                    search.to_owned(),
                     self.inner_html(),
                     e.unchecked_into(),
-                )))
+                ))))
             }
         } else {
-            Err(ByDisplayValueError::NotFound((search, self.inner_html())))
+            Err(Box::new(ByDisplayValueError::NotFound((
+                search.to_owned(),
+                self.inner_html(),
+            ))))
         }
     }
 }
@@ -290,9 +287,9 @@ impl ByDisplayValue for TestRender {
 /**
 An error indicating that no element with a display value was an equal match for a given search term.
 */
-pub enum ByDisplayValueError<'search> {
+pub enum ByDisplayValueError {
     /// No element could be found with the given search term.
-    NotFound((&'search str, String)),
+    NotFound((String, String)),
     /**
     No element display value was an exact match for the search term could be found, however, an
     element with a similar display value as the search term was found.
@@ -301,10 +298,10 @@ pub enum ByDisplayValueError<'search> {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((&'search str, String, Node)),
+    Closest((String, String, Node)),
 }
 
-impl Debug for ByDisplayValueError<'_> {
+impl Debug for ByDisplayValueError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ByDisplayValueError::NotFound((search, html)) => {
@@ -324,6 +321,18 @@ impl Debug for ByDisplayValueError<'_> {
                 )
             }
         }
+    }
+}
+
+impl Display for ByDisplayValueError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for ByDisplayValueError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
     }
 }
 
