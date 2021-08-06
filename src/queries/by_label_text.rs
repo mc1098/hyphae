@@ -418,7 +418,7 @@ The label text was not found or no element could be found associated with the la
 */
 pub enum ByLabelTextError<'search> {
     /// No [`HtmlLabelElement`] could be found with a text content that matches the search term.
-    LabelNotFound(&'search str),
+    LabelNotFound((&'search str, String)),
     /**
     A [`HtmlLabelElement`] was found but either had `for` attribute or no
     [`Element`](web_sys::Element) could be found with an `id` matching the value of the `for`
@@ -434,16 +434,21 @@ pub enum ByLabelTextError<'search> {
     Note: The number of labels found and the number of ids can differ when a label with the correct
     search term doesn't have a 'for' attribute
      */
-    NoElementFound((&'search str, usize, Vec<String>)),
+    NoElementFound((&'search str, usize, Vec<String>, String)),
 }
 
 impl std::fmt::Debug for ByLabelTextError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByLabelTextError::LabelNotFound(text) => {
-                writeln!(f, "No label found with text: '{}'.", text)
+            ByLabelTextError::LabelNotFound((text, html)) => {
+                writeln!(
+                    f,
+                    "No label found with text: '{}' in the following HTML:{}",
+                    text,
+                    sap_utils::format_html(html)
+                )
             }
-            ByLabelTextError::NoElementFound((text, no_of_labels, ids)) => {
+            ByLabelTextError::NoElementFound((text, no_of_labels, ids, html)) => {
                 if *no_of_labels == 1 {
                     write!(f, "Found a label ")?;
                 } else {
@@ -457,16 +462,18 @@ impl std::fmt::Debug for ByLabelTextError<'_> {
                 } else if ids.len() == 1 {
                     writeln!(
                         f,
-                        "no element of the correct type was found associated with the following id '{}'.",
+                        "no element of the correct type was found associated with the following id '{}' ",
                         ids[0]
                     )?;
                 } else {
                     writeln!(
                         f,
-                        "no element of the correct type was found associated with the following ids: '{}'.",
+                        "no element of the correct type was found associated with the following ids: '{}' ",
                         ids.join(",")
                     )?;
                 }
+
+                writeln!(f, "in the following HTML:{}", sap_utils::format_html(html))?;
 
                 if *no_of_labels != ids.len() {
                     writeln!(
@@ -490,7 +497,7 @@ impl ByLabelText for TestRender {
     {
         let labels = match self.root_element.query_selector_all("label") {
             Ok(labels) => labels,
-            Err(_) => return Err(ByLabelTextError::LabelNotFound(search)),
+            Err(_) => return Err(ByLabelTextError::LabelNotFound((search, self.inner_html()))),
         };
 
         let mut labels_matching_search = 0;
@@ -523,12 +530,13 @@ impl ByLabelText for TestRender {
         }
 
         if labels_matching_search == 0 {
-            Err(ByLabelTextError::LabelNotFound(search))
+            Err(ByLabelTextError::LabelNotFound((search, self.inner_html())))
         } else {
             Err(ByLabelTextError::NoElementFound((
                 search,
                 labels_matching_search,
                 ids_matching,
+                self.inner_html(),
             )))
         }
     }
