@@ -41,7 +41,7 @@ use std::fmt::Display;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlLabelElement;
 
-use crate::{Error, TestRender};
+use crate::{Error, QueryElement};
 
 /**
 Enables queries by `label text`.
@@ -101,8 +101,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -110,16 +108,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn get_input_by_label_text() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What need to be done?" }</label>
-            #       <br />
-            #       <input id="new-todo" value={"hi!"} />
-            #   </form>
-            # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
         let input: HtmlInputElement = rendered
             .get_by_label_text("What needs to be done?")
             .expect("To find the input by label text");
@@ -145,8 +135,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -154,16 +142,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn label_not_found() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What doesn't need to be done?" }</label>
-            #       <br />
-            #       <input id="new-todo" value={"hi!"} />
-            #   </form>
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
@@ -189,8 +169,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -198,16 +176,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn label_found_but_no_matching_input_element() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What needs to be done?" }</label>
-            #       <br />
-            #       <input id="typo-on-id" value="hi!" />
-            #   </form>
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let result = rendered
             .get_by_label_text::<HtmlElement>("What needs to be done?");
 
@@ -280,8 +250,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -289,16 +257,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn get_input_by_label_text() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What need to be done?" }</label>
-            #       <br />
-            #       <input id="new-todo" value={"hi!"} />
-            #   </form>
-            # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
         // turbo fish is recommended over this approach
         let (input, label): (HtmlInputElement, HtmlLabelElement) = rendered
             .get_by_label_text_inc("What needs to be done?")
@@ -325,8 +285,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -334,16 +292,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn label_not_found() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What doesn't need to be done?" }</label>
-            #       <br />
-            #       <input id="new-todo" value={"hi!"} />
-            #   </form>
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
@@ -369,8 +319,6 @@ pub trait ByLabelText {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -378,16 +326,8 @@ pub trait ByLabelText {
 
     #[wasm_bindgen_test]
     fn label_found_but_no_matching_input_element() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <form>
-            #       <label for="new-todo">{ "What needs to be done?" }</label>
-            #       <br />
-            #       <input id="typo-on-id" value="hi!" />
-            #   </form>
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let result = rendered
             .get_by_label_text_inc::<HtmlElement>("What needs to be done?");
 
@@ -409,12 +349,12 @@ pub trait ByLabelText {
     }
 }
 
-impl ByLabelText for TestRender {
+impl ByLabelText for QueryElement {
     fn get_by_label_text_inc<T>(&self, search: &str) -> Result<(T, HtmlLabelElement), Error>
     where
         T: JsCast,
     {
-        let labels = match self.root_element.query_selector_all("label") {
+        let labels = match self.query_selector_all("label") {
             Ok(labels) => labels,
             Err(_) => {
                 return Err(Box::new(ByLabelTextError::LabelNotFound((
@@ -561,46 +501,54 @@ pub mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
-    use crate::TestRender;
-    use sap_yew::test_render;
+    use crate::{make_element_with_html_string, QueryElement};
     use web_sys::{HtmlElement, HtmlInputElement};
 
-    fn input_label_text() -> TestRender {
-        test_render! {
+    fn input_label_text() -> QueryElement {
+        make_element_with_html_string(
+            r#"""
             <div>
                 <form>
-                    <label for="new-todo">{"What needs to be done?"}</label>
+                    <label for="new-todo">What needs to be done?</label>
                     <br />
-                    <input id="new-todo" value={"hi!"} />
+                    <input id="new-todo" value="hi!" />
                 </form>
             </div>
-        }
+        """#,
+        )
+        .into()
     }
 
-    fn input_label_text_label_after_input() -> TestRender {
-        test_render! {
+    fn input_label_text_label_after_input() -> QueryElement {
+        make_element_with_html_string(
+            r#"""
             <div>
                 <form>
-                    <input id="new-todo" value={"hi!"} />
+                    <input id="new-todo" value="hi!" />
                     <br />
-                    <label for="new-todo">{"What needs to be done?"}</label>
+                    <label for="new-todo">What needs to be done?</label>
                 </form>
             </div>
-        }
+        """#,
+        )
+        .into()
     }
 
-    fn input_label_text_different_parents() -> TestRender {
-        test_render! {
+    fn input_label_text_different_parents() -> QueryElement {
+        make_element_with_html_string(
+            r#"""
             <div>
                 <form>
                     <div>
-                        <label for="new-todo">{"What needs to be done?"}</label>
+                        <label for="new-todo">What needs to be done?</label>
                     </div>
                     <br />
-                    <input id="new-todo" value={"hi!"} />
+                    <input id="new-todo" value="hi!" />
                 </form>
             </div>
-        }
+        """#,
+        )
+        .into()
     }
 
     #[wasm_bindgen_test]
@@ -621,15 +569,18 @@ pub mod tests {
 
     #[wasm_bindgen_test]
     fn no_element_found_when_id_and_for_do_not_match() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
                 <form>
-                    <label for="new-todoz">{ "What needs to be done?" }</label>
+                    <label for="new-todoz">What needs to be done?</label>
                     <br />
-                    <input id="new_todo" value={"hi!"} />
+                    <input id="new_todo" value="hi!" />
                 </form>
             </div>
-        };
+        """#,
+        )
+        .into();
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
         assert!(result.is_err());
@@ -637,15 +588,18 @@ pub mod tests {
 
     #[wasm_bindgen_test]
     fn text_not_found_when_search_term_not_found_in_label() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
                 <form>
-                    <label for="new-todo">{ "What doesn't need to be done?" }</label>
+                    <label for="new-todo">What doesn't need to be done?</label>
                     <br />
-                    <input id="new-todo" value={"hi!"} />
+                    <input id="new-todo" value="hi!" />
                 </form>
             </div>
-        };
+        """#,
+        )
+        .into();
 
         let result = rendered.get_by_label_text::<HtmlElement>("What needs to be done?");
 
@@ -655,12 +609,15 @@ pub mod tests {
     #[wasm_bindgen_test]
     fn input_value_change() {
         let label_text = "What needs to be done?";
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <>
-                <label for="todo">{ "What needs to be done?" }</label>
+                <label for="todo">What needs to be done?</label>
                 <input type="text" id="todo" value="" />
             </>
-        };
+        """#,
+        )
+        .into();
 
         let new_value = "Gardening";
 

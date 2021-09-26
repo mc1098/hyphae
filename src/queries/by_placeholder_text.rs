@@ -44,7 +44,7 @@ use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement, Node};
 
-use crate::{Error, RawNodeListIter, TestRender};
+use crate::{Error, QueryElement, RawNodeListIter};
 
 /**
 Enables querying by `placeholder text`.
@@ -82,8 +82,6 @@ pub trait ByPlaceholderText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -91,13 +89,8 @@ pub trait ByPlaceholderText {
 
     #[wasm_bindgen_test]
     fn get_input_by_placeholder_text() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <input id="username-input" placeholder="Username" />
-            #   <textarea id="username-textarea" placeholder="Username" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let input: HtmlInputElement = rendered
             .get_by_placeholder_text("Username")
             .unwrap();
@@ -113,8 +106,6 @@ pub trait ByPlaceholderText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -122,13 +113,8 @@ pub trait ByPlaceholderText {
 
     #[wasm_bindgen_test]
     fn get_text_area_by_placeholder_text() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <input id="username-input" placeholder="Username" />
-            #   <textarea id="username-textarea" placeholder="Username" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let text_area: HtmlTextAreaElement = rendered
             .get_by_placeholder_text("Username")
             .unwrap();
@@ -144,8 +130,6 @@ pub trait ByPlaceholderText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -153,13 +137,8 @@ pub trait ByPlaceholderText {
 
     #[wasm_bindgen_test]
     fn get_first_element_by_placeholder_text() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div>
-            #   <input id="username-input" placeholder="Username" />
-            #   <textarea id="username-textarea" placeholder="Username" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let element: HtmlElement = rendered
             .get_by_placeholder_text("Username")
             .unwrap();
@@ -185,15 +164,12 @@ pub trait ByPlaceholderText {
     }
 }
 
-impl ByPlaceholderText for TestRender {
+impl ByPlaceholderText for QueryElement {
     fn get_by_placeholder_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
-        let holders = self
-            .root_element
-            .query_selector_all(":placeholder-shown")
-            .ok();
+        let holders = self.query_selector_all(":placeholder-shown").ok();
 
         let holders = RawNodeListIter::<T>::new(holders).filter_map(|holder| match holder
             .dyn_into::<HtmlInputElement>(
@@ -283,16 +259,18 @@ mod tests {
     use web_sys::{Element, HtmlElement};
 
     use super::*;
-    use crate::TestRender;
-    use sap_yew::test_render;
+    use crate::{make_element_with_html_string, QueryElement};
 
     #[wasm_bindgen_test]
     fn get_input_by_placeholder_text() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
                 <input id="34" placeholder="Username" />
             </div>
-        };
+        """#,
+        )
+        .into();
 
         let result: HtmlElement = rendered.get_by_placeholder_text("Username").unwrap();
         assert_eq!("34", result.id());
@@ -300,11 +278,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_textarea_by_placeholder_text() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
-                <textarea id="23" placeholder="Enter bio here" />
+                <textarea id="23" placeholder="Enter bio here"></textarea>
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let result: HtmlElement = rendered.get_by_placeholder_text("Enter bio here").unwrap();
         assert_eq!("23", result.id());
@@ -316,9 +297,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_errors() {
-        let rendered = test_render! {
-            <input type="text" placeholder="Username" />
-        };
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <input placeholder="Username" type="text" />
+        "#,
+        )
+        .into();
 
         let result = rendered.get_by_placeholder_text::<HtmlInputElement>("usrname");
 
@@ -342,11 +326,14 @@ mod tests {
 
         drop(rendered);
 
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
-                { "Click me!" }
+                Click me!
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let result = rendered.get_by_placeholder_text::<HtmlTextAreaElement>("Enter bio");
 

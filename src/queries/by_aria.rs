@@ -182,7 +182,7 @@ use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::{Element, Node};
 
-use crate::{RawNodeListIter, TestRender};
+use crate::{QueryElement, RawNodeListIter};
 
 /**
 Enables querying elements generically by ARIA roles, properties, and state.
@@ -223,8 +223,6 @@ pub trait ByAria {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -232,14 +230,8 @@ pub trait ByAria {
 
     #[wasm_bindgen_test]
     fn get_button_by_role() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                #   <div id="not-mybtn">
-                #       <button id="mybtn">{ "Click me!" }</button>
-                #   </div>
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "Click me!")
@@ -263,8 +255,6 @@ pub trait ByAria {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -272,12 +262,8 @@ pub trait ByAria {
 
     #[wasm_bindgen_test]
     fn get_button_by_role() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                    # <input id="toggle-all" type="checkbox" aria-label="Toggle all todo items" />
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
 
         let checkbox: HtmlInputElement = rendered
             .get_by_aria_role(AriaRole::Checkbox, "Toggle all todo items")
@@ -341,8 +327,6 @@ pub trait ByAria {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -350,15 +334,8 @@ pub trait ByAria {
 
     #[wasm_bindgen_test]
     fn get_required_input_by_name() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <form>
-                #   <label for="user-email">{ "Email:" }</label>
-                #   <input type="email" id="user-email" required=true />
-                #   <label for="user-password">{ "Password:" }</label>
-                #   <input type="password" id="user-password" required=true />
-                # </form>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
 
         let email_input: HtmlInputElement = rendered
             .get_by_aria_prop(AriaProperty::Required(true), "Email:")
@@ -385,8 +362,6 @@ pub trait ByAria {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -394,14 +369,8 @@ pub trait ByAria {
 
     #[wasm_bindgen_test]
     fn get_button_aria_label() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                    # <div id="not-mybtn">
-                        # <button id="mybtn" aria-label="ok"/>
-                    # </div>
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_prop(AriaProperty::Label("ok".to_owned()), None)
@@ -459,8 +428,6 @@ pub trait ByAria {
     Code:
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -468,13 +435,8 @@ pub trait ByAria {
 
     #[wasm_bindgen_test]
     fn get_invalid_spelling_input() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <form>
-                    # <input id="best-pet" aria-invalid="spelling" value="doge" aria-label="best pet" />
-                    # <input id="second-best-pet" value="cat" aria-label="second best pet" />
-                # </form>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
 
         let spelling_error_input: HtmlInputElement = rendered
             .get_by_aria_state(AriaState::Invalid(InvalidToken::Spelling), "best pet")
@@ -541,7 +503,7 @@ where
     }
 }
 
-impl ByAria for TestRender {
+impl ByAria for QueryElement {
     fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Result<T, Error>
     where
         T: JsCast,
@@ -632,7 +594,7 @@ impl std::error::Error for ByAriaError {
 #[cfg(test)]
 mod tests {
 
-    use sap_yew::test_render;
+    use crate::make_element_with_html_string;
 
     use super::*;
     use sap_aria::InvalidToken;
@@ -642,14 +604,17 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_by_button_role_with_text_content() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <div id="not-mybtn">
-                    { "click me" }
-                    <button id="mybtn">{ "click me!" }</button>
+                    click me
+                <button id="mybtn">click me!</button>
                 </div>
             </div>
-        };
+        "#,
+        )
+        .into();
         let button: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "click me!")
             .unwrap();
@@ -659,13 +624,17 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_by_aria_label() {
-        let rendered = test_render! {
+        // No text content in button
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <div id="not-mybtn">
-                    <button id="mybtn" aria-label="ok" /> // No text on button
+                    <button id="mybtn" aria-label="ok" />
                 </div>
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_prop(AriaProperty::Label("ok".to_owned()), None)
@@ -676,11 +645,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_by_aria_disabled_state() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <input type="email" id="my-input" aria-disabled="true" />
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered
             .get_by_aria_state(AriaState::Disabled(true), None)
@@ -691,12 +663,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_single_input_with_spelling_error() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(r#"
             <form>
                 <input id="best-pet" aria-label="best pet" aria-invalid="spelling" value="doge" />
                 <input id="second-best-pet" aria-label="second best pet" aria-invalid="false" value="cat"  />
             </form>
-        };
+        "#).into();
         let spelling_error_input: HtmlInputElement = rendered
             .get_by_aria_state(AriaState::Invalid(InvalidToken::Spelling), "best pet")
             .unwrap();
@@ -706,11 +678,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_input_by_role_with_aria_label() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <input id="myinput" type="text" aria-label="username" />
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered
             .get_by_aria_role(AriaRole::TextBox, "username")
@@ -721,14 +696,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_button_by_role_with_aria_labelledby() {
-        let rendered = test_render! {
-            <>
-                <div id="button-label" >
-                    { "My custom button label" }
-                </div>
-                <button aria-labelledby="button-label" />
-            </>
-        };
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <div id="button-label">
+                My custom button label
+            </div>
+            <button aria-labelledby="button-label" />
+        "#,
+        )
+        .into();
 
         let button: HtmlButtonElement = rendered
             .get_by_aria_role(AriaRole::Button, "My custom button label")
@@ -742,14 +718,17 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_input_by_role_with_label() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <div>
-                    <label for="my-input">{ "My input label" }</label>
+                    <label for="my-input">My input label</label>
                 </div>
                 <input id="my-input" type="search" />
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered
             .get_by_aria_role(AriaRole::Searchbox, "My input label")
@@ -760,12 +739,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_img_by_role_with_alt() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <div>
                 <img id="no" src="first-img.jpg" />
                 <img id="yes" src="somg-img.jpg" alt="The best image ever!" />
             </div>
-        };
+        "#,
+        )
+        .into();
 
         let img: HtmlImageElement = rendered
             .get_by_aria_role(AriaRole::Image, "The best image ever!")
@@ -776,12 +758,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_errors() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <label for="my-input">
-                { "My Input" }
+                My Input
                 <input id="my-input" type="text" />
             </label>
-        };
+        "#,
+        )
+        .into();
 
         let result = rendered.get_by_aria_role::<HtmlInputElement>(AriaRole::TextBox, "my input");
 

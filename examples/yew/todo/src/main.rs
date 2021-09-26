@@ -1,7 +1,7 @@
 use gloo_storage::{LocalStorage, Storage};
 use state::{Entry, Filter, State};
 use strum::IntoEnumIterator;
-use yew::{prelude::*, web_sys::HtmlInputElement};
+use yew::{html::Scope, prelude::*, web_sys::HtmlInputElement};
 
 mod state;
 
@@ -22,7 +22,6 @@ pub enum Msg {
 }
 
 pub struct Model {
-    link: ComponentLink<Self>,
     state: State,
     focus_ref: NodeRef,
 }
@@ -31,7 +30,7 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_: &Context<Self>) -> Self {
         let entries = LocalStorage::get(KEY).unwrap_or_default();
 
         let state = State {
@@ -42,14 +41,10 @@ impl Component for Model {
         };
         let focus_ref = NodeRef::default();
 
-        Self {
-            link,
-            state,
-            focus_ref,
-        }
+        Self { state, focus_ref }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Add => {
                 let description = self.state.value.trim();
@@ -107,11 +102,9 @@ impl Component for Model {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
-    }
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
 
-    fn view(&self) -> Html {
         let hidden_class = if self.state.entries.is_empty() {
             "hidden"
         } else {
@@ -122,7 +115,7 @@ impl Component for Model {
                 <section class="todoapp">
                     <header class="header">
                         <h1>{ "todos" }</h1>
-                        { self.view_input() }
+                        { self.view_input(link) }
                     </header>
                     <section class={classes!("main", hidden_class)}>
                         <input
@@ -131,11 +124,11 @@ impl Component for Model {
                             id="toggle-all"
                             aria-label="toggle all todo items"
                             checked={self.state.is_all_completed()}
-                            onclick={self.link.callback(|_| Msg::ToggleAll)}
+                            onclick={link.callback(|_| Msg::ToggleAll)}
                         />
                         <label for="toggle-all" />
                         <ul class="todo-list">
-                            { for self.state.entries.iter().filter(|e| self.state.filter.fits(e)).enumerate().map(|e| self.view_entry(e)) }
+                            { for self.state.entries.iter().filter(|e| self.state.filter.fits(e)).enumerate().map(|e| self.view_entry(link, e)) }
                         </ul>
                     </section>
                     <footer class={classes!("footer", hidden_class)}>
@@ -144,9 +137,9 @@ impl Component for Model {
                             { " item(s) left" }
                         </span>
                         <ul class="filters">
-                            { for Filter::iter().map(|flt| self.view_filter(flt)) }
+                            { for Filter::iter().map(|flt| self.view_filter(link, flt)) }
                         </ul>
-                        <button class="clear-completed" onclick={self.link.callback(|_| Msg::ClearCompleted)}>
+                        <button class="clear-completed" onclick={link.callback(|_| Msg::ClearCompleted)}>
                             { format!("Clear completed ({})", self.state.total_completed()) }
                         </button>
                     </footer>
@@ -161,8 +154,14 @@ impl Component for Model {
     }
 }
 
+macro_rules! value_from_input_target {
+    ($event:expr) => {
+        $event.target_unchecked_into::<HtmlInputElement>().value()
+    };
+}
+
 impl Model {
-    fn view_filter(&self, filter: Filter) -> Html {
+    fn view_filter(&self, link: &Scope<Self>, filter: Filter) -> Html {
         let cls = if self.state.filter == filter {
             "selected"
         } else {
@@ -172,7 +171,7 @@ impl Model {
             <li>
                 <a class={cls}
                    href={filter.as_href()}
-                   onclick={self.link.callback(move |_| Msg::SetFilter(filter))}
+                   onclick={link.callback(move |_| Msg::SetFilter(filter))}
                 >
                     { filter }
                 </a>
@@ -180,7 +179,9 @@ impl Model {
         }
     }
 
-    fn view_input(&self) -> Html {
+    fn view_input(&self, link: &Scope<Self>) -> Html {
+        let oninput = link.callback(|e: InputEvent| Msg::Update(value_from_input_target!(e)));
+
         html! {
             // You can use standard Rust comments. One line:
             // <li></li>
@@ -188,8 +189,8 @@ impl Model {
                 class="new-todo"
                 placeholder="What needs to be done?"
                 value={self.state.value.clone()}
-                oninput={self.link.callback(|e: InputData| Msg::Update(e.value))}
-                onkeypress={self.link.batch_callback(|e: KeyboardEvent| {
+                {oninput}
+                onkeypress={link.batch_callback(|e: KeyboardEvent| {
                     if e.key() == "Enter" { Some(Msg::Add) } else { None }
                 })}
             />
@@ -201,7 +202,7 @@ impl Model {
         }
     }
 
-    fn view_entry(&self, (idx, entry): (usize, &Entry)) -> Html {
+    fn view_entry(&self, link: &Scope<Self>, (idx, entry): (usize, &Entry)) -> Html {
         let mut class = Classes::from("todo");
         if entry.editing {
             class.push(" editing");
@@ -219,17 +220,17 @@ impl Model {
                         type="checkbox"
                         class="toggle"
                         checked={entry.completed}
-                        onclick={self.link.callback(move |_| Msg::Toggle(idx))}
+                        onclick={link.callback(move |_| Msg::Toggle(idx))}
                     />
-                    <label for={check_id} ondblclick={self.link.callback(move |_| Msg::ToggleEdit(idx))}>{ &entry.description }</label>
-                    <button aria-controls={id} class="destroy" onclick={self.link.callback(move |_| Msg::Remove(idx))} />
+                    <label for={check_id} ondblclick={link.callback(move |_| Msg::ToggleEdit(idx))}>{ &entry.description }</label>
+                    <button aria-controls={id} class="destroy" onclick={link.callback(move |_| Msg::Remove(idx))} />
                 </div>
-                { self.view_entry_edit_input((idx, entry)) }
+                { self.view_entry_edit_input(link, (idx, entry)) }
             </li>
         }
     }
 
-    fn view_entry_edit_input(&self, (idx, entry): (usize, &Entry)) -> Html {
+    fn view_entry_edit_input(&self, link: &Scope<Self>, (idx, entry): (usize, &Entry)) -> Html {
         if entry.editing {
             html! {
                 <input
@@ -237,10 +238,10 @@ impl Model {
                     type="text"
                     ref={self.focus_ref.clone()}
                     value={self.state.edit_value.clone()}
-                    onmouseover={self.link.callback(|_| Msg::Focus)}
-                    oninput={self.link.callback(|e: InputData| Msg::UpdateEdit(e.value))}
-                    onblur={self.link.callback(move |_| Msg::Edit(idx))}
-                    onkeypress={self.link.batch_callback(move |e: KeyboardEvent| {
+                    onmouseover={link.callback(|_| Msg::Focus)}
+                    oninput={link.callback(|e: InputEvent| Msg::UpdateEdit(value_from_input_target!(e)))}
+                    onblur={link.callback(move |_| Msg::Edit(idx))}
+                    onkeypress={link.batch_callback(move |e: KeyboardEvent| {
                         if e.key() == "Enter" { Some(Msg::Edit(idx)) } else { None }
                     })}
                 />
@@ -260,16 +261,14 @@ mod tests {
 
     use super::*;
     use sap::{events::*, prelude::*, type_to};
-    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::HtmlButtonElement;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed() {
-        let rendered = test_render! {
-            <Model />
-        };
+        let rendered = QueryElement::default();
+        let _ = yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -299,7 +298,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_edit_it_and_complete() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::default();
+        let _ = yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -336,7 +336,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_multiple_todo_items_and_complete_them_all_at_once() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::default();
+        let _ = yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -367,7 +368,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_remove_it() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::default();
+        let _ = yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -391,7 +393,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn check_active_completed_tabs() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::default();
+        let _ = yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");

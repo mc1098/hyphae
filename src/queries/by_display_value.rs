@@ -1,16 +1,16 @@
 /*!
-Supports finding: [`HtmlInputElement`], [`HtmlSelectElement`], [`HtmlTextAreaElement`] generically
-by `display value`.
+Supports finding: [`HtmlInputElement`](web_sys::HtmlInputElement), [`HtmlSelectElement`](web_sys::HtmlSelectElement),
+[`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement) generically by `display value`.
 
 # Display value
 
 The `display value` for each element:
-- [`HtmlInputElement`]\:
+- [`HtmlInputElement`](web_sys::HtmlInputElement)\:
     ```html
     <input type="text" value="Welcome" />
                               ^^^^^^^ the "display value"
     ```
-- [`HtmlSelectElement`]\:
+- [`HtmlSelectElement`](web_sys::HtmlSelectElement)\:
 
     The `display value`s possible are listed by the `option` elements - the current `display value`
     will be whichever option is selected by the user.
@@ -26,7 +26,7 @@ The `display value` for each element:
     default will normally be the first `option`[^note].
 
     [^note] _Needs to be confirmed that this is the standard_
-- [`HtmlTextAreaElement`]\:
+- [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)\:
 
     The `display value` will be current text found in the textarea element.
     ```html
@@ -39,15 +39,15 @@ The `display value` for each element:
 
 # Generics
 Each trait function supports generics for convenience and to help narrow the scope of the search. If
-you are querying for a [`HtmlInputElement`] by `display value` then you won't find either
-[`HtmlSelectElement`], [`HtmlTextAreaElement`].
+you are querying for a [`HtmlInputElement`](web_sys::HtmlInputElement) by `display value` then you won't find either
+[`HtmlSelectElement`](web_sys::HtmlSelectElement), [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement).
 
 In [`Sap`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
 [^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
 type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
-or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
+or performing certain actions, such as [`click`](web_sys::HtmlElement::click())._
 
 # What is [`JsCast`]?
 
@@ -60,7 +60,7 @@ use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::Node;
 
-use crate::{Error, RawNodeListIter, TestRender};
+use crate::{Error, QueryElement, RawNodeListIter};
 
 /**
 Enables querying elements by `display value`.
@@ -72,9 +72,9 @@ pub trait ByDisplayValue {
     Get a generic element by the display value.
 
     The possible elements that can be returned are:
-    - [`HtmlInputElement`]
-    - [`HtmlSelectElement`]
-    - [`HtmlTextAreaElement`]
+    - [`HtmlInputElement`](web_sys::HtmlInputElement)
+    - [`HtmlSelectElement`](web_sys::HtmlSelectElement)
+    - [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)
 
     Using one of the generic types above as `T` will essentially skip the other two types of
     elements - if you want to find the very first element that matches the display value then use
@@ -100,11 +100,9 @@ pub trait ByDisplayValue {
     ## Get input by display value
 
     The first element with the display value of "Welcome" is the textarea, however, this function
-    will return the last element because of the [`HtmlInputElement`] generic.
+    will return the last element because of the [`HtmlInputElement`](web_sys::HtmlInputElement) generic.
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -112,17 +110,8 @@ pub trait ByDisplayValue {
 
     #[wasm_bindgen_test]
     fn get_input_by_display_value() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div id="my-display-value-elements">
-            #   <textarea id="greeting-textarea">{ "Welcome" }</textarea>
-            #   <select id="greeting-select">
-            #       <option value="Welcome" selected=true>{ "Welcome" }</option>
-            #       <option value="Hello">{ "Hello" }</option>
-            #   </select>
-            #   <input id="greeting-input" type="text" value="Welcome" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let input: HtmlInputElement = rendered
             .get_by_display_value("Welcome")
             .unwrap();
@@ -134,11 +123,9 @@ pub trait ByDisplayValue {
     ## Get select by display value
 
     The first element with the display value of "Welcome" is the textarea, however, this function
-    will return the second element because of the [`HtmlSelectElement`] generic.
+    will return the second element because of the [`HtmlSelectElement`](web_sys::HtmlSelectElement) generic.
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -146,17 +133,8 @@ pub trait ByDisplayValue {
 
     #[wasm_bindgen_test]
     fn get_select_by_display_value() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div id="my-display-value-elements">
-            #   <textarea id="greeting-textarea">{ "Welcome" }</textarea>
-            #   <select id="greeting-select">
-            #       <option value="Welcome" selected=true>{ "Welcome" }</option>
-            #       <option value="Hello">{ "Hello" }</option>
-            #   </select>
-            #   <input id="greeting-input" type="text" value="Welcome" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let select = rendered
             .get_by_display_value::<HtmlSelectElement>("Welcome") // can use turbo fish
             .unwrap();
@@ -172,8 +150,6 @@ pub trait ByDisplayValue {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -181,17 +157,8 @@ pub trait ByDisplayValue {
 
     #[wasm_bindgen_test]
     fn get_text_area_by_display_value() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div id="my-display-value-elements">
-            #   <textarea id="greeting-textarea">{ "Welcome" }</textarea>
-            #   <select id="greeting-select">
-            #       <option value="Welcome" selected=true>{ "Welcome" }</option>
-            #       <option value="Hello">{ "Hello" }</option>
-            #   </select>
-            #   <input id="greeting-input" type="text" value="Welcome" />
-            # </div>
-        # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let text_area: HtmlTextAreaElement = rendered
             .get_by_display_value("Welcome")
             .unwrap();
@@ -207,8 +174,6 @@ pub trait ByDisplayValue {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -216,17 +181,8 @@ pub trait ByDisplayValue {
 
     #[wasm_bindgen_test]
     fn get_text_area_by_display_value() {
-        let rendered: TestRender = // feature dependent rendering
-        # test_render! {
-            # <div id="my-display-value-elements">
-            #   <textarea id="greeting-textarea">{ "Welcome" }</textarea>
-            #   <select id="greeting-select">
-            #       <option value="Welcome" selected=true>{ "Welcome" }</option>
-            #       <option value="Hello">{ "Hello" }</option>
-            #   </select>
-            #   <input id="greeting-input" type="text" value="Welcome" />
-            # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+        # QueryElement::new();
         let element: HtmlElement = rendered
             .get_by_display_value("Welcome")
             .unwrap();
@@ -251,15 +207,12 @@ pub trait ByDisplayValue {
     }
 }
 
-impl ByDisplayValue for TestRender {
+impl ByDisplayValue for QueryElement {
     fn get_by_display_value<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
-        let elements = self
-            .root_element
-            .query_selector_all("input, select, textarea")
-            .ok();
+        let elements = self.query_selector_all("input, select, textarea").ok();
 
         let display_values = RawNodeListIter::<T>::new(elements).filter_map(|element| {
             sap_utils::get_element_value(&element).map(|value| (value, element))
@@ -345,14 +298,16 @@ mod tests {
     use super::*;
     use web_sys::{Element, HtmlInputElement, HtmlTextAreaElement};
 
-    use crate::TestRender;
-    use sap_yew::test_render;
+    use crate::{make_element_with_html_string, QueryElement};
 
     #[wasm_bindgen_test]
     fn get_input_by_display_value() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <input type="text" id="greeting" value="Welcome" />
-        };
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered.get_by_display_value("Welcome").unwrap();
         assert_eq!("greeting", input.id());
@@ -360,12 +315,13 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_text_area_due_to_type() {
-        let rendered = test_render! {
-            <>
-                <input type="text" id="input" value="hello" />
-                <textarea id="textarea" value="hello" />
-            </>
-        };
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <input type="text" id="input" value="hello" />
+            <textarea id="textarea">hello</textarea>
+        "#,
+        )
+        .into();
 
         let text_area: HtmlTextAreaElement = rendered.get_by_display_value("hello").unwrap();
         assert_eq!("textarea", text_area.id());
@@ -379,9 +335,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn get_errors() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <input type="text" value="this is it!" />
-        };
+        "#,
+        )
+        .into();
 
         let result = rendered.get_by_display_value::<HtmlInputElement>("this isn't it!");
 
@@ -394,13 +353,11 @@ mod tests {
             Err(error) => {
                 let expected = format!(
                     "\nNo exact match found for a display value of: '{}'.\nA similar match was found in the following HTML:{}",
-                    // "\nNo exact match found for a display value of: '{}'\nDid you mean to find this Element:\n\t{}\n",
                     "this isn't it!",
                     r#"
-<input type="text">
-^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
+<input type="text" value="this is it!">
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Did you mean to find this element?
 "#
-                    // "<input type=\"text\">"
                 );
 
                 assert_eq!(expected, format!("{:?}", error));
@@ -409,11 +366,14 @@ mod tests {
 
         drop(rendered);
 
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
             <span>
-                { "Not my bio!" }
+                Not my bio!
             </span>
-        };
+        "#,
+        )
+        .into();
 
         let result = rendered.get_by_display_value::<HtmlTextAreaElement>("My bio!");
 
@@ -422,7 +382,6 @@ mod tests {
             Err(err) => {
                 let expected = format!(
                     "\nNo element found with a display value equal or similar to '{}' in the following HTML:{}",
-                    // "\nNo element found with a display value equal or similar to '{}'\n",
                     "My bio!",
                     r#"
 <span>Not my bio!</span>
