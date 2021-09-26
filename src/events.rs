@@ -211,9 +211,9 @@ impl DblClick for EventTarget {
 Dispatches a [`InputEvent`] with the `data` given, to the event target.
 
 Input events can only be fired on the following:
-- [`HtmlInputElement`]
-- [`HtmlSelectElement`]
-- [`HtmlTextAreaElement`]
+- [`HtmlInputElement`](web_sys::HtmlInputElement)
+- [`HtmlSelectElement`](web_sys::HtmlSelectElement)
+- [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)
 
 Using the function on other elements will do nothing!
 
@@ -722,7 +722,6 @@ mod tests {
     use yew::prelude::*;
 
     struct KeyDemo {
-        link: ComponentLink<Self>,
         last_key_pressed: Option<String>,
     }
 
@@ -730,30 +729,25 @@ mod tests {
         type Message = KeyboardEvent;
         type Properties = ();
 
-        fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        fn create(_: &Context<Self>) -> Self {
             Self {
-                link,
                 last_key_pressed: None,
             }
         }
 
-        fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
             self.last_key_pressed = Some(msg.key());
             true
         }
 
-        fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-            false
-        }
-
-        fn view(&self) -> Html {
+        fn view(&self, ctx: &Context<Self>) -> Html {
             let default = "None".to_owned();
             let last_key_value = self.last_key_pressed.as_ref().unwrap_or(&default);
             html! {
                 <>
                     <p>{ last_key_value }</p>
                     <label for="input">{ "input label" }</label>
-                    <input id="input" placeholder="key" type="text" onkeydown={self.link.callback(|e| e)} />
+                    <input id="input" placeholder="key" type="text" onkeydown={ctx.link().callback(|e| e)} />
                 </>
             }
         }
@@ -761,17 +755,15 @@ mod tests {
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use crate::{assert_text_content, TestRender};
-    use sap_yew::test_render;
+    use crate::{assert_text_content, QueryElement};
 
     use super::*;
     use crate::prelude::*;
 
     #[wasm_bindgen_test]
     fn sim_typing_to_input_and_enter_to_confirm() {
-        let rendered = test_render! {
-            <KeyDemo />
-        };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<KeyDemo>(rendered.clone().into());
 
         let last_key_value: HtmlElement = rendered.get_by_text("None").unwrap();
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
@@ -795,22 +787,14 @@ mod tests {
     struct InputDemo;
 
     impl Component for InputDemo {
-        type Message = InputData;
+        type Message = ();
         type Properties = ();
 
-        fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+        fn create(_: &Context<Self>) -> Self {
             Self
         }
 
-        fn update(&mut self, _: Self::Message) -> ShouldRender {
-            false
-        }
-
-        fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-            false
-        }
-
-        fn view(&self) -> Html {
+        fn view(&self, _: &Context<Self>) -> Html {
             html! {
                 <>
                     <input placeholder="key" type="text" />
@@ -821,9 +805,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn type_to_input() {
-        let rendered = test_render! {
-            <InputDemo />
-        };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<InputDemo>(rendered.clone().into());
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
 
@@ -838,9 +821,8 @@ mod tests {
             static FLAG: Cell<bool> = Default::default();
         }
 
-        let rendered = test_render! {
-            <InputDemo />
-        };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<InputDemo>(rendered.clone().into());
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
 

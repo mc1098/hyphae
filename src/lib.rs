@@ -36,7 +36,7 @@ $ wasm-pack test --headless --firefox --chrome
 use std::{marker::PhantomData, ops::Deref};
 
 use wasm_bindgen::JsCast;
-use web_sys::{Element, HtmlElement, NodeList};
+use web_sys::{HtmlElement, NodeList};
 
 mod asserts;
 pub mod events;
@@ -46,11 +46,9 @@ pub mod queries;
 pub type Error = Box<dyn std::error::Error>;
 
 /// Wrapper around a root element which has been rendered.
-pub struct TestRender {
-    root_element: HtmlElement,
-}
+pub struct QueryElement(HtmlElement);
 
-/// Iterator for [`Element`]s
+/// Iterator for [`Element`](web_sys::Element)s
 pub struct ElementIter<'a, T: JsCast> {
     iter: Box<dyn Iterator<Item = T> + 'a>,
     _marker: PhantomData<&'a T>,
@@ -148,48 +146,94 @@ where
     }
 }
 
-impl TestRender {
+impl QueryElement {
     /**
     Wrap rendered root element ready to be queried.
 
     # Examples
     ```no_run
     use sap::prelude::*;
-    # use web_sys::Element;
-    # fn render(element: Element) {
-    let rendered = TestRender::new(element);
+    let rendered = QueryElement::new();
     // .. use `rendered` to get elements and perform tests
-    # }
     ```
     */
-    pub fn new(root_element: Element) -> Self {
-        Self {
-            root_element: root_element.unchecked_into(),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
-impl From<HtmlElement> for TestRender {
+impl Default for QueryElement {
+    fn default() -> Self {
+        let doc = web_sys::window()
+            .and_then(|w| w.document())
+            .expect("Cannot get global document");
+        let div = doc.create_element("div").expect("Unable to create element");
+        div.set_id("sap-test-app");
+        doc.body()
+            .expect("Cannot get body element")
+            .append_child(&div)
+            .expect("Unable to append test div to body");
+
+        Self(div.unchecked_into())
+    }
+}
+
+impl From<HtmlElement> for QueryElement {
     fn from(root_element: HtmlElement) -> Self {
-        Self { root_element }
+        Self(root_element)
     }
 }
 
-impl Deref for TestRender {
+impl Deref for QueryElement {
     type Target = HtmlElement;
 
     fn deref(&self) -> &Self::Target {
-        &self.root_element
+        &self.0
+    }
+}
+
+impl AsRef<HtmlElement> for QueryElement {
+    fn as_ref(&self) -> &HtmlElement {
+        &self.0
     }
 }
 
 // Removing the element is useful to avoid conflicts when a test module has multiple
 // #[wasm_bindgen_test]s, however, it does mean that everything is removed from the DOM when a
 // user is performing wasm-pack test without --headless.
-impl Drop for TestRender {
+impl Drop for QueryElement {
     fn drop(&mut self) {
-        self.root_element.remove();
+        self.0.remove();
     }
+}
+
+#[cfg(test)]
+pub(crate) fn make_element_with_html_string(inner_html: &str) -> web_sys::HtmlElement {
+    let document = web_sys::window().unwrap().document().unwrap();
+    let div = document.create_element("div").unwrap();
+    // remove \n & \t and 4 x spaces which are just formatting to avoid text nodes being added
+    let inner_html = inner_html
+        .chars()
+        .fold((String::new(), 0), |(mut s, ws), c| match c {
+            ' ' if ws == 3 => {
+                s.truncate(s.len() - 3);
+                (s, 0)
+            }
+            ' ' => {
+                s.push(c);
+                (s, ws + 1)
+            }
+            '\n' | '\t' => (s, 0),
+            _ => {
+                s.push(c);
+                (s, 0)
+            }
+        })
+        .0;
+    div.set_inner_html(&inner_html);
+
+    document.body().unwrap().append_child(&div).unwrap();
+    div.unchecked_into()
 }
 
 /// Sap Prelude
@@ -205,7 +249,7 @@ pub mod prelude {
         queries::{
             by_aria::*, by_display_value::*, by_label_text::*, by_placeholder_text::*, by_text::*,
         },
-        Error, TestRender,
+        Error, QueryElement,
     };
     pub use sap_aria::*;
     pub use web_sys::{Element, HtmlElement, Node};

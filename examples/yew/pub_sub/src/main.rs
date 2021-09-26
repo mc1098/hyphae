@@ -4,7 +4,7 @@ mod subscriber;
 
 use producer::Producer;
 use subscriber::Subscriber;
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, Context, Html};
 
 pub struct Model;
 
@@ -12,19 +12,11 @@ impl Component for Model {
     type Message = ();
     type Properties = ();
 
-    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+    fn create(_: &Context<Self>) -> Self {
         Self
     }
 
-    fn change(&mut self, _msg: Self::Properties) -> ShouldRender {
-        false
-    }
-
-    fn update(&mut self, _props: Self::Message) -> ShouldRender {
-        unimplemented!()
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, _: &Context<Self>) -> Html {
         html! {
             <>
                 <Producer />
@@ -43,7 +35,6 @@ mod tests {
 
     use super::*;
     use sap::prelude::*;
-    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::HtmlButtonElement;
 
@@ -51,7 +42,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn click_producer_and_view_subscriber_message() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // get subscriber heading message
         let sub_message: HtmlElement =

@@ -1,4 +1,4 @@
-use yew::prelude::*;
+use yew::{html::Scope, prelude::*};
 use yew_router::prelude::*;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
@@ -19,21 +19,19 @@ pub enum Msg {
 }
 
 pub struct Model {
-    link: ComponentLink<Self>,
     navbar_active: bool,
 }
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_: &Context<Self>) -> Self {
         Self {
-            link,
             navbar_active: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ToggleNavbar => {
                 self.navbar_active = !self.navbar_active;
@@ -42,14 +40,10 @@ impl Component for Model {
         }
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <>
-                { self.view_nav() }
+                { self.view_nav(ctx.link()) }
 
                 <main>
                     <Router<Route> render={Router::render(switch)} />
@@ -69,12 +63,8 @@ impl Component for Model {
     }
 }
 impl Model {
-    fn view_nav(&self) -> Html {
-        let Self {
-            ref link,
-            navbar_active,
-            ..
-        } = *self;
+    fn view_nav(&self, link: &Scope<Self>) -> Html {
+        let navbar_active = self.navbar_active;
 
         let active_class = if navbar_active { "is-active" } else { "" };
 
@@ -130,19 +120,11 @@ macro_rules! static_comp {
                 type Message = ();
                 type Properties = ();
 
-                fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+                fn create(_: &Context<Self>) -> Self {
                     Self
                 }
 
-                fn update(&mut self, _: Self::Message) -> ShouldRender {
-                    false
-                }
-
-                fn change(&mut self, _: Self::Properties) -> ShouldRender {
-                    false
-                }
-
-                fn view(&self) -> Html {
+                fn view(&self, _: &Context<Self>) -> Html {
                     $content
                 }
             }
@@ -186,11 +168,11 @@ mod tests {
     wasm_bindgen_test_configure!(run_in_browser);
 
     use sap::prelude::*;
-    use sap_yew::test_render;
 
     #[wasm_bindgen_test]
     fn route_test() {
-        let rendered: TestRender = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<Model>(rendered.clone().into());
 
         // Confirm that the Home component is loaded by checking for the "Home" heading.
         rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Heading, "Home");

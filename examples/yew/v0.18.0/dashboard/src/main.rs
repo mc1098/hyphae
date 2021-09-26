@@ -239,7 +239,6 @@ mod tests {
     wasm_bindgen_test_configure!(run_in_browser);
 
     use sap::prelude::*;
-    use sap_yew::test_render;
     use yew::{
         format::{Binary, Text},
         web_sys::HtmlButtonElement,
@@ -247,7 +246,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn get_data() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        App::<Model>::new().mount(rendered.clone().into());
 
         let mock = DataFromFile { value: 20 };
         // mock fetch to return mock value
@@ -269,7 +269,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn get_binary_data() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        App::<Model>::new().mount(rendered.clone().into());
 
         let mock = DataFromFile { value: 50 };
         let _handle = sap_mock::mock_fetch(Ok(&mock));
@@ -286,7 +287,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     async fn get_binary_toml() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        App::<Model>::new().mount(rendered.clone().into());
 
         let mock: Text = Toml(&DataFromFile { value: 230 }).into();
         let _handle = sap_mock::mock_fetch(Ok(&mock.unwrap()));
@@ -303,7 +305,9 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn connect_to_ws_send_and_recieve() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        App::<Model>::new().mount(rendered.clone().into());
+
         let controller = sap_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered
@@ -346,7 +350,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn connect_to_ws_send_and_recieve_binary() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        App::<Model>::new().mount(rendered.clone().into());
         let controller = sap_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered

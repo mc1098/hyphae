@@ -7,7 +7,6 @@ pub enum Msg {
 }
 
 pub struct Model {
-    link: ComponentLink<Self>,
     value: i64,
 }
 
@@ -15,11 +14,11 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+    fn create(_: &Context<Self>) -> Self {
+        Self { value: 0 }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Increment => {
                 self.value += 1;
@@ -34,24 +33,20 @@ impl Component for Model {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div>
                 <div class="panel">
                     // A button to send the Increment message
-                    <button class="button" onclick={self.link.callback(|_| Msg::Increment)}>
+                    <button class="button" onclick={ctx.link().callback(|_| Msg::Increment)}>
                         { "+1" }
                     </button>
                     // A button to send the Decrement message
-                    <button class="button" onclick={self.link.callback(|_| Msg::Decrement)}>
+                    <button class="button" onclick={ctx.link().callback(|_| Msg::Decrement)}>
                         { "-1" }
                     </button>
                     // A button to send the two Increment messages
-                    <button class="button" onclick={self.link.batch_callback(|_| vec![Msg::Increment, Msg::Increment])}>
+                    <button class="button" onclick={ctx.link().batch_callback(|_| vec![Msg::Increment, Msg::Increment])}>
                         { "+1, +1" }
                     </button>
 
@@ -81,7 +76,6 @@ fn main() {
 mod tests {
 
     use sap::prelude::*;
-    use sap_yew::test_render;
     use wasm_bindgen_test::*;
     use yew::web_sys::{HtmlButtonElement, HtmlElement};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -89,7 +83,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_counter() {
-        let rendered = test_render! { <Model /> };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<Model>(rendered.clone().into());
 
         let inc_btn: HtmlButtonElement = rendered.assert_by_text("+1");
         let dec_btn: HtmlButtonElement = rendered.assert_by_text("-1");

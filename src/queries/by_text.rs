@@ -43,7 +43,7 @@ use std::{
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{Node, NodeFilter, TreeWalker};
 
-use crate::{Error, TestRender};
+use crate::{Error, QueryElement};
 
 /**
 Enables queries by text node.
@@ -81,8 +81,6 @@ pub trait ByText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -90,15 +88,8 @@ pub trait ByText {
 
     #[wasm_bindgen_test]
     fn get_button_by_text() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                    # { "Hello, "}<strong>{ "World!" }</strong>
-                    # <div id="text-div">{ "Hello, World!" }</div>
-                    # <button id="text-button">{ "Hello, World!" }</button>
-                    # <label id="text-label">{ "Hello, World!" }</label>
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
         let button: HtmlButtonElement = rendered
             .get_by_text("Hello, World!")
             .unwrap();
@@ -114,8 +105,6 @@ pub trait ByText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -123,15 +112,8 @@ pub trait ByText {
 
     #[wasm_bindgen_test]
     fn get_label_by_text() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                    # { "Hello, "}<strong>{ "World!" }</strong>
-                    # <div id="text-div">{ "Hello, World!" }</div>
-                    # <button id="text-button">{ "Hello, World!" }</button>
-                    # <label id="text-label">{ "Hello, World!" }</label>
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
         let label: HtmlLabelElement = rendered
             .get_by_text("Hello, World!")
             .unwrap();
@@ -151,8 +133,6 @@ pub trait ByText {
 
     ```no_run
     # fn main() {}
-    # use yew::prelude::*;
-    # use sap_yew::test_render;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
@@ -160,15 +140,8 @@ pub trait ByText {
 
     #[wasm_bindgen_test]
     fn get_first_element_by_text() {
-        let rendered: TestRender = // feature dependent rendering
-            # test_render! {
-                # <div>
-                    # { "Hello, "}<strong>{ "World!" }</strong>
-                    # <div id="text-div">{ "Hello, World!" }</div>
-                    # <button id="text-button">{ "Hello, World!" }</button>
-                    # <label id="text-label">{ "Hello, World!" }</label>
-                # </div>
-            # };
+        let rendered: QueryElement = // feature dependent rendering
+            # QueryElement::new();
         let element: HtmlElement = rendered
             .get_by_text("Hello, World!")
             .unwrap();
@@ -193,7 +166,7 @@ pub trait ByText {
     }
 }
 
-impl ByText for TestRender {
+impl ByText for QueryElement {
     fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
@@ -214,25 +187,18 @@ impl ByText for TestRender {
             }
         };
 
-        let walker = create_filtered_tree_walker(
-            &self.root_element,
-            WhatToShow::ShowText,
-            filter_on_text_value,
-        );
+        let walker = create_filtered_tree_walker(self, WhatToShow::ShowText, filter_on_text_value);
 
         if let Some(node) = walker.next_node().unwrap() {
             Ok(node.parent_element().unwrap().unchecked_into())
         } else {
             // nothing found - lets go back over each text node and find 'close' matches
-            let walker = create_filtered_tree_walker(
-                &self.root_element,
-                WhatToShow::ShowText,
-                move |node: Node| {
+            let walker =
+                create_filtered_tree_walker(self, WhatToShow::ShowText, move |node: Node| {
                     node.parent_element()
                         .and_then(|e| e.dyn_into::<T>().ok())
                         .is_some()
-                },
-            );
+                });
 
             let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
                 .filter_map(|node| node.text_content().map(|text| (text, node)));
@@ -362,7 +328,7 @@ where
 #[cfg(test)]
 mod tests {
 
-    use sap_yew::test_render;
+    use crate::make_element_with_html_string;
 
     use super::*;
     use wasm_bindgen_test::*;
@@ -372,31 +338,26 @@ mod tests {
 
     pub(crate) struct Counter {
         count: usize,
-        link: ComponentLink<Self>,
     }
 
     impl Component for Counter {
         type Message = ();
         type Properties = ();
 
-        fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-            Self { count: 0, link }
+        fn create(_: &Context<Self>) -> Self {
+            Self { count: 0 }
         }
 
-        fn update(&mut self, _: Self::Message) -> ShouldRender {
+        fn update(&mut self, _: &Context<Self>, _: Self::Message) -> bool {
             self.count += 1;
             true
         }
 
-        fn change(&mut self, _: Self::Properties) -> ShouldRender {
-            false
-        }
-
-        fn view(&self) -> Html {
+        fn view(&self, ctx: &Context<Self>) -> Html {
             html! {
                 <div>
                     <p>{ format!("Count: {}", self.count) }</p>
-                    <button onclick={self.link.callback(|_| ())}>{ "Click me!" }</button>
+                    <button onclick={ctx.link().callback(|_| ())}>{ "Click me!" }</button>
                 </div>
             }
         }
@@ -404,13 +365,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn text_search() {
-        let test = test_render! {
+        let test: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
-                <div>
-                    { "Hello, World!" }
-                </div>
+                <div>Hello, World!</div>
             </div>
-        };
+        """#,
+        )
+        .into();
 
         let result = test.get_by_text::<Element>("Hello, World!");
         assert!(result.is_ok());
@@ -418,13 +380,16 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn search_for_text_narrow_with_generics() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
-                <div id="div">{ "Hello!" }</div>
-                <label id="label">{ "Hello!" }</label>
-                <button id="button">{ "Hello!" }</button>
+                <div id="div">Hello!</div>
+                <label id="label">Hello!</label>
+                <button id="button">Hello!</button>
             </div>
-        };
+        """#,
+        )
+        .into();
 
         let button: HtmlButtonElement = rendered.get_by_text("Hello!").unwrap();
         assert_eq!("button", button.id());
@@ -438,12 +403,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn by_text_uses_text_nodes_not_text_content() {
-        let rendered = test_render! {
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"""
             <div>
-                { "Hello, " }
-                <strong>{ "World!" }</strong>
+                Hello, 
+                <strong>World!</strong>
             </div>
-        };
+        """#,
+        )
+        .into();
         // can't find `Hello, World!` as they are two distinct text nodes :(
         let not_found = rendered.get_by_text::<Element>("Hello, World!");
         assert!(not_found.is_err());
@@ -454,9 +422,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn button_click_test() {
-        let rendered = test_render! {
-            <Counter />
-        };
+        let rendered = QueryElement::new();
+        yew::start_app_in_element::<Counter>(rendered.clone().into());
 
         let button: HtmlElement = rendered.get_by_text("Click me!").unwrap();
         button.click();
@@ -471,9 +438,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn find_close_match() {
-        let rendered = test_render! {
-            <button>{ "Click me!" }</button>
-        };
+        let rendered: QueryElement =
+            make_element_with_html_string("<button>Click me!</button>").into();
 
         let result = rendered.get_by_text::<HtmlButtonElement>("Click me");
 
@@ -495,11 +461,7 @@ mod tests {
 
         drop(rendered);
 
-        let rendered = test_render! {
-            <div>
-                { "Click me!" }
-            </div>
-        };
+        let rendered: QueryElement = make_element_with_html_string("<div>Click me!</div>").into();
 
         let result = rendered.get_by_text::<HtmlButtonElement>("Click me");
 
