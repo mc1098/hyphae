@@ -489,17 +489,14 @@ where
             }
         } else {
             Err(Box::new(ByAriaError::NotFound((
-                name.to_owned(),
+                Some(name.to_owned()),
                 root.inner_html(),
             ))))
         }
     } else if let Some(element) = node_iter.next() {
         Ok(element)
     } else {
-        Err(Box::new(ByAriaError::NotFound((
-            "".to_owned(),
-            root.inner_html(),
-        ))))
+        Err(Box::new(ByAriaError::NotFound((None, root.inner_html()))))
     }
 }
 
@@ -533,7 +530,7 @@ An error indicating that no element with an accessible name was an equal match f
 */
 pub enum ByAriaError {
     /// No element could be found with the given search term.
-    NotFound((String, String)),
+    NotFound((Option<String>, String)),
     /**
     No element accessible name was an exact match for the search term could be found, however, an
     element with a similar accessible name as the search term was found.
@@ -548,7 +545,7 @@ pub enum ByAriaError {
 impl Debug for ByAriaError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByAriaError::NotFound((s, html)) if s.is_empty() => {
+            ByAriaError::NotFound((None, html)) => {
                 write!(
                     f,
                     "\nNo element found with the aria type provided in the following HTML:{}. \
@@ -559,7 +556,7 @@ impl Debug for ByAriaError {
                     sap_utils::format_html(html)
                 )
             }
-            ByAriaError::NotFound((name, html)) => {
+            ByAriaError::NotFound((Some(name), html)) => {
                 write!(
                     f,
                     "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
