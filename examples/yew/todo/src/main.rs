@@ -1,7 +1,8 @@
 use gloo_storage::{LocalStorage, Storage};
 use state::{Entry, Filter, State};
 use strum::IntoEnumIterator;
-use yew::{html::Scope, prelude::*, web_sys::HtmlInputElement};
+use web_sys::HtmlInputElement;
+use yew::{html::Scope, prelude::*};
 
 mod state;
 
@@ -262,8 +263,8 @@ mod tests {
     use super::*;
     use sap::{events::*, prelude::*, type_to};
     use wasm_bindgen_test::*;
-    use yew::web_sys::HtmlButtonElement;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+    use web_sys::HtmlButtonElement;
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed() {
