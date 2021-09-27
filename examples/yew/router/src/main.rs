@@ -168,6 +168,7 @@ mod tests {
     wasm_bindgen_test_configure!(run_in_browser);
 
     use sap::prelude::*;
+    use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]
     fn route_test() {

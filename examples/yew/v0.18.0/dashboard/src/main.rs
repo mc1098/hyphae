@@ -241,7 +241,7 @@ mod tests {
     use sap::prelude::*;
     use yew::{
         format::{Binary, Text},
-        web_sys::HtmlButtonElement,
+        web_sys::{HtmlButtonElement, HtmlElement},
     };
 
     #[wasm_bindgen_test]

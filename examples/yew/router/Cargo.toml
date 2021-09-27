@@ -13,3 +13,9 @@ yew-router = { git = "https://github.com/yewstack/yew.git" }
 [dev-dependencies]
 sap = { path = "../../.." }
 wasm-bindgen-test = "0.3.24"
+
+[dev-dependencies.web-sys]
+version = "0.3"
+features = [
+	"HtmlElement",
+]

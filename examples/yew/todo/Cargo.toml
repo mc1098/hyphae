@@ -26,4 +26,5 @@ wasm-bindgen-test = "0.3.24"
 version = "0.3"
 features = [
 	"HtmlButtonElement",
+	"HtmlElement",
 ]
