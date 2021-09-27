@@ -5,16 +5,16 @@ edition = "2018"
 
 [dependencies]
 serde = "1"
-wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"] }
-js-sys = "0.3.51"
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+js-sys = "0.3"
 
 [dev-dependencies]
-wasm-bindgen-futures = "0.4.24"
-wasm-bindgen-test = "0.3.24"
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = "0.3"
 sap-utils = { path = "../sap-utils" }
 
 [dev-dependencies.web-sys] 
-version = "0.3.51"
+version = "0.3"
 features = [
 	"Blob",
 	"console",
