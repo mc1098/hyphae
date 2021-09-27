@@ -252,5 +252,4 @@ pub mod prelude {
         Error, QueryElement,
     };
     pub use sap_aria::*;
-    pub use web_sys::{Element, HtmlElement, Node};
 }

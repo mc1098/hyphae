@@ -138,7 +138,7 @@ pub trait ByLabelText {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
-    use web_sys::HtmlTextAreaElement;
+    use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
     fn label_not_found() {
@@ -172,7 +172,7 @@ pub trait ByLabelText {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
-    use web_sys::HtmlTextAreaElement;
+    use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
     fn label_found_but_no_matching_input_element() {
@@ -288,7 +288,7 @@ pub trait ByLabelText {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
-    use web_sys::HtmlTextAreaElement;
+    use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
     fn label_not_found() {
@@ -322,7 +322,7 @@ pub trait ByLabelText {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
     use sap::prelude::*;
-    use web_sys::HtmlTextAreaElement;
+    use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
     fn label_found_but_no_matching_input_element() {

@@ -264,7 +264,7 @@ mod tests {
     use sap::{events::*, prelude::*, type_to};
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-    use web_sys::HtmlButtonElement;
+    use web_sys::{HtmlButtonElement, HtmlElement};
 
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed() {
