@@ -38,16 +38,14 @@ One of the tests found in the `todo` example.
 ```rust
 use super::*;
 use sap::{events::*, prelude::*, type_to};
-use sap_yew::test_render;
 use wasm_bindgen_test::*;
-use yew::web_sys::HtmlButtonElement;
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+use web_sys::{HtmlButtonElement, HtmlInputElement};
 
 #[wasm_bindgen_test]
 fn make_new_todo_item_complete_it_then_clear_completed() {
-    let rendered = test_render! {
-        <Model />
-    };
+    let rendered = QueryElement::new();
+    yew::start_app_in_element::<Model>(rendered.clone().into());
 
     // get todo input
     let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
