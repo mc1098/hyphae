@@ -12,6 +12,18 @@ serde_derive = "1"
 yew = { git = "https://github.com/yewstack/yew.git" }
 gloo-storage = { git = "https://github.com/rustwasm/gloo.git" }
 
+[dependencies.web-sys]
+version = "0.3"
+features = [
+	"HtmlInputElement",
+]
+
 [dev-dependencies]
 sap = { path = "../../.." }
 wasm-bindgen-test = "0.3.24"
+
+[dev-dependencies.web-sys]
+version = "0.3"
+features = [
+	"HtmlButtonElement",
+]

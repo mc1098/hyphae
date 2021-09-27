@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use sap::prelude::*;
     use wasm_bindgen_test::*;
-    use yew::web_sys::HtmlButtonElement;
+    use web_sys::{HtmlButtonElement, HtmlElement};
 
     wasm_bindgen_test_configure!(run_in_browser);
 

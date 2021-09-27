@@ -1,5 +1,6 @@
 use js_sys::Date;
-use yew::{prelude::*, web_sys::console};
+use web_sys::console;
+use yew::prelude::*;
 
 pub enum Msg {
     Increment,
@@ -77,9 +78,9 @@ mod tests {
 
     use sap::prelude::*;
     use wasm_bindgen_test::*;
-    use yew::web_sys::{HtmlButtonElement, HtmlElement};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use super::*;
+    use web_sys::{HtmlButtonElement, HtmlElement};
 
     #[wasm_bindgen_test]
     fn test_counter() {
