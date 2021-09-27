@@ -333,35 +333,7 @@ mod tests {
     use super::*;
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-    use web_sys::{Element, HtmlButtonElement, HtmlElement, HtmlLabelElement};
-    use yew::{html, prelude::*};
-
-    pub(crate) struct Counter {
-        count: usize,
-    }
-
-    impl Component for Counter {
-        type Message = ();
-        type Properties = ();
-
-        fn create(_: &Context<Self>) -> Self {
-            Self { count: 0 }
-        }
-
-        fn update(&mut self, _: &Context<Self>, _: Self::Message) -> bool {
-            self.count += 1;
-            true
-        }
-
-        fn view(&self, ctx: &Context<Self>) -> Html {
-            html! {
-                <div>
-                    <p>{ format!("Count: {}", self.count) }</p>
-                    <button onclick={ctx.link().callback(|_| ())}>{ "Click me!" }</button>
-                </div>
-            }
-        }
-    }
+    use web_sys::{Element, HtmlButtonElement, HtmlLabelElement};
 
     #[wasm_bindgen_test]
     fn text_search() {
@@ -418,22 +390,6 @@ mod tests {
 
         let found = rendered.get_by_text::<Element>("Hello, ");
         assert!(found.is_ok())
-    }
-
-    #[wasm_bindgen_test]
-    fn button_click_test() {
-        let rendered = QueryElement::new();
-        yew::start_app_in_element::<Counter>(rendered.clone().into());
-
-        let button: HtmlElement = rendered.get_by_text("Click me!").unwrap();
-        button.click();
-
-        let count = rendered.get_by_text::<Element>("Count: 1");
-        assert!(count.is_ok());
-
-        button.click();
-        let count = rendered.get_by_text::<Element>("Count: 2");
-        assert!(count.is_ok());
     }
 
     #[wasm_bindgen_test]

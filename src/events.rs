@@ -718,52 +718,80 @@ mod tests {
     use std::cell::Cell;
 
     use wasm_bindgen::{prelude::Closure, JsCast};
-    use web_sys::{HtmlElement, HtmlInputElement, KeyboardEvent};
-    use yew::prelude::*;
-
-    struct KeyDemo {
-        last_key_pressed: Option<String>,
-    }
-
-    impl Component for KeyDemo {
-        type Message = KeyboardEvent;
-        type Properties = ();
-
-        fn create(_: &Context<Self>) -> Self {
-            Self {
-                last_key_pressed: None,
-            }
-        }
-
-        fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-            self.last_key_pressed = Some(msg.key());
-            true
-        }
-
-        fn view(&self, ctx: &Context<Self>) -> Html {
-            let default = "None".to_owned();
-            let last_key_value = self.last_key_pressed.as_ref().unwrap_or(&default);
-            html! {
-                <>
-                    <p>{ last_key_value }</p>
-                    <label for="input">{ "input label" }</label>
-                    <input id="input" placeholder="key" type="text" onkeydown={ctx.link().callback(|e| e)} />
-                </>
-            }
-        }
-    }
+    use web_sys::{Document, HtmlElement, HtmlInputElement, KeyboardEvent};
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use crate::{assert_text_content, QueryElement};
+    use crate::{assert_text_content, make_element_with_html_string, QueryElement};
 
     use super::*;
     use crate::prelude::*;
 
+    macro_rules! wasm_closure {
+        (|_: $t:ty| $expr:expr) => {
+            FunctionClosure(Closure::<dyn Fn($t)>::wrap(Box::new(|_: $t| $expr)))
+        };
+        (move |_: $t:ty| $expr:expr) => {
+            FunctionClosure(Closure::<dyn Fn($t)>::wrap(Box::new(move |_: $t| $expr)))
+        };
+        (| $($v:ident: $t:ty),* | $expr:expr) => {
+            FunctionClosure(Closure::<dyn Fn($($t),*)>::wrap(Box::new(|$($v: $t),*| $expr)))
+        };
+        (move | $($v:ident: $t:ty),* | $expr:expr) => {
+            FunctionClosure(Closure::<dyn Fn($($t),*)>::wrap(Box::new(move |$($v: $t),*| $expr)))
+        };
+    }
+
+    struct FunctionClosure<T: ?Sized>(Closure<T>);
+
+    impl<T: ?Sized> Deref for FunctionClosure<T> {
+        type Target = js_sys::Function;
+
+        fn deref(&self) -> &Self::Target {
+            self.0.as_ref().unchecked_ref()
+        }
+    }
+
+    fn global_document() -> Document {
+        web_sys::window()
+            .expect("No global window object")
+            .document()
+            .expect("No global document object")
+    }
+
     #[wasm_bindgen_test]
     fn sim_typing_to_input_and_enter_to_confirm() {
-        let rendered = QueryElement::new();
-        yew::start_app_in_element::<KeyDemo>(rendered.clone().into());
+        // setup
+
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <p id="key-value">None</p>
+            <label for="input">input label</label>
+            <input id="input" placeholder="key" type="text" />
+        "#,
+        )
+        .into();
+
+        let document = global_document();
+
+        let key_value_output = document
+            .get_element_by_id("key-value")
+            .expect("no element with 'key-value' id found")
+            .unchecked_into::<HtmlElement>();
+
+        let input = document
+            .get_element_by_id("input")
+            .expect("no element with `input` id found");
+
+        let closure = wasm_closure!(move |e: KeyboardEvent| {
+            key_value_output.set_inner_text(&e.key());
+        });
+
+        input
+            .add_event_listener_with_callback("keydown", &closure)
+            .unwrap();
+
+        // asserts
 
         let last_key_value: HtmlElement = rendered.get_by_text("None").unwrap();
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
@@ -784,32 +812,16 @@ mod tests {
         assert_text_content!('🎉', last_key_value);
     }
 
-    struct InputDemo;
-
-    impl Component for InputDemo {
-        type Message = ();
-        type Properties = ();
-
-        fn create(_: &Context<Self>) -> Self {
-            Self
-        }
-
-        fn view(&self, _: &Context<Self>) -> Html {
-            html! {
-                <>
-                    <input placeholder="key" type="text" />
-                </>
-            }
-        }
-    }
-
     #[wasm_bindgen_test]
     fn type_to_input() {
-        let rendered = QueryElement::new();
-        yew::start_app_in_element::<InputDemo>(rendered.clone().into());
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <input placeholder="key" type="text" />
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
-
         type_to!(input, "hello");
 
         assert_eq!("hello", input.value());
@@ -821,16 +833,21 @@ mod tests {
             static FLAG: Cell<bool> = Default::default();
         }
 
-        let rendered = QueryElement::new();
-        yew::start_app_in_element::<InputDemo>(rendered.clone().into());
+        let rendered: QueryElement = make_element_with_html_string(
+            r#"
+            <input placeholder="key" type="text" />
+        "#,
+        )
+        .into();
 
         let input: HtmlInputElement = rendered.get_by_placeholder_text("key").unwrap();
 
-        let listener =
-            Closure::wrap(Box::new(move |_| FLAG.with(|v| v.set(true))) as Box<dyn Fn(Event)>);
+        let listener = wasm_closure!(move |_: Event| {
+            FLAG.with(|v| v.set(true));
+        });
 
         rendered
-            .add_event_listener_with_callback("change", listener.as_ref().unchecked_ref())
+            .add_event_listener_with_callback("change", &listener)
             .unwrap();
 
         input.changed();
@@ -839,7 +856,7 @@ mod tests {
 
         // clean up
         rendered
-            .remove_event_listener_with_callback("change", listener.as_ref().unchecked_ref())
+            .remove_event_listener_with_callback("change", &listener)
             .unwrap();
     }
 }
