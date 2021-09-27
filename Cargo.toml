@@ -8,14 +8,14 @@ license = "MIT"
 [dependencies]
 sap-aria = { path = "crates/sap-aria" }
 sap-utils = { path = "crates/sap-utils" }
-wasm-bindgen = "0.2.74"
+wasm-bindgen = "0.2"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.24"
-js-sys = "0.3.55"
+wasm-bindgen-test = "0.3"
+js-sys = "0.3"
 
 [dependencies.web-sys]
-version = "0.3.51"
+version = "0.3"
 features = [
 	"Event",
 	"EventInit",
