@@ -51,8 +51,6 @@ mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    use web_sys::Element;
-
     #[wasm_bindgen_test]
     fn assert_div_has_text_content() {
         let render = QueryElement::new();
@@ -67,9 +65,6 @@ mod tests {
         let render = QueryElement::new();
         render
             .set_inner_html("<div id=\"mydiv\">text content <strong>is broken up!</strong></div>");
-
-        let not_found = render.get_by_text::<Element>("text content is broken up!");
-        assert!(not_found.is_err());
 
         let result = render.query_selector("#mydiv").unwrap().unwrap();
         assert_text_content!("text content is broken up!", result);
