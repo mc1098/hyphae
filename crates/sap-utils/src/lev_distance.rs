@@ -32,6 +32,10 @@ pub(crate) fn lev_distance(me: &str, t: &str) -> usize {
     dcol[t_last + 1]
 }
 
+pub fn is_close(a: &str, b: &str) -> bool {
+    lev_distance(a, b) < 4
+}
+
 pub fn closest<T, I, F>(search: &str, iter: I, to_key: F) -> Option<T>
 where
     I: Iterator<Item = T>,
