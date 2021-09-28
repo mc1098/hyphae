@@ -159,37 +159,64 @@ pub trait ByText {
     }
 }
 
+fn first_text_node_in_inner_text_match<T>(node: &Node, query: &str, exact: bool) -> Option<T>
+where
+    T: JsCast,
+{
+    let check = if exact { str::eq } else { sap_utils::is_close };
+    let mut node = node.clone();
+    while let Some(parent) = node
+        .parent_element()
+        .map(|e| e.unchecked_into::<HtmlElement>())
+    {
+        let inner_text = parent.inner_text();
+        match inner_text.len().cmp(&query.len()) {
+            std::cmp::Ordering::Less if check(&query[..inner_text.len()], &inner_text) => {
+                node = parent.unchecked_into();
+            }
+            std::cmp::Ordering::Equal if check(query, &inner_text) => {
+                return parent.dyn_into().ok();
+            }
+            // we only want to check this when checking for close matches
+            std::cmp::Ordering::Greater if !exact && check(&inner_text[..query.len()], query) => {
+                return parent.dyn_into().ok()
+            }
+            _ => break,
+        }
+    }
+    None
+}
+
 impl ByText for QueryElement {
     fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
-        let search_string = search.to_owned();
-
-        let filter_on_text_value = move |node: Node| match node.parent_element().and_then(|e| {
-            e.dyn_into::<T>()
-                .ok()
-                .map(|e| e.unchecked_into::<HtmlElement>())
-        }) {
-            Some(e) => e.inner_text() == search_string,
-            None => false,
+        let create_filter = |search: &str, exact| {
+            let search = search.to_owned();
+            move |node| first_text_node_in_inner_text_match::<T>(&node, &search, exact).is_some()
         };
 
-        let walker = create_filtered_tree_walker(self, WhatToShow::ShowText, filter_on_text_value);
+        let walker =
+            create_filtered_tree_walker(self, WhatToShow::ShowText, create_filter(search, true));
 
         if let Some(node) = walker.next_node().unwrap() {
             Ok(node.parent_element().unwrap().unchecked_into())
         } else {
             // nothing found - lets go back over each text node and find 'close' matches
-            let walker =
-                create_filtered_tree_walker(self, WhatToShow::ShowText, move |node: Node| {
-                    node.parent_element()
-                        .and_then(|e| e.dyn_into::<T>().ok())
-                        .is_some()
-                });
+            let walker = create_filtered_tree_walker(
+                self,
+                WhatToShow::ShowText,
+                create_filter(search, false),
+            );
 
-            let iter = std::iter::from_fn(move || walker.next_node().ok().flatten())
-                .filter_map(|node| node.text_content().map(|text| (text, node)));
+            let iter =
+                std::iter::from_fn(move || walker.next_node().ok().flatten()).filter_map(|node| {
+                    first_text_node_in_inner_text_match::<T>(&node, search, false).map(|e| {
+                        let element = e.unchecked_into::<HtmlElement>();
+                        (element.inner_text(), element)
+                    })
+                });
 
             if let Some(closest) = sap_utils::closest(search, iter, |(key, _)| key) {
                 Err(Box::new(ByTextError::Closest((
@@ -221,7 +248,7 @@ pub enum ByTextError {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((String, String, Node)),
+    Closest((String, String, HtmlElement)),
 }
 
 impl Debug for ByTextError {
@@ -236,8 +263,7 @@ impl Debug for ByTextError {
                 )
             }
             ByTextError::Closest((search, html, closest)) => {
-                let html =
-                    sap_utils::format_html_with_closest(html, &closest.parent_element().unwrap());
+                let html = sap_utils::format_html_with_closest(html, closest.unchecked_ref());
                 write!(
                     f,
                     "\nNo exact match found for the text: '{}'.\nA similar match was found in the following HTML:{}",
@@ -322,6 +348,21 @@ mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use web_sys::{Element, HtmlButtonElement, HtmlLabelElement};
+
+    #[wasm_bindgen_test]
+    fn traverse_the_element_tree_to_find_text() {
+        let rendered: QueryElement = make_element_with_html_string(
+            "
+            <div>
+                <strong>1</strong>
+                <span> item left</span>
+            </div>
+        ",
+        )
+        .into();
+
+        rendered.assert_by_text::<Element>("1 item left");
+    }
 
     #[wasm_bindgen_test]
     fn search_multi_text_node_element() {
