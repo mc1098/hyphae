@@ -1,0 +1,21 @@
+[package]
+name = "sycamore-counter"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sycamore = "0.6"
+log = "0.4"
+
+[dev-dependencies]
+sap = { path = "../../../" }
+wasm-bindgen-test = "0.3"
+
+[dev-dependencies.web-sys]
+version = "0.3"
+features = [
+	"HtmlButtonElement",
+	"HtmlElement",
+]

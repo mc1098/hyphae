@@ -1,5 +1,5 @@
 [package]
-name = "counter"
+name = "yew-counter"
 version = "0.1.0"
 authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
