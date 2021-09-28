@@ -63,6 +63,7 @@ members = [
 	"examples/yew/router",
 	"examples/yew/todo",
 	"examples/sycamore/counter",
+	"examples/sycamore/todo",
 ]
 
 [patch.crates-io]
