@@ -32,11 +32,12 @@ pub fn format_html(html: &str) -> String {
 fn element_selection_string(element: &Element) -> String {
     let html = element.outer_html();
 
-    let (opening_tag, rest) = html.split_at(html.find('>').unwrap());
-    if rest.starts_with('\n') {
-        opening_tag.to_owned()
-    } else {
+    let closing_tag_pos = html.find('>').unwrap();
+    if &html[closing_tag_pos..=closing_tag_pos] == "/" {
+        // self closing element
         html
+    } else {
+        html[..=closing_tag_pos].to_owned()
     }
 }
 
