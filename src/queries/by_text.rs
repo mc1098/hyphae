@@ -200,8 +200,12 @@ impl ByText for QueryElement {
         let walker =
             create_filtered_tree_walker(self, WhatToShow::ShowText, create_filter(search, true));
 
-        if let Some(node) = walker.next_node().unwrap() {
-            Ok(node.parent_element().unwrap().unchecked_into())
+        if let Some(result) = walker
+            .next_node()
+            .unwrap()
+            .and_then(|node| first_text_node_in_inner_text_match::<T>(&node, search, true))
+        {
+            Ok(result)
         } else {
             // nothing found - lets go back over each text node and find 'close' matches
             let walker = create_filtered_tree_walker(
