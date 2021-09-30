@@ -215,9 +215,7 @@ mod tests {
         // click the todo checkbox - marking it complete
         checkbox.click();
 
-        // todo_left contains the number text node but the other text is in an
-        // element so won't be found.
-        assert_text_content!("0", todo_left);
+        assert_text_content!("0 items left", todo_left);
 
         // get clear completed button - it only appears after a todo has been marked as completed
         let clear_completed_btn: HtmlButtonElement =
@@ -294,7 +292,7 @@ mod tests {
             rendered.assert_by_aria_role(AriaRole::Button, "Clear completed");
 
         // confirm that no items are left todo
-        assert_text_content!("0", todo_left);
+        assert_text_content!("0 items left", todo_left);
 
         // must clear completed because the storage is a side effect and can spill into other tests
         clear_completed_btn.click();
