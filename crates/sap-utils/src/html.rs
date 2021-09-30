@@ -30,13 +30,13 @@ pub fn format_html(html: &str) -> String {
 }
 
 fn element_selection_string(element: &Element) -> String {
-    let html = element.outer_html();
+    let html = format_html(&element.outer_html());
 
-    let (opening_tag, rest) = html.split_at(html.find('>').unwrap());
+    let (opening_tag, rest) = html.split_at(html.find('>').expect("expect to find closing tag"));
     if rest.starts_with('\n') {
         opening_tag.to_owned()
     } else {
-        html
+        html.trim().to_owned()
     }
 }
 
@@ -59,14 +59,23 @@ pub fn format_html_with_closest(html: &str, closest: &Element) -> String {
     let closest_opening_tag = element_selection_string(closest);
     let closest_pos = html.find(&closest_opening_tag).unwrap();
     let ws = preceding_space(&html, closest_pos);
-    let selection = "^".repeat(closest_opening_tag.len());
-    html.insert_str(
-        closest_pos + 1 + closest_opening_tag.len(),
+    web_sys::console::log_1(
         &format!(
-            "{}{} {}\n",
-            ws, selection, "Did you mean to find this element?",
-        ),
+            "closest_opening_tag: {}, closest_pos: {}, html: {}",
+            closest_opening_tag, closest_pos, html
+        )
+        .into(),
     );
+    let selection = "^".repeat(closest_opening_tag.len());
+    let to_insert = format!(
+        "{}{} {}\n",
+        ws, selection, "Did you mean to find this element?"
+    );
+    if html.len() <= closest_pos + closest_opening_tag.len() + 1 {
+        html.push_str(&to_insert);
+    } else {
+        html.insert_str(closest_pos + closest_opening_tag.len() + 1, &to_insert);
+    }
     html
 }
 
