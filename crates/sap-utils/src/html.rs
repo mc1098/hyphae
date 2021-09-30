@@ -32,9 +32,11 @@ pub fn format_html(html: &str) -> String {
 fn element_selection_string(element: &Element) -> String {
     let html = format_html(&element.outer_html());
 
-    let (opening_tag, rest) = html.split_at(html.find('>').expect("expect to find closing tag"));
-    if rest.starts_with('\n') {
-        opening_tag.to_owned()
+    let (opening_tag, rest) = html.split_at(html.find('>').unwrap());
+    if rest.starts_with(">\n") {
+        let mut opening_tag = opening_tag.to_owned();
+        opening_tag.push('>');
+        opening_tag.trim().to_owned()
     } else {
         html.trim().to_owned()
     }
@@ -64,6 +66,7 @@ pub fn format_html_with_closest(html: &str, closest: &Element) -> String {
         "{}{} {}\n",
         ws, selection, "Did you mean to find this element?"
     );
+
     if html.len() <= closest_pos + closest_opening_tag.len() + 1 {
         html.push_str(&to_insert);
     } else {
