@@ -32,7 +32,7 @@ pub fn format_html(html: &str) -> String {
 fn element_selection_string(element: &Element) -> String {
     let html = format_html(&element.outer_html());
 
-    let (opening_tag, rest) = html.split_at(html.find('>').expect("expect to find closing tag"));
+    let (opening_tag, rest) = html.split_at(html.find('>').unwrap());
     if rest.starts_with(">\n") {
         let mut opening_tag = opening_tag.to_owned();
         opening_tag.push('>');
@@ -59,20 +59,13 @@ fn preceding_space(value: &str, idx: usize) -> String {
 pub fn format_html_with_closest(html: &str, closest: &Element) -> String {
     let mut html = format_html(html);
     let closest_opening_tag = element_selection_string(closest);
-    let closest_pos = html.find(&closest_opening_tag).expect(&format!(
-        "no '{}' found in html:'{}'",
-        closest_opening_tag, html
-    ));
+    let closest_pos = html.find(&closest_opening_tag).unwrap();
     let ws = preceding_space(&html, closest_pos);
     let selection = "^".repeat(closest_opening_tag.len());
     let to_insert = format!(
         "{}{} {}\n",
         ws, selection, "Did you mean to find this element?"
     );
-
-    // insert after opening tag
-    //    let insertion_index = closest_pos + closest_opening_tag.len() + 1;
-    //   let insertion_index = match html.get(
 
     if html.len() <= closest_pos + closest_opening_tag.len() + 1 {
         html.push_str(&to_insert);
