@@ -27,6 +27,7 @@ pub fn list(app_state: AppState) -> Template<G> {
     template! {
         section(class="main") {
             input(
+                aria-label="toggle all todo items",
                 id="toggle-all",
                 class="toggle-all",
                 type="checkbox",

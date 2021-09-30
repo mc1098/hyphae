@@ -87,16 +87,18 @@ pub fn item(props: ItemProps) -> Template<G> {
     });
 
     let todo_id = format!("todo-{}", id);
-    let todo_id_label = todo_id.clone();
+    let todo_id_list = todo_id.clone();
+    let todo_checkbox_id = format!("{}-check", todo_id);
+    let checkbox_label_id = todo_checkbox_id.clone();
 
     template! {
-        li(class=class()) {
+        li(id=todo_id_list, class=class()) {
             div(class="view") {
-                input(class="toggle", id=todo_id, type="checkbox", on:input=toggle_completed, bind:checked=checked)
-                label(for=todo_id_label, on:dblclick=handle_dblclick) {
+                input(class="toggle", id=todo_checkbox_id, type="checkbox", on:input=toggle_completed, bind:checked=checked)
+                label(for=checkbox_label_id, on:dblclick=handle_dblclick) {
                     (title())
                 }
-                button(class="destroy", on:click=handle_destroy)
+                button(aria-controls=todo_id, class="destroy", on:click=handle_destroy)
             }
 
             (if *editing.get() {

@@ -188,7 +188,7 @@ fn main() {
 mod tests {
 
     use super::*;
-    use sap::{events::*, prelude::*, type_to};
+    use sap::{events::*, prelude::*, type_to, assert_text_content};
     use wasm_bindgen_test::*;
     use web_sys::{HtmlButtonElement, HtmlElement, HtmlInputElement};
     wasm_bindgen_test_configure!(run_in_browser);
@@ -204,8 +204,8 @@ mod tests {
         // type 'Gardening' into input and confirm
         type_to!(input, "Gardening", Key::Enter);
 
-        // // expecting the item left count to be 1
-        // let todo_left: HtmlElement = rendered.assert_by_text("1 item left");
+        // expecting the item left count to be 1
+        let todo_left: HtmlElement = rendered.assert_by_text("1 item left");
 
         // 'Gardening' todo item has been rendered - lets just get the completed checkbox
         let checkbox: HtmlInputElement = rendered.assert_by_label_text("Gardening");
@@ -214,6 +214,10 @@ mod tests {
 
         // click the todo checkbox - marking it complete
         checkbox.click();
+
+        // todo_left contains the number text node but the other text is in an
+        // element so won't be found.
+        assert_text_content!("0", todo_left);
 
         // get clear completed button - it only appears after a todo has been marked as completed
         let clear_completed_btn: HtmlButtonElement =
@@ -224,4 +228,132 @@ mod tests {
         // confirm that the todo item has been removed
         assert!(!rendered.contains(Some(&checkbox)));
     }
+
+    #[wasm_bindgen_test]
+    fn make_new_todo_item_and_edit_it_and_complete() {
+        let rendered = QueryElement::new();
+        sycamore::render_to(|| template!{ App() }, &rendered);
+
+        // get todo input
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
+
+        // enter a new todo - oops pressed enter before finishing to type 'car!'
+        type_to!(input, "Wash the c", Key::Enter);
+
+        // get the label for the new todo item
+        let label: HtmlElement = rendered.assert_by_text("Wash the c");
+        // double click label to edit todo
+        label.dbl_click();
+
+        // edit todo input is different - so go find it by the current value
+        let edit_input: HtmlInputElement = rendered.assert_by_display_value("Wash the c");
+        // finish typing 'car' with 'Enter' to confirm
+        type_to!(edit_input, "ar", Key::Enter);
+
+        // confirm label has been updated with the correct text
+        assert_text_content!("Wash the car", label);
+
+        // get todo checkbox to complete it
+        let checkbox: HtmlInputElement = rendered.assert_by_aria_role(AriaRole::Checkbox, "Wash the car");
+        // complete todo
+        checkbox.click();
+
+        // get clear completed button
+        let clear_completed_btn: HtmlButtonElement = rendered.assert_by_aria_role(AriaRole::Button, "Clear completed");
+        clear_completed_btn.click();
+    }
+
+    #[wasm_bindgen_test]
+    fn make_multiple_todo_items_and_complete_them_all_at_once() {
+        let rendered = QueryElement::new();
+        sycamore::render_to(|| template!{ App() }, &rendered);
+
+        // get todo input
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
+
+        // enter first todo
+        type_to!(input, "A", Key::Enter);
+
+        // enter second todo
+        type_to!(input, "B", Key::Enter);
+
+        // get toggle all checkbox
+        let toggle_all_checkbox: HtmlInputElement = rendered.assert_by_aria_role(AriaRole::Checkbox, "toggle all todo items"); 
+
+        // expecting the item left count to be 2
+        let todo_left: HtmlElement = rendered.assert_by_text("2 items left");
+
+        // set all items to completed
+        toggle_all_checkbox.click();
+        
+        // get clear completed button
+        let clear_completed_btn: HtmlButtonElement = rendered.assert_by_aria_role(AriaRole::Button, "Clear completed");
+
+        // confirm that no items are left todo
+        assert_text_content!("0", todo_left);
+
+        // must clear completed because the storage is a side effect and can spill into other tests
+        clear_completed_btn.click();
+        
+    }
+
+    #[wasm_bindgen_test]
+    fn make_new_todo_item_and_remove_it() {
+        let rendered = QueryElement::new();
+        sycamore::render_to(|| template!{ App() }, &rendered);
+
+        // get todo input
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
+
+        // enter todo item
+        type_to!(input, "Some todo item", Key::Enter);
+
+        // get todo item 
+        let todo_item: HtmlElement = rendered.assert_by_aria_role(AriaRole::ListItem, "Some todo item");
+
+        // get single controlling element of checkbox using its id
+        let remove_button: HtmlButtonElement = rendered.assert_by_aria_prop(AriaProperty::Controls([todo_item.id()].into()), None);
+
+        // click and remove todo item
+        remove_button.click();
+
+        assert!(!rendered.contains(Some(&todo_item)));
+    }
+
+    #[wasm_bindgen_test]
+    fn check_active_completed_tabs() {
+        let rendered = QueryElement::new();
+        sycamore::render_to(|| template! { App() }, &rendered);
+
+        let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
+
+        type_to!(input, "A", Key::Enter);
+
+        let checkbox_a: HtmlInputElement = rendered.assert_by_label_text("A");
+
+        type_to!(input, "B", Key::Enter);
+
+        checkbox_a.click();
+
+        let active_filter: HtmlElement = rendered.assert_by_aria_role(AriaRole::Link, "Active");
+        active_filter.click();
+
+        assert!(rendered.get_by_label_text::<HtmlInputElement>("A").is_err());
+
+        let completed_filter: HtmlElement = rendered.assert_by_aria_role(AriaRole::Link, "Completed");
+        completed_filter.click();
+
+        rendered.assert_by_label_text::<HtmlInputElement>("A");
+
+        assert!(rendered.get_by_label_text::<HtmlInputElement>("B").is_err());
+
+        rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Link, "All").click();
+
+        rendered.assert_by_label_text::<HtmlInputElement>("B").click();
+
+        rendered.assert_by_aria_role::<HtmlElement>(AriaRole::Button, "Clear completed").click();
+
+    }
+
 }
+
