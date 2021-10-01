@@ -158,13 +158,21 @@ pub trait ByPlaceholderText {
     /// [`get_by_placeholder_text`](ByPlaceholderText::get_by_placeholder_text).
     fn assert_by_placeholder_text<T>(&self, search: &str) -> T
     where
-        T: JsCast,
-    {
-        self.get_by_placeholder_text(search).unwrap()
-    }
+        T: JsCast;
 }
 
 impl ByPlaceholderText for QueryElement {
+    fn assert_by_placeholder_text<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        let result = self.get_by_placeholder_text(search);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
+    }
+
     fn get_by_placeholder_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
