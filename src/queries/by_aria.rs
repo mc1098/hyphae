@@ -283,10 +283,7 @@ pub trait ByAria {
     /// A convenient method which unwraps the result of [`get_by_aria_role`](ByAria::get_by_aria_role).
     fn assert_by_aria_role<T>(&self, role: AriaRole, name: &str) -> T
     where
-        T: JsCast,
-    {
-        self.get_by_aria_role(role, name).unwrap()
-    }
+        T: JsCast;
 
     /**
 
@@ -389,10 +386,7 @@ pub trait ByAria {
     fn assert_by_aria_prop<'name, S, T>(&self, property: AriaProperty, name: S) -> T
     where
         S: Into<Option<&'name str>>,
-        T: JsCast,
-    {
-        self.get_by_aria_prop(property, name).unwrap()
-    }
+        T: JsCast;
 
     /**
 
@@ -455,10 +449,7 @@ pub trait ByAria {
     fn assert_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> T
     where
         S: Into<Option<&'name str>>,
-        T: JsCast,
-    {
-        self.get_by_aria_state(state, name).unwrap()
-    }
+        T: JsCast;
 }
 
 #[inline]
@@ -501,11 +492,34 @@ where
 }
 
 impl ByAria for QueryElement {
+    fn assert_by_aria_role<T>(&self, role: AriaRole, name: &str) -> T
+    where
+        T: JsCast,
+    {
+        let result = self.get_by_aria_role(role, name);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
+    }
+
     fn get_by_aria_role<T>(&self, role: AriaRole, name: &str) -> Result<T, Error>
     where
         T: JsCast,
     {
         get_by_aria_impl(self, role, name.into())
+    }
+
+    fn assert_by_aria_prop<'name, S, T>(&self, property: AriaProperty, name: S) -> T
+    where
+        S: Into<Option<&'name str>>,
+        T: JsCast,
+    {
+        let result = self.get_by_aria_prop(property, name);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
     }
 
     fn get_by_aria_prop<'name, S, T>(&self, prop: AriaProperty, name: S) -> Result<T, Error>
@@ -514,6 +528,18 @@ impl ByAria for QueryElement {
         T: JsCast,
     {
         get_by_aria_impl(self, prop, name.into())
+    }
+
+    fn assert_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> T
+    where
+        S: Into<Option<&'name str>>,
+        T: JsCast,
+    {
+        let result = self.get_by_aria_state(state, name);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
     }
 
     fn get_by_aria_state<'name, S, T>(&self, state: AriaState, name: S) -> Result<T, Error>

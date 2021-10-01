@@ -201,13 +201,21 @@ pub trait ByDisplayValue {
     /// [`get_by_display_value`](ByDisplayValue::get_by_display_value).
     fn assert_by_display_value<T>(&self, search: &str) -> T
     where
-        T: JsCast,
-    {
-        self.get_by_display_value(search).unwrap()
-    }
+        T: JsCast;
 }
 
 impl ByDisplayValue for QueryElement {
+    fn assert_by_display_value<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        let result = self.get_by_display_value(search);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
+    }
+
     fn get_by_display_value<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,

@@ -150,13 +150,9 @@ pub trait ByText {
         T: JsCast;
 
     /// A convenient method which unwraps the result of [`get_by_text`](ByText::get_by_text).
-    #[inline]
     fn assert_by_text<T>(&self, search: &str) -> T
     where
-        T: JsCast,
-    {
-        self.get_by_text(search).unwrap()
-    }
+        T: JsCast;
 }
 
 fn first_text_node_in_inner_text_match<T>(node: &Node, query: &str, exact: bool) -> Option<T>
@@ -188,6 +184,18 @@ where
 }
 
 impl ByText for QueryElement {
+    #[inline]
+    fn assert_by_text<T>(&self, search: &str) -> T
+    where
+        T: JsCast,
+    {
+        let result = self.get_by_text(search);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
+    }
+
     fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast,
