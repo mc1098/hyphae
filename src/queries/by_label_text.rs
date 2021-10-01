@@ -198,7 +198,7 @@ pub trait ByLabelText {
     where
         T: JsCast,
     {
-        self.get_by_label_text(search).unwrap()
+        self.assert_by_label_text_inc(search).0
     }
 
     /**
@@ -343,13 +343,21 @@ pub trait ByLabelText {
     /// [`get_by_label_text_inc`](ByLabelText::get_by_label_text_inc).
     fn assert_by_label_text_inc<T>(&self, search: &str) -> (T, HtmlLabelElement)
     where
-        T: JsCast,
-    {
-        self.get_by_label_text_inc(search).unwrap()
-    }
+        T: JsCast;
 }
 
 impl ByLabelText for QueryElement {
+    fn assert_by_label_text_inc<T>(&self, search: &str) -> (T, HtmlLabelElement)
+    where
+        T: JsCast,
+    {
+        let result = self.get_by_label_text_inc(search);
+        if result.is_err() {
+            self.remove();
+        }
+        result.unwrap()
+    }
+
     fn get_by_label_text_inc<T>(&self, search: &str) -> Result<(T, HtmlLabelElement), Error>
     where
         T: JsCast,
