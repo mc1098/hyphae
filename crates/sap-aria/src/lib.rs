@@ -434,6 +434,7 @@ roles_impl! {
     - `select`
     */
     Combobox, "combobox", [
+        "input:not([type])",
         "input[type=text][list]",
         "input[type=search][list]",
         "input[type=tel][list]",
@@ -589,11 +590,11 @@ roles_impl! {
     - `input` with the types:
         - `email`
         - `tel`
-        - `text`
+        - `text` - this includes input without a type set
         - `url`
     - `textarea`
     */
-    TextBox, "textbox", ["input[type=email]", "input[type=tel]", "input[type=text]", "input[type=url]", "textarea"],
+    TextBox, "textbox", ["input:not([type])", "input[type=email]", "input[type=tel]", "input[type=text]", "input[type=url]", "textarea"],
     /// `toolbar` role - no implicit elements with these semantics
     Toolbar, "toolbar", [],
     /// `tooltip` role - no implicit elements with these semantics
