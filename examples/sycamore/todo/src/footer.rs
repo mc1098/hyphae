@@ -20,7 +20,7 @@ pub fn footer(app_state: AppState) -> Template<G> {
 
     template! {
         footer(class="footer") {
-            span(class="todo-count") {
+            span(aria-live="polite", class="todo-count") {
                 strong { (app_state.todos_left()) }
                 span { " " (items_text()) " left" }
             }

@@ -228,6 +228,42 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
+    fn make_new_todo_item_complete_it_then_clear_completed_aria_only() {
+        let rendered = QueryElement::new();
+        sycamore::render_to(|| template! { App() }, &rendered);
+
+        let input: HtmlInputElement =
+            rendered.assert_by_aria_role(AriaRole::TextBox, "What needs to be done?");
+
+        type_to!(input, "Gardening", Key::Enter);
+
+        // we've added 'aria-live="polite"' to the span so that we can find
+        // this element. This is a nice accessibility win because as you
+        // enter in new todo items the screen reader will announce the change
+        // Note: we added something to the example to find it via ByAria
+        // queries but we also improved the accessibility of the example
+        // by doing so.
+        let todo_left: HtmlElement =
+            rendered.assert_by_aria_prop(AriaProperty::Live(LiveToken::Polite), "1 item left");
+
+        let checkbox: HtmlInputElement =
+            rendered.assert_by_aria_role(AriaRole::Checkbox, "Gardening");
+
+        assert!(!checkbox.checked());
+
+        checkbox.click();
+
+        assert_text_content!("0 items left", todo_left);
+
+        let clear_completed_btn: HtmlButtonElement =
+            rendered.assert_by_aria_role(AriaRole::Button, "Clear completed");
+
+        clear_completed_btn.click();
+
+        assert!(!rendered.contains(Some(&checkbox)));
+    }
+
+    #[wasm_bindgen_test]
     fn make_new_todo_item_and_edit_it_and_complete() {
         let rendered = QueryElement::new();
         sycamore::render_to(|| template! { App() }, &rendered);
