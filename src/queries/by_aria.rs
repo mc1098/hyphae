@@ -177,7 +177,10 @@ version does not need to be explicitly set.
  */
 
 use crate::Error;
-use sap_aria::{AriaProperty, AriaRole, AriaState, ToQueryString};
+use sap_aria::{
+    element_accessible_name, property::AriaProperty, role::AriaRole, state::AriaState,
+    ToQueryString,
+};
 use std::fmt::{Debug, Display};
 use wasm_bindgen::JsCast;
 use web_sys::{Element, Node};
@@ -463,7 +466,7 @@ where
     if let Some(name) = name {
         let elements = node_iter.filter_map(|element| {
             Some((
-                sap_aria::element_accessible_name(element.unchecked_ref()).ok()?,
+                element_accessible_name(element.unchecked_ref()).ok()?,
                 element,
             ))
         });
@@ -620,7 +623,7 @@ mod tests {
     use crate::make_element_with_html_string;
 
     use super::*;
-    use sap_aria::InvalidToken;
+    use sap_aria::state::InvalidToken;
     use wasm_bindgen_test::*;
     use web_sys::{HtmlButtonElement, HtmlImageElement, HtmlInputElement};
     wasm_bindgen_test_configure!(run_in_browser);

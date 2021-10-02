@@ -25,3 +25,9 @@ features = [
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
+[features]
+default = ["property", "role", "state", "name"] 
+property = []
+role = []
+state = []
+name = []

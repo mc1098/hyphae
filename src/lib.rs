@@ -251,5 +251,5 @@ pub mod prelude {
         },
         Error, QueryElement,
     };
-    pub use sap_aria::*;
+    pub use sap_aria::{property::*, role::*, state::*};
 }
