@@ -192,17 +192,17 @@ impl ByPlaceholderText for QueryElement {
             if search == ph {
                 Ok(e)
             } else {
-                Err(Box::new(ByPlaceholderTextError::Closest((
-                    search.to_owned(),
-                    self.inner_html(),
-                    e.unchecked_into(),
-                ))))
+                Err(Box::new(ByPlaceholderTextError::Closest {
+                    search_term: search.to_owned(),
+                    inner_html: self.inner_html(),
+                    closest_node: e.unchecked_into(),
+                }))
             }
         } else {
-            Err(Box::new(ByPlaceholderTextError::NotFound((
-                search.to_owned(),
-                self.inner_html(),
-            ))))
+            Err(Box::new(ByPlaceholderTextError::NotFound {
+                search_term: search.to_owned(),
+                inner_html: self.inner_html(),
+            }))
         }
     }
 }
@@ -210,9 +210,12 @@ impl ByPlaceholderText for QueryElement {
 /**
 An error indicating that no element with a placeholder text was an equal match for a given search term.
 */
-pub enum ByPlaceholderTextError {
+enum ByPlaceholderTextError {
     /// No element could be found with the given search term.
-    NotFound((String, String)),
+    NotFound {
+        search_term: String,
+        inner_html: String,
+    },
     /**
     No element placeholder text was an exact match for the search term could be found, however, an
     element with a similar placeholder text as the search term was found.
@@ -221,26 +224,37 @@ pub enum ByPlaceholderTextError {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((String, String, Node)),
+    Closest {
+        search_term: String,
+        inner_html: String,
+        closest_node: Node,
+    },
 }
 
 impl Debug for ByPlaceholderTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByPlaceholderTextError::NotFound((search, html)) => {
+            ByPlaceholderTextError::NotFound {
+                search_term,
+                inner_html,
+            } => {
                 write!(
                     f,
                     "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
-                    search,
-                    sap_utils::format_html(html)
+                    search_term,
+                    sap_utils::format_html(inner_html)
                 )
             }
-            ByPlaceholderTextError::Closest((search, html, closest)) => {
+            ByPlaceholderTextError::Closest {
+                search_term,
+                inner_html,
+                closest_node,
+            } => {
                 write!(
                     f,
                     "\nNo exact match found for the placeholder text: '{}'.\nA similar match was found in the following HTML:{}",
-                    search,
-                    sap_utils::format_html_with_closest(html, closest.unchecked_ref())
+                    search_term,
+                    sap_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
                 )
             }
         }
