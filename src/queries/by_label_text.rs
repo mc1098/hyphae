@@ -365,15 +365,15 @@ impl ByLabelText for QueryElement {
         let labels = match self.query_selector_all("label") {
             Ok(labels) => labels,
             Err(_) => {
-                return Err(Box::new(ByLabelTextError::LabelNotFound((
-                    search.to_owned(),
-                    self.inner_html(),
-                ))))
+                return Err(Box::new(ByLabelTextError::LabelNotFound {
+                    search_term: search.to_owned(),
+                    inner_html: self.inner_html(),
+                }))
             }
         };
 
         let mut labels_matching_search = 0;
-        let mut ids_matching = vec![];
+        let mut ids_found = vec![];
 
         for i in 0..labels.length() {
             let label = labels.get(i).unwrap();
@@ -396,23 +396,23 @@ impl ByLabelText for QueryElement {
                         }
                     }
                     // only push at the end - happy path == no allocation for vec
-                    ids_matching.push(id);
+                    ids_found.push(id);
                 }
             }
         }
 
         if labels_matching_search == 0 {
-            Err(Box::new(ByLabelTextError::LabelNotFound((
-                search.to_owned(),
-                self.inner_html(),
-            ))))
+            Err(Box::new(ByLabelTextError::LabelNotFound {
+                search_term: search.to_owned(),
+                inner_html: self.inner_html(),
+            }))
         } else {
-            Err(Box::new(ByLabelTextError::NoElementFound((
-                search.to_owned(),
-                labels_matching_search,
-                ids_matching,
-                self.inner_html(),
-            ))))
+            Err(Box::new(ByLabelTextError::NoElementFound {
+                search_term: search.to_owned(),
+                no_of_labels: labels_matching_search,
+                ids_found,
+                inner_html: self.inner_html(),
+            }))
         }
     }
 }
@@ -420,9 +420,12 @@ impl ByLabelText for QueryElement {
 /**
 The label text was not found or no element could be found associated with the label element found.
 */
-pub enum ByLabelTextError {
+enum ByLabelTextError {
     /// No [`HtmlLabelElement`] could be found with a text content that matches the search term.
-    LabelNotFound((String, String)),
+    LabelNotFound {
+        search_term: String,
+        inner_html: String,
+    },
     /**
     A [`HtmlLabelElement`] was found but either had `for` attribute or no
     [`Element`](web_sys::Element) could be found with an `id` matching the value of the `for`
@@ -438,48 +441,57 @@ pub enum ByLabelTextError {
     Note: The number of labels found and the number of ids can differ when a label with the correct
     search term doesn't have a 'for' attribute
      */
-    NoElementFound((String, usize, Vec<String>, String)),
+    NoElementFound {
+        search_term: String,
+        no_of_labels: usize,
+        ids_found: Vec<String>,
+        inner_html: String,
+    },
 }
 
 impl std::fmt::Debug for ByLabelTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByLabelTextError::LabelNotFound((text, html)) => {
+            ByLabelTextError::LabelNotFound {
+                search_term,
+                inner_html,
+            } => {
                 writeln!(
                     f,
                     "No label found with text: '{}' in the following HTML:{}",
-                    text,
-                    sap_utils::format_html(html)
+                    search_term,
+                    sap_utils::format_html(inner_html)
                 )
             }
-            ByLabelTextError::NoElementFound((text, no_of_labels, ids, html)) => {
+            ByLabelTextError::NoElementFound {
+                search_term,
+                no_of_labels,
+                ids_found,
+                inner_html,
+            } => {
                 if *no_of_labels == 1 {
                     write!(f, "Found a label ")?;
                 } else {
                     write!(f, "Found {} labels ", no_of_labels)?;
                 }
-                write!(f, "with the text: '{}'\n however, ", text,)?;
+                write!(f, "with the text: '{}'\n however, ", search_term,)?;
 
-                if ids.is_empty() {
-                    f.write_str("no 'for' attributes were found.")?;
-                    return Ok(());
-                } else if ids.len() == 1 {
-                    writeln!(
-                        f,
-                        "no element of the correct type was found associated with the following id '{}' ",
-                        ids[0]
-                    )?;
-                } else {
-                    writeln!(
-                        f,
-                        "no element of the correct type was found associated with the following ids: '{}' ",
-                        ids.join(",")
-                    )?;
+                match &ids_found[..] {
+                    [] => {
+                        f.write_str("no 'for' attributes were found.")?;
+                        return Ok(());
+                    },
+                    [id] => writeln!(f, "no element of the correct type was found associated with the following id '{}' ", id)?,
+                    _ => writeln!(f, "no element of the correct type was found associated with the following ids: '{}' ", ids_found.join(","))?,
                 }
 
-                writeln!(f, "in the following HTML:{}", sap_utils::format_html(html))?;
+                writeln!(
+                    f,
+                    "in the following HTML:{}",
+                    sap_utils::format_html(inner_html)
+                )?;
 
-                if *no_of_labels != ids.len() {
+                if *no_of_labels != ids_found.len() {
                     writeln!(
                         f,
                         "Note: Some labels found to match don't have a 'for' attribute!"
