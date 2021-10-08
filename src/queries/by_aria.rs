@@ -475,22 +475,25 @@ where
             if an == name {
                 Ok(e)
             } else {
-                Err(Box::new(ByAriaError::Closest((
-                    name.to_owned(),
-                    root.inner_html(),
-                    e.unchecked_into(),
-                ))))
+                Err(Box::new(ByAriaError::Closest {
+                    name: name.to_owned(),
+                    inner_html: root.inner_html(),
+                    closest_node: e.unchecked_into(),
+                }))
             }
         } else {
-            Err(Box::new(ByAriaError::NotFound((
-                Some(name.to_owned()),
-                root.inner_html(),
-            ))))
+            Err(Box::new(ByAriaError::NotFound {
+                name: Some(name.to_owned()),
+                inner_html: root.inner_html(),
+            }))
         }
     } else if let Some(element) = node_iter.next() {
         Ok(element)
     } else {
-        Err(Box::new(ByAriaError::NotFound((None, root.inner_html()))))
+        Err(Box::new(ByAriaError::NotFound {
+            name: None,
+            inner_html: root.inner_html(),
+        }))
     }
 }
 
@@ -557,9 +560,12 @@ impl ByAria for QueryElement {
 /**
 An error indicating that no element with an accessible name was an equal match for a given search term.
 */
-pub enum ByAriaError {
+enum ByAriaError {
     /// No element could be found with the given search term.
-    NotFound((Option<String>, String)),
+    NotFound {
+        name: Option<String>,
+        inner_html: String,
+    },
     /**
     No element accessible name was an exact match for the search term could be found, however, an
     element with a similar accessible name as the search term was found.
@@ -568,13 +574,20 @@ pub enum ByAriaError {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((String, String, Node)),
+    Closest {
+        name: String,
+        inner_html: String,
+        closest_node: Node,
+    },
 }
 
 impl Debug for ByAriaError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByAriaError::NotFound((None, html)) => {
+            ByAriaError::NotFound {
+                name: None,
+                inner_html,
+            } => {
                 write!(
                     f,
                     "\nNo element found with the aria type provided in the following HTML:{}. \
@@ -582,23 +595,30 @@ impl Debug for ByAriaError {
                     provided?
                     Note: ARIA type variants comments provide information on which element, \
                     properties or state they match.",
-                    sap_utils::format_html(html)
+                    sap_utils::format_html(inner_html)
                 )
             }
-            ByAriaError::NotFound((Some(name), html)) => {
+            ByAriaError::NotFound {
+                name: Some(name),
+                inner_html,
+            } => {
                 write!(
                     f,
                     "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
                     name,
-                    sap_utils::format_html(html)
+                    sap_utils::format_html(inner_html)
                 )
             }
-            ByAriaError::Closest((name, html, closest)) => {
+            ByAriaError::Closest {
+                name,
+                inner_html,
+                closest_node,
+            } => {
                 write!(
                     f,
                     "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
                     name,
-                    sap_utils::format_html_with_closest(html, closest.unchecked_ref())
+                    sap_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
                 )
             }
         }
