@@ -231,16 +231,16 @@ impl ByText for QueryElement {
                 });
 
             if let Some(closest) = sap_utils::closest(search, iter, |(key, _)| key) {
-                Err(Box::new(ByTextError::Closest((
-                    search.to_owned(),
-                    self.inner_html(),
-                    closest.1,
-                ))))
+                Err(Box::new(ByTextError::Closest {
+                    search_term: search.to_owned(),
+                    inner_html: self.inner_html(),
+                    closest_element: closest.1,
+                }))
             } else {
-                Err(Box::new(ByTextError::NotFound(
-                    search.to_owned(),
-                    self.inner_html(),
-                )))
+                Err(Box::new(ByTextError::NotFound {
+                    search_term: search.to_owned(),
+                    inner_html: self.inner_html(),
+                }))
             }
         }
     }
@@ -249,9 +249,12 @@ impl ByText for QueryElement {
 /**
 An error indicating that no inner text was an equal match for a given search term.
 */
-pub enum ByTextError {
+enum ByTextError {
     /// No inner text could be found with the given search term.
-    NotFound(String, String),
+    NotFound {
+        search_term: String,
+        inner_html: String,
+    },
     /**
     No inner text with an exact match for the search term could be found, however, a inner text
     with a similar content as the search term was found.
@@ -260,26 +263,40 @@ pub enum ByTextError {
     implementation being tested or when trying to find text with a dynamic number that may be
     incorrect
     */
-    Closest((String, String, HtmlElement)),
+    Closest {
+        search_term: String,
+        inner_html: String,
+        closest_element: HtmlElement,
+    },
 }
 
 impl Debug for ByTextError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ByTextError::NotFound(search, html) => {
+            ByTextError::NotFound {
+                search_term,
+                inner_html,
+            } => {
                 write!(
                     f,
                     "\nNo text node found with text equal or similar to '{}' in the following HTML:{}",
-                    search,
-                    sap_utils::format_html(html),
+                    search_term,
+                    sap_utils::format_html(inner_html),
                 )
             }
-            ByTextError::Closest((search, html, closest)) => {
-                let html = sap_utils::format_html_with_closest(html, closest.unchecked_ref());
+            ByTextError::Closest {
+                search_term,
+                inner_html,
+                closest_element,
+            } => {
+                let html = sap_utils::format_html_with_closest(
+                    inner_html,
+                    closest_element.unchecked_ref(),
+                );
                 write!(
                     f,
                     "\nNo exact match found for the text: '{}'.\nA similar match was found in the following HTML:{}",
-                    search,
+                    search_term,
                     html,
                 )
             }
