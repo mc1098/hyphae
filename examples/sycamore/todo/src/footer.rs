@@ -3,7 +3,7 @@ use sycamore::prelude::*;
 use crate::{AppState, Filter};
 
 #[component(Footer<G>)]
-pub fn footer(app_state: AppState) -> Template<G> {
+pub fn footer(app_state: AppState) -> View<G> {
     let items_text = cloned!((app_state) => move || {
         match app_state.todos_left() {
             1 => "item",
@@ -18,7 +18,7 @@ pub fn footer(app_state: AppState) -> Template<G> {
     let app_state2 = app_state.clone();
     let app_state3 = app_state.clone();
 
-    template! {
+    view! {
         footer(class="footer") {
             span(aria-live="polite", class="todo-count") {
                 strong { (app_state.todos_left()) }
@@ -33,7 +33,7 @@ pub fn footer(app_state: AppState) -> Template<G> {
                             app_state2.filter.set(filter)
                         });
 
-                        template! {
+                        view! {
                             li {
                                 a(
                                     class=if selected() { "selected" } else { "" },
@@ -49,13 +49,13 @@ pub fn footer(app_state: AppState) -> Template<G> {
             }
 
             (if *has_completed_todos.get() {
-                template! {
+                view! {
                     button(class="clear-completed", on:click=cloned!((app_state3) => move |_| app_state3.clear_completed())) {
                         "Clear completed"
                     }
                 }
             } else {
-                Template::empty()
+                View::empty()
             })
         }
     }

@@ -10,7 +10,7 @@ pub struct ItemProps {
 }
 
 #[component(Item<G>)]
-pub fn item(props: ItemProps) -> Template<G> {
+pub fn item(props: ItemProps) -> View<G> {
     let ItemProps { todo, app_state } = props;
 
     let title = cloned!((todo) => move || todo.get().title.clone());
@@ -91,7 +91,7 @@ pub fn item(props: ItemProps) -> Template<G> {
     let todo_checkbox_id = format!("{}-check", todo_id);
     let checkbox_label_id = todo_checkbox_id.clone();
 
-    template! {
+    view! {
         li(id=todo_id_list, class=class()) {
             div(class="view") {
                 input(class="toggle", id=todo_checkbox_id, type="checkbox", on:input=toggle_completed, bind:checked=checked)
@@ -102,7 +102,7 @@ pub fn item(props: ItemProps) -> Template<G> {
             }
 
             (if *editing.get() {
-                cloned!((todo, input_ref, handle_blur, handle_submit, handle_input) => template! {
+                cloned!((todo, input_ref, handle_blur, handle_submit, handle_input) => view! {
                     input(ref=input_ref,
                         class="edit",
                         value=todo.get().title.clone(),
@@ -112,7 +112,7 @@ pub fn item(props: ItemProps) -> Template<G> {
                     )
                 })
             } else {
-                Template::empty()
+                View::empty()
             })
         }
     }

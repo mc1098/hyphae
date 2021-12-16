@@ -131,7 +131,7 @@ impl Filter {
 const KEY: &str = "todos-sycamore";
 
 #[component(App<G>)]
-fn app() -> Template<G> {
+fn app() -> View<G> {
     let local_storage = web_sys::window()
         .unwrap()
         .local_storage()
@@ -160,18 +160,18 @@ fn app() -> Template<G> {
     let todos_is_empty =
         create_selector(cloned!((app_state) => move || app_state.todos.get().len() == 0));
 
-    template! {
+    view! {
         div(class="todomvc-wrapper") {
             section(class="todoapp") {
                 header::Header(app_state.clone())
 
                 (if !*todos_is_empty.get() {
-                    template! {
+                    view! {
                         list::List(app_state.clone())
                         footer::Footer(app_state.clone())
                     }
                 } else {
-                    Template::empty()
+                    View::empty()
                 })
             }
 
@@ -181,7 +181,7 @@ fn app() -> Template<G> {
 }
 
 fn main() {
-    sycamore::render(|| template! { App() });
+    sycamore::render(|| view! { App() });
 }
 
 #[cfg(test)]
@@ -196,7 +196,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -230,7 +230,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn make_new_todo_item_complete_it_then_clear_completed_aria_only() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         let input: HtmlInputElement =
             rendered.assert_by_aria_role(AriaRole::TextBox, "What needs to be done?");
@@ -266,7 +266,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_edit_it_and_complete() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -302,7 +302,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn make_multiple_todo_items_and_complete_them_all_at_once() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -337,7 +337,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn make_new_todo_item_and_remove_it() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");
@@ -362,7 +362,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn check_active_completed_tabs() {
         let rendered = QueryElement::new();
-        sycamore::render_to(|| template! { App() }, &rendered);
+        sycamore::render_to(|| view! { App() }, &rendered);
 
         // get todo input
         let input: HtmlInputElement = rendered.assert_by_placeholder_text("What needs to be done?");

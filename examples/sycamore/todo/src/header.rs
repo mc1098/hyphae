@@ -5,7 +5,7 @@ use web_sys::{Event, KeyboardEvent};
 use crate::AppState;
 
 #[component(Header<G>)]
-pub fn header(app_state: AppState) -> Template<G> {
+pub fn header(app_state: AppState) -> View<G> {
     let value = Signal::new(String::new());
 
     let handle_submit = cloned!((app_state, value) => move |event: Event| {
@@ -22,7 +22,7 @@ pub fn header(app_state: AppState) -> Template<G> {
         }
     });
 
-    template! {
+    view! {
         header(class="header") {
             h1 { "todos" }
             input(class="new-todo",
