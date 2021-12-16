@@ -9,8 +9,8 @@ strum = "0.21"
 strum_macros = "0.21"
 serde = "1"
 serde_derive = "1"
-yew = { git = "https://github.com/yewstack/yew.git" }
-gloo-storage = { git = "https://github.com/rustwasm/gloo.git" }
+yew = "0.19.3"
+gloo-storage = "0.2.0"
 
 [dependencies.web-sys]
 version = "0.3"

@@ -5,8 +5,8 @@ authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
 
 [dependencies]
-yew = { git = "https://github.com/yewstack/yew.git" }
-yew-agent = { git = "https://github.com/yewstack/yew.git" }
+yew = "0.19.3"
+yew-agent = "0.1.0"
 
 serde = { version = "1.0", features = ["derive"] }
 
