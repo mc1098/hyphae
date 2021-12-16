@@ -5,7 +5,7 @@ authors = ["mc1098 <m.cripps1@uni.brighton.ac.uk>"]
 edition = "2018"
 
 [dependencies]
-yew = { git = "https://github.com/yewstack/yew.git" }
+yew = "0.19.3"
 js-sys = "0.3.51"
 
 [dependencies.web-sys]
