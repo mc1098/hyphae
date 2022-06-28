@@ -1,4 +1,4 @@
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::Element;
 
 #[wasm_bindgen(module = "/js/sap-utils.js")]
@@ -7,22 +7,31 @@ extern "C" {
 }
 
 macro_rules! get_js_property_impl {
-    ($getter:ident, $setter:ident, $property_name:literal) => {
-        pub fn $getter<T: JsCast>(element: &T) -> Option<String> {
+    ($getter:ident, $setter:ident, $mapper:ident, $property_name:literal:$property_type:ty) => {
+        pub fn $getter<T: JsCast>(element: &T) -> Option<$property_type> {
             js_sys::Reflect::get(&element.into(), &$property_name.into())
                 .ok()
                 .and_then(|v| v.as_string())
         }
 
-        pub fn $setter<T: JsCast>(element: &T, value: &str) -> bool {
+        pub fn $setter<T: JsCast, V: Into<JsValue>>(element: &T, value: V) -> bool {
             js_sys::Reflect::set(&element.into(), &$property_name.into(), &value.into())
                 .expect("implementations of JsCast should be Objects")
+        }
+
+        pub fn $mapper<T: JsCast, V: Into<JsValue>, F: FnMut($property_type) -> V>(
+            element: &T,
+            mut f: F,
+        ) -> bool {
+            $getter(element)
+                .map(move |prop| $setter(element, f(prop)))
+                .unwrap_or_default()
         }
     };
 }
 
 get_js_property_impl! {
-    get_element_value, set_element_value, "value"
+    get_element_value, set_element_value, map_element_value, "value":String
 }
 
 pub fn format_html(html: &str) -> String {
