@@ -236,7 +236,7 @@ fn element_accessible_name_impl(
     }
 
     if Node::TEXT_NODE == node.node_type() {
-        accumulated_text.push_str(&node.text_content().unwrap_or_default().trim().to_owned());
+        accumulated_text.push_str(node.text_content().unwrap_or_default().trim());
     }
 
     Ok(accumulated_text)
