@@ -94,6 +94,7 @@ where
     if key.is_visible() {
         let mut init = InputEventInit::new();
         init.data(Some(&key.to_string()));
+        init.bubbles(true);
         init.input_type("insertText");
         dispatch_input_event(element, init);
     }
@@ -106,9 +107,8 @@ This will fire the following events, in this order, on the target for each key:
 - `keydown` [`KeyboardEvent`]
 - `keypress` [`KeyboardEvent`]
 - `keyup` [`KeyboardEvent`]
+- `input` [`InputEvent`] if the key is visible
 
-This will also fire a single input event containing a `String` with all the
-visible keys.
 # Examples
 ```
 use hyphae::event::*;
@@ -128,21 +128,7 @@ where
 {
     let keys = keys.into();
     for key in keys.iter().copied() {
-        type_key_only(element, key);
-    }
-
-    let input_data: String = keys
-        .iter()
-        .filter(|key| key.is_visible())
-        .map(|k| k.to_string())
-        .collect();
-
-    if !input_data.is_empty() {
-        let mut init = InputEventInit::new();
-        init.data(Some(&input_data));
-        init.input_type("insertText");
-
-        dispatch_input_event(element, init);
+        type_key(element, key);
     }
 }
 
@@ -258,13 +244,17 @@ assert_eq!("Hello, World!", input.value());
 pub fn dispatch_input_event(element: &EventTarget, data: InputEventInit) {
     let input_event = InputEvent::new_with_event_init_dict("input", &data).unwrap();
     let data = input_event.data();
-    if let Some(data) = data {
+    // if let Some(data) = data {
+    //     let mut value = hyphae_utils::get_element_value(element).unwrap();
+    //     value.push_str(&data);
+    //     hyphae_utils::set_element_value(element, value);
+    // }
+    if let Some(data) = data.as_ref() {
         hyphae_utils::map_element_value(element, |mut value| {
-            value.push_str(&data);
+            value.push_str(data);
             value
         });
     }
-
     assert!(element.dispatch_event(&input_event).unwrap());
 }
 
