@@ -1,5 +1,5 @@
 [package]
-name = "sap"
+name = "hyphae"
 version = "0.1.0"
 authors = ["mc1098"]
 edition = "2018"
@@ -48,7 +48,7 @@ default = []
 [workspace]
 # crates to document when using cargo doc
 default-members = [
-	"../sap",
+	"../hyphae",
 	"crates/sap-aria",
 	"crates/sap-mock",
 	"crates/sap-utils",
