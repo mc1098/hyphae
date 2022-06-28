@@ -231,6 +231,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
+    use std::time::Duration;
+
     use super::*;
 
     use anyhow::anyhow;
@@ -238,7 +240,7 @@ mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use yew::{
         format::{Binary, Text},
         web_sys::{HtmlButtonElement, HtmlElement},
@@ -251,7 +253,7 @@ mod tests {
 
         let mock = DataFromFile { value: 20 };
         // mock fetch to return mock value
-        let _handle = sap_mock::mock_fetch(Ok(&mock));
+        let _handle = hyphae_mock::mock_fetch(Ok(&mock));
 
         let button: HtmlButtonElement =
             rendered.assert_by_aria_role(AriaRole::Button, "Fetch Data");
@@ -259,9 +261,7 @@ mod tests {
         // We need to wait for a bit here because fetch is async
         // even with a Promise that resolves immediately it will be delayed
         // Use effect_dom to add a future that won't complete until the dom changes or gets timed out.
-        sap_utils::effect_dom(&rendered, move || button.click(), Some(100))
-            .await
-            .unwrap();
+        hyphae::utils::effect_dom(&rendered, move || button.click(), Duration::ZERO).await;
 
         // check that mock value has been added to the DOM.
         rendered.assert_by_text::<HtmlElement>("20");
@@ -273,14 +273,12 @@ mod tests {
         App::<Model>::new().mount(rendered.clone().into());
 
         let mock = DataFromFile { value: 50 };
-        let _handle = sap_mock::mock_fetch(Ok(&mock));
+        let _handle = hyphae_mock::mock_fetch(Ok(&mock));
 
         let button = rendered
             .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [binary]");
 
-        sap_utils::effect_dom(&rendered, move || button.click(), Some(100))
-            .await
-            .unwrap();
+        hyphae::utils::effect_dom(&rendered, move || button.click(), Duration::ZERO).await;
 
         rendered.assert_by_text::<HtmlElement>("50");
     }
@@ -291,14 +289,12 @@ mod tests {
         App::<Model>::new().mount(rendered.clone().into());
 
         let mock: Text = Toml(&DataFromFile { value: 230 }).into();
-        let _handle = sap_mock::mock_fetch(Ok(&mock.unwrap()));
+        let _handle = hyphae_mock::mock_fetch(Ok(&mock.unwrap()));
 
         let button = rendered
             .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Fetch Data [toml]");
 
-        sap_utils::effect_dom(&rendered, move || button.click(), Some(100))
-            .await
-            .unwrap();
+        hyphae::utils::effect_dom(&rendered, move || button.click(), Duration::ZERO).await;
 
         rendered.assert_by_text::<HtmlElement>("230");
     }
@@ -308,7 +304,7 @@ mod tests {
         let rendered = QueryElement::new();
         App::<Model>::new().mount(rendered.clone().into());
 
-        let controller = sap_mock::mock_ws(0);
+        let controller = hyphae_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered
             .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket");
@@ -352,7 +348,7 @@ mod tests {
     fn connect_to_ws_send_and_recieve_binary() {
         let rendered = QueryElement::new();
         App::<Model>::new().mount(rendered.clone().into());
-        let controller = sap_mock::mock_ws(0);
+        let controller = hyphae_mock::mock_ws(0);
 
         let connect_to_ws_btn = rendered
             .assert_by_aria_role::<HtmlButtonElement>(AriaRole::Button, "Connect To WebSocket");

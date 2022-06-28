@@ -1,13 +1,13 @@
 [package]
-name = "sap"
+name = "hyphae"
 version = "0.1.0"
 authors = ["mc1098"]
 edition = "2018"
 license = "MIT"
 
 [dependencies]
-sap-aria = { path = "crates/sap-aria" }
-sap-utils = { path = "crates/sap-utils" }
+hyphae-aria = { path = "crates/hyphae-aria" }
+hyphae-utils = { path = "crates/hyphae-utils" }
 wasm-bindgen = "0.2"
 
 [dev-dependencies]
@@ -48,15 +48,15 @@ default = []
 [workspace]
 # crates to document when using cargo doc
 default-members = [
-	"../sap",
-	"crates/sap-aria",
-	"crates/sap-mock",
-	"crates/sap-utils",
+	"../hyphae",
+	"crates/hyphae-aria",
+	"crates/hyphae-mock",
+	"crates/hyphae-utils",
 ]
 members = [
-	"crates/sap-aria",
-	"crates/sap-mock",
-	"crates/sap-utils",
+	"crates/hyphae-aria",
+	"crates/hyphae-mock",
+	"crates/hyphae-utils",
 	"examples/yew/counter",
 	"examples/yew/v0.18.0/dashboard",
 	"examples/yew/pub_sub",
@@ -67,4 +67,4 @@ members = [
 ]
 
 [patch.crates-io]
-sap-aria = { path = "crates/sap-aria" }
+hyphae-aria = { path = "crates/hyphae-aria" }

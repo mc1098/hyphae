@@ -110,9 +110,9 @@ immediately.
 
 Mock a WebSocket that connects immediately:
 ```no_run
-use sap_mock::WebSocketController;
+use hyphae_mock::WebSocketController;
 
-let controller: WebSocketController = sap_mock::mock_ws(0);
+let controller: WebSocketController = hyphae_mock::mock_ws(0);
 // `ws` is a mocked WebSocket
 let ws = web_sys::WebSocket::new("anyurl").unwrap();
 // No wait required
@@ -122,10 +122,10 @@ assert!(controller.is_opened());
 Mock a WebSocket that takes 500ms to connect:
 ```no_run
 # async fn wait_for_ws() {
-use sap_mock::WebSocketController;
+use hyphae_mock::WebSocketController;
 
 // Mock a WebSocket that takes 500ms to connect
-let controller: WebSocketController = sap_mock::mock_ws(500);
+let controller: WebSocketController = hyphae_mock::mock_ws(500);
 // `ws` is a mocked WebSocket
 let ws = web_sys::WebSocket::new("anyurl").unwrap();
 
@@ -133,7 +133,7 @@ let ws = web_sys::WebSocket::new("anyurl").unwrap();
 assert!(!controller.is_opened());
 
 // Need to be in an async fn here to await
-sap_utils::wait_ms(500).await.unwrap();
+hyphae_utils::wait_ms(500).await;
 // After 500ms mock WebSocket will be opened
 assert!(controller.is_opened());
 # }
@@ -180,7 +180,7 @@ async fn mock_fetch_usize() {
     let mock = Model { value: 32 };
 
     // Hold handle to keep mock alive
-    let _handle = sap_mock::mock_fetch(Ok(&mock));
+    let _handle = hyphae_mock::mock_fetch(Ok(&mock));
     let window = window().expect("No global window");
     // Wrap fetch call into a Future to await it
     let resp: Response = JsFuture::from(window.fetch_with_str("someurl"))
@@ -282,7 +282,7 @@ mod tests {
         // connection is not open yet!
         assert!(!controller.is_opened());
         // wait for connection
-        sap_utils::wait_ms(100).await.unwrap();
+        hyphae_utils::wait_ms(100).await;
 
         assert!(controller.is_opened());
 

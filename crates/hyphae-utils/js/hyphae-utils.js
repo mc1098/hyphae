@@ -49,6 +49,7 @@ export function until_mutation(element, action, timeout) {
 		if (timeout) {
 			let wait = setTimeout(() => {
 				clearTimeout(wait);
+                observer.disconnect();
 				reject(`No change observed within the allotted time: ${timeout}ms.`);
 			}, timeout)
 		}

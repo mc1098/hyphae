@@ -7,7 +7,7 @@ If you want to take into account styling then you will want to use [`assert_inne
 # Examples
 The expected text content is the first argument and the node is the second:
 ```no_run
-# use sap::assert_text_content;
+# use hyphae::assert_text_content;
 # use web_sys::Node;
 # fn test_assert_text_context(node: Node) {
 let node: Node = //.. some function to get Node with text content with "Hello, World!"
@@ -17,7 +17,7 @@ assert_text_content!("Hello, World!", node);
 ```
 A second version is available to add a custom panic message when the equality fails:
 ```no_run
-# use sap::assert_text_content;
+# use hyphae::assert_text_content;
 # use web_sys::Node;
 # fn test_assert_text_content(node: Node) {
 let node: Node = //.. some function to get Node with text content with "Hello, World!"
@@ -54,7 +54,7 @@ If you want to exclude styling then you will want to use [`assert_text_content`]
 # Examples
 The expected inner text is the first argument and the HtmlElement is the second:
 ```no_run
-# use sap::assert_inner_text;
+# use hyphae::assert_inner_text;
 # use web_sys::HtmlElement;
 # fn test_assert_inner_text(element: HtmlElement) {
 let element: HtmlElement = //.. some function to get Element with inner text of "Hello, World!"
@@ -64,7 +64,7 @@ assert_inner_text!("Hello, World!", element);
 ```
 A second version is available to add a custom panic message when the equality fails:
 ```no_run
-# use sap::assert_inner_text;
+# use hyphae::assert_inner_text;
 # use web_sys::HtmlElement;
 # fn test_assert_inner_text(element: HtmlElement) {
 let element: HtmlElement = //.. some function to get HtmlElement with inner text of "Hello, World!"
@@ -82,12 +82,13 @@ macro_rules! assert_inner_text {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::{make_element_with_html_string, prelude::*};
-
-    use wasm_bindgen::JsCast;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
+
+    use hyphae::prelude::*;
+    use hyphae_utils::make_element_with_html_string;
+
+    use wasm_bindgen::JsCast;
     use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]

@@ -298,7 +298,7 @@ where
     T: ToQueryString + Copy,
 {
     fn from(slice: &'a S) -> Self {
-        TokenList(slice.as_ref().iter().copied().collect())
+        TokenList(slice.as_ref().to_vec())
     }
 }
 

@@ -39,7 +39,7 @@ use std::{
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{HtmlElement, Node, NodeFilter, TreeWalker};
 
-use crate::{Error, QueryElement};
+use hyphae::{Error, QueryElement};
 
 /**
 Enables queries by inner text.
@@ -78,7 +78,7 @@ pub trait ByText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlButtonElement;
 
     #[wasm_bindgen_test]
@@ -102,7 +102,7 @@ pub trait ByText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlLabelElement;
 
     #[wasm_bindgen_test]
@@ -130,7 +130,7 @@ pub trait ByText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]
@@ -159,7 +159,11 @@ fn first_text_node_in_inner_text_match<T>(node: &Node, query: &str, exact: bool)
 where
     T: JsCast,
 {
-    let check = if exact { str::eq } else { sap_utils::is_close };
+    let check = if exact {
+        str::eq
+    } else {
+        hyphae_utils::is_close
+    };
     let mut node = node.clone();
     while let Some(parent) = node
         .parent_element()
@@ -230,7 +234,7 @@ impl ByText for QueryElement {
                     })
                 });
 
-            if let Some(closest) = sap_utils::closest(search, iter, |(key, _)| key) {
+            if let Some(closest) = hyphae_utils::closest(search, iter, |(key, _)| key) {
                 Err(Box::new(ByTextError::Closest {
                     search_term: search.to_owned(),
                     inner_html: self.inner_html(),
@@ -281,7 +285,7 @@ impl Debug for ByTextError {
                     f,
                     "\nNo text node found with text equal or similar to '{}' in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html(inner_html),
+                    hyphae_utils::format_html(inner_html),
                 )
             }
             ByTextError::Closest {
@@ -289,7 +293,7 @@ impl Debug for ByTextError {
                 inner_html,
                 closest_element,
             } => {
-                let html = sap_utils::format_html_with_closest(
+                let html = hyphae_utils::format_html_with_closest(
                     inner_html,
                     closest_element.unchecked_ref(),
                 );
@@ -370,12 +374,13 @@ where
 
 #[cfg(test)]
 mod tests {
-
-    use crate::make_element_with_html_string;
-
     use super::*;
+
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    use hyphae_utils::make_element_with_html_string;
+
     use web_sys::{Element, HtmlButtonElement, HtmlLabelElement};
 
     #[wasm_bindgen_test]

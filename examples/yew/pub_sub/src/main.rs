@@ -34,7 +34,7 @@ fn main() {
 mod tests {
 
     use super::*;
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use wasm_bindgen_test::*;
     use web_sys::{HtmlButtonElement, HtmlElement};
 

@@ -1,5 +1,5 @@
 [package]
-name = "sap-mock"
+name = "hyphae-mock"
 version = "0.1.0"
 edition = "2018"
 
@@ -11,7 +11,7 @@ js-sys = "0.3"
 [dev-dependencies]
 wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3"
-sap-utils = { path = "../sap-utils" }
+hyphae-utils = { path = "../hyphae-utils" }
 
 [dev-dependencies.web-sys] 
 version = "0.3"

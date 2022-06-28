@@ -1,43 +1,45 @@
 mod html;
 mod lev_distance;
 
-pub use html::{format_html, format_html_with_closest, get_element_value, set_element_value};
+use std::time::Duration;
+
+pub use html::{
+    format_html, format_html_with_closest, get_element_value, make_element_with_html_string,
+    map_element_value, set_element_value,
+};
+
 pub use lev_distance::{closest, is_close};
 
 use js_sys::Function;
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
 
-#[wasm_bindgen(module = "/js/sap-utils.js")]
+#[wasm_bindgen(module = "/js/hyphae-utils.js")]
 extern "C" {
     fn wait_promise(ms: JsValue) -> js_sys::Promise;
     fn until_mutation(element: &JsValue, action: &Function, timeout: JsValue) -> js_sys::Promise;
 }
 
-/**
-Perform an action and await a DOM change with an optional timeout.
-
-This function uses the MutationObserver in JS to track whether a change in the DOM has occurred
-for the element given or it's subtree, this includes attribute changes.
-
-When a timeout is given, the Future will wait until the allotted time for a change in the DOM
-to occur. If no DOM change occurs then this function will panic.
-
-*/
-pub fn effect_dom<F>(element: &JsValue, action: F, timeout_ms: Option<u32>) -> JsFuture
+/// Perform an action and await a DOM change with a timeout duration.
+///
+/// This function uses the MutationObserver in JS to track whether a change in the DOM has occurred
+/// for the element given or it's subtree, this includes attribute changes.
+///
+/// The Future will wait until the allotted time for a change in the DOM
+/// to occur. If no DOM change occurs then this function will panic.
+pub async fn effect_dom<F>(element: &JsValue, action: F, timeout: Duration)
 where
     F: Fn() + 'static,
 {
-    let timeout = match timeout_ms {
-        Some(ms) => ms.into(),
-        None => JsValue::UNDEFINED,
-    };
+    let timeout = timeout.as_millis().into();
     let function = Closure::wrap(Box::new(action) as Box<dyn Fn()>);
     JsFuture::from(until_mutation(
         element,
         function.as_ref().unchecked_ref(),
         timeout,
     ))
+    .await
+    .unwrap_throw();
 }
 
 /**
@@ -56,13 +58,12 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen_test]
 async fn some_test_that_requires_waiting() {
     // setup..
-    // wait 500ms - unwrap required
-    sap_utils::wait_ms(500).await.expect("Underlying JS not to throw exception");
+    // wait 500ms
+    hyphae_utils::wait_ms(500);
     // some asserts..
 }
 ```
 */
-pub async fn wait_ms(ms: u32) -> Result<(), JsValue> {
-    let _ = JsFuture::from(wait_promise(ms.into())).await?;
-    Ok(())
+pub async fn wait_ms(ms: u32) {
+    JsFuture::from(wait_promise(ms.into())).await.unwrap_throw();
 }

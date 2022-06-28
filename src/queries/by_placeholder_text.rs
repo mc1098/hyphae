@@ -84,7 +84,7 @@ pub trait ByPlaceholderText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -108,7 +108,7 @@ pub trait ByPlaceholderText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlTextAreaElement;
 
     #[wasm_bindgen_test]
@@ -132,7 +132,7 @@ pub trait ByPlaceholderText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]
@@ -188,7 +188,7 @@ impl ByPlaceholderText for QueryElement {
                 .map(|e| (e.placeholder(), e.unchecked_into::<T>()))
                 .ok(),
         });
-        if let Some((ph, e)) = sap_utils::closest(search, holders, |(k, _)| k) {
+        if let Some((ph, e)) = hyphae_utils::closest(search, holders, |(k, _)| k) {
             if search == ph {
                 Ok(e)
             } else {
@@ -242,7 +242,7 @@ impl Debug for ByPlaceholderTextError {
                     f,
                     "\nNo element found with placeholder text equal or similar to '{}' in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )
             }
             ByPlaceholderTextError::Closest {
@@ -254,7 +254,7 @@ impl Debug for ByPlaceholderTextError {
                     f,
                     "\nNo exact match found for the placeholder text: '{}'.\nA similar match was found in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
+                    hyphae_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
                 )
             }
         }
@@ -275,13 +275,15 @@ impl std::error::Error for ByPlaceholderTextError {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-    use web_sys::{Element, HtmlElement};
 
-    use super::*;
-    use crate::{make_element_with_html_string, QueryElement};
+    use hyphae::QueryElement;
+    use hyphae_utils::make_element_with_html_string;
+
+    use web_sys::{Element, HtmlElement};
 
     #[wasm_bindgen_test]
     fn get_input_by_placeholder_text() {

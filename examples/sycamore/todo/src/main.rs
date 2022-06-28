@@ -188,7 +188,7 @@ fn main() {
 mod tests {
 
     use super::*;
-    use sap::{assert_text_content, events::*, prelude::*, type_to};
+    use hyphae::{assert_text_content, event::*, prelude::*, type_to};
     use wasm_bindgen_test::*;
     use web_sys::{HtmlButtonElement, HtmlElement, HtmlInputElement};
     wasm_bindgen_test_configure!(run_in_browser);
