@@ -167,7 +167,7 @@ mod tests {
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]

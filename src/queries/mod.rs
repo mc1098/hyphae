@@ -25,7 +25,7 @@ impl QueryElement {
 
     # Examples
     ```no_run
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     let rendered = QueryElement::new();
     // .. use `rendered` to get elements and perform tests
     ```
@@ -41,7 +41,7 @@ impl Default for QueryElement {
             .and_then(|w| w.document())
             .expect("Cannot get global document");
         let div = doc.create_element("div").expect("Unable to create element");
-        div.set_id("sap-test-app");
+        div.set_id("hyphae-test-app");
         doc.body()
             .expect("Cannot get body element")
             .append_child(&div)

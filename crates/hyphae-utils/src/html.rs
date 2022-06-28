@@ -1,7 +1,7 @@
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::Element;
 
-#[wasm_bindgen(module = "/js/sap-utils.js")]
+#[wasm_bindgen(module = "/js/hyphae-utils.js")]
 extern "C" {
     fn format(str: JsValue) -> JsValue;
 }
@@ -82,6 +82,34 @@ pub fn format_html_with_closest(html: &str, closest: &Element) -> String {
         html.insert_str(closest_pos + closest_opening_tag.len() + 1, &to_insert);
     }
     html
+}
+
+pub fn make_element_with_html_string(inner_html: &str) -> web_sys::HtmlElement {
+    let document = web_sys::window().unwrap().document().unwrap();
+    let div = document.create_element("div").unwrap();
+    // remove \n & \t and 4 x spaces which are just formatting to avoid text nodes being added
+    let inner_html = inner_html
+        .chars()
+        .fold((String::new(), 0), |(mut s, ws), c| match c {
+            ' ' if ws == 3 => {
+                s.truncate(s.len() - 3);
+                (s, 0)
+            }
+            ' ' => {
+                s.push(c);
+                (s, ws + 1)
+            }
+            '\n' | '\t' => (s, 0),
+            _ => {
+                s.push(c);
+                (s, 0)
+            }
+        })
+        .0;
+    div.set_inner_html(&inner_html);
+
+    document.body().unwrap().append_child(&div).unwrap();
+    div.unchecked_into()
 }
 
 #[cfg(test)]

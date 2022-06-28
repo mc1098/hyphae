@@ -103,7 +103,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -137,7 +137,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
@@ -171,7 +171,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
@@ -252,7 +252,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::{HtmlInputElement, HtmlLabelElement};
 
     #[wasm_bindgen_test]
@@ -287,7 +287,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
@@ -321,7 +321,7 @@ pub trait ByLabelText {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::{HtmlElement, HtmlTextAreaElement};
 
     #[wasm_bindgen_test]
@@ -460,7 +460,7 @@ impl std::fmt::Debug for ByLabelTextError {
                     f,
                     "No label found with text: '{}' in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )
             }
             ByLabelTextError::NoElementFound {
@@ -488,7 +488,7 @@ impl std::fmt::Debug for ByLabelTextError {
                 writeln!(
                     f,
                     "in the following HTML:{}",
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )?;
 
                 if *no_of_labels != ids_found.len() {
@@ -517,11 +517,14 @@ impl std::error::Error for ByLabelTextError {
 
 #[cfg(test)]
 pub mod tests {
+    use super::*;
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-    use super::*;
-    use crate::{make_element_with_html_string, QueryElement};
+
+    use hyphae::QueryElement;
+    use hyphae_utils::make_element_with_html_string;
+
     use web_sys::{HtmlElement, HtmlInputElement};
 
     fn input_label_text() -> QueryElement {

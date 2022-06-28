@@ -15,7 +15,7 @@ features = [
 ]
 
 [dev-dependencies]
-sap = { path = "../../../" }
+hyphae = { path = "../../../" }
 wasm-bindgen-test = "0.3.24"
 
 [dev-dependencies.web-sys]

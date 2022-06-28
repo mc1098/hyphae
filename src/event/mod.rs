@@ -25,7 +25,7 @@ The [list of keys available](https://developer.mozilla.org/en-US/docs/Web/API/Ke
 ## Control Key
 [`Key`] has a variant for most of the keys listed above (see next example for typed chars).
 ```
-use sap::events::*;
+use hyphae::event::*;
 use web_sys::HtmlButtonElement;
 
 # fn control_key_example(btn: HtmlButtonElement) {
@@ -40,7 +40,7 @@ dispatch_key_event(&btn, KeyEventType::KeyPress, Key::Enter);
 A [`char`] can be accepted and will be the equivalent to using [`Key::Lit`] variant with the [`char`]
 value.
 ```
-use sap::events::*;
+use hyphae::event::*;
 use web_sys::HtmlInputElement;
 
 # fn char_literal_example(input: HtmlInputElement) {
@@ -74,7 +74,7 @@ This will fire the following events, in this order, on the target:
 
 # Examples
 ```
-use sap::events::*;
+use hyphae::event::*;
 use web_sys::HtmlInputElement;
 
 # fn type_key_example(input: HtmlInputElement) {
@@ -111,14 +111,14 @@ This will also fire a single input event containing a `String` with all the
 visible keys.
 # Examples
 ```
-use sap::events::*;
+use hyphae::event::*;
 use web_sys::HtmlInputElement;
 
 # fn type_key_example(input: HtmlInputElement) {
 let input: HtmlInputElement = // some function to get input element;
     # input;
-type_keys(&input, vec!['A', 'B', 'C');
-assert_eq!("ABC", input.value());
+type_keys(&input, "abc");
+assert_eq!("abc", input.value());
 # }
 ```
 */
@@ -167,7 +167,7 @@ fn type_key_only(element: &EventTarget, key: Key) {
 /// - `input` [`InputEvent`]
 ///
 /// ```
-/// use sap::{events::*, type_to};
+/// use hyphae::{event::*, type_to};
 /// use web_sys::HtmlInputElement;
 ///
 /// # fn type_to_example(input: HtmlInputElement) {
@@ -181,12 +181,12 @@ fn type_key_only(element: &EventTarget, key: Key) {
 #[macro_export]
 macro_rules! type_to {
     ($element: ident, $($into_keys:expr),+) => {
-        let mut keys: Vec<sap::event::Key> = vec![];
+        let mut keys: Vec<hyphae::event::Key> = vec![];
         $(
-            let mut ks: sap::event::Keys = $into_keys.into();
+            let mut ks: hyphae::event::Keys = $into_keys.into();
             keys.append(&mut ks);
         )+
-        sap::event::type_keys(&$element, keys);
+        hyphae::event::type_keys(&$element, keys);
     };
 }
 
@@ -197,7 +197,7 @@ pub trait DblClick {
 
     # Examples
     ```
-    use sap::events::DblClick;
+    use hyphae::event::DblClick;
     use web_sys::HtmlButtonElement;
 
     # fn dbl_click_example(btn: HtmlButtonElement) {
@@ -239,14 +239,18 @@ of the [`EventTarget`] you can just use the relative set value method.
 
 # Examples
 ```
-use sap::events::dispatch_input_event;
-use web_sys::HtmlInputElement;
+use hyphae::event::dispatch_input_event;
+use web_sys::{HtmlInputElement, InputEventInit};
 
 # fn dispatch_input_event_example(input: HtmlInputElement) {
 let input: HtmlInputElement = // function to get input element
     # input;
 // enter value into input
-dispatch_input_event(&input, "Hello, World!");
+let mut init = InputEventInit::new();
+init.data(Some("Hello World!"));
+init.input_type("insertText");
+
+dispatch_input_event(&input, init);
 assert_eq!("Hello, World!", input.value());
 # }
 ```
@@ -255,7 +259,7 @@ pub fn dispatch_input_event(element: &EventTarget, data: InputEventInit) {
     let input_event = InputEvent::new_with_event_init_dict("input", &data).unwrap();
     let data = input_event.data();
     if let Some(data) = data {
-        sap_utils::map_element_value(element, |mut value| {
+        hyphae_utils::map_element_value(element, |mut value| {
             value.push_str(&data);
             value
         });
@@ -271,7 +275,7 @@ pub trait EventTargetChanged {
 
     # Examples
     ```
-    use sap::events::EventTargetChanged;
+    use hyphae::event::EventTargetChanged;
     use web_sys::HtmlInputElement;
 
     # fn dispatch_input_event_example(input: HtmlInputElement) {
@@ -296,18 +300,18 @@ impl EventTargetChanged for EventTarget {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
 
     use std::cell::Cell;
 
     use wasm_bindgen::{prelude::Closure, JsCast};
     use web_sys::{Document, HtmlElement, HtmlInputElement, KeyboardEvent};
 
-    use wasm_bindgen_test::*;
-    wasm_bindgen_test_configure!(run_in_browser);
-    use crate::{assert_text_content, make_element_with_html_string, QueryElement};
-
-    use super::*;
-    use crate::prelude::*;
+    use hyphae::{prelude::*, QueryElement};
+    use hyphae_utils::make_element_with_html_string;
 
     macro_rules! wasm_closure {
         (|_: $t:ty| $expr:expr) => {

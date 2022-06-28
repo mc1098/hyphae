@@ -261,7 +261,7 @@ fn main() {
 mod tests {
 
     use super::*;
-    use sap::{events::*, prelude::*, type_to};
+    use hyphae::{event::*, prelude::*, type_to};
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use web_sys::{HtmlButtonElement, HtmlElement};

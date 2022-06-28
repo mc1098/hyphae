@@ -34,12 +34,17 @@ $ wasm-pack test --headless --firefox --chrome
 ```
 */
 
-extern crate self as sap;
+extern crate self as hyphae;
 
 mod asserts;
 pub mod event;
 mod iter;
 pub mod queries;
+
+/// Utility functions.
+pub mod utils {
+    pub use hyphae_utils::{effect_dom, wait_ms};
+}
 
 pub use iter::*;
 pub use queries::QueryElement;
@@ -47,46 +52,15 @@ pub use queries::QueryElement;
 /// Alias for boxed error
 pub type Error = Box<dyn std::error::Error>;
 
-#[cfg(test)]
-pub(crate) fn make_element_with_html_string(inner_html: &str) -> web_sys::HtmlElement {
-    use wasm_bindgen::JsCast;
-
-    let document = web_sys::window().unwrap().document().unwrap();
-    let div = document.create_element("div").unwrap();
-    // remove \n & \t and 4 x spaces which are just formatting to avoid text nodes being added
-    let inner_html = inner_html
-        .chars()
-        .fold((String::new(), 0), |(mut s, ws), c| match c {
-            ' ' if ws == 3 => {
-                s.truncate(s.len() - 3);
-                (s, 0)
-            }
-            ' ' => {
-                s.push(c);
-                (s, ws + 1)
-            }
-            '\n' | '\t' => (s, 0),
-            _ => {
-                s.push(c);
-                (s, 0)
-            }
-        })
-        .0;
-    div.set_inner_html(&inner_html);
-
-    document.body().unwrap().append_child(&div).unwrap();
-    div.unchecked_into()
-}
-
 /// Sap Prelude
 ///
-/// Convenient module to import the most used imports for sap.
+/// Convenient module to import the most used imports for hyphae.
 ///
 /// ```no_run
-/// use sap::prelude::*;
+/// use hyphae::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::{
+    pub use hyphae::{
         assert_inner_text, assert_text_content,
         iter::*,
         queries::{
@@ -95,5 +69,5 @@ pub mod prelude {
         },
         Error,
     };
-    pub use sap_aria::{property::*, role::*, state::*};
+    pub use hyphae_aria::{property::*, role::*, state::*};
 }

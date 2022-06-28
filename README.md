@@ -4,12 +4,12 @@
 [![MIT licensed][mit-badge]][mit-url]
 [![Build Status][actions-badge]][actions-url]
 
-<!-- [crates-badge]: https://img.shields.io/crates/v/sap.svg
-[crates-url]: https://crates.io/crates/sap -->
+<!-- [crates-badge]: https://img.shields.io/crates/v/hyphae.svg
+[crates-url]: https://crates.io/crates/hyphae -->
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: https://github.com/mc1098/sap/blob/main/LICENSE
-[actions-badge]: https://github.com/mc1098/sap/workflows/CI/badge.svg
-[actions-url]: https://github.com/mc1098/sap/actions?query=workflow%3ACI+branch%3Astaging
+[mit-url]: https://github.com/mc1098/hyphae/blob/main/LICENSE
+[actions-badge]: https://github.com/mc1098/hyphae/workflows/CI/badge.svg
+[actions-url]: https://github.com/mc1098/hyphae/actions?query=workflow%3ACI+branch%3Astaging
 
 Sap is a testing library that provides abstractions on top of `wasm_bindgen` for testing DOM nodes.
 
@@ -48,7 +48,7 @@ One of the tests found in the `todo` example.
 
 ```rust
 use super::*;
-use sap::{events::*, prelude::*, type_to};
+use hyphae::{events::*, prelude::*, type_to};
 use wasm_bindgen_test::*;
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 use web_sys::{HtmlButtonElement, HtmlInputElement};

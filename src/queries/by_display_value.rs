@@ -105,7 +105,7 @@ pub trait ByDisplayValue {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -128,7 +128,7 @@ pub trait ByDisplayValue {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlSelectElement;
 
     #[wasm_bindgen_test]
@@ -152,7 +152,7 @@ pub trait ByDisplayValue {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlTextAreaElement;
 
     #[wasm_bindgen_test]
@@ -176,7 +176,7 @@ pub trait ByDisplayValue {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlElement;
 
     #[wasm_bindgen_test]
@@ -223,10 +223,10 @@ impl ByDisplayValue for QueryElement {
         let elements = self.query_selector_all("input, select, textarea").ok();
 
         let display_values = RawNodeListIter::<T>::new(elements).filter_map(|element| {
-            sap_utils::get_element_value(&element).map(|value| (value, element))
+            hyphae_utils::get_element_value(&element).map(|value| (value, element))
         });
 
-        if let Some((dv, e)) = sap_utils::closest(search, display_values, |(k, _)| k) {
+        if let Some((dv, e)) = hyphae_utils::closest(search, display_values, |(k, _)| k) {
             if search == dv {
                 Ok(e)
             } else {
@@ -280,7 +280,7 @@ impl Debug for ByDisplayValueError {
                     f,
                     "\nNo element found with a display value equal or similar to '{}' in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )
             }
             ByDisplayValueError::Closest {
@@ -292,7 +292,7 @@ impl Debug for ByDisplayValueError {
                     f,
                     "\nNo exact match found for a display value of: '{}'.\nA similar match was found in the following HTML:{}",
                     search_term,
-                    sap_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref()),
+                    hyphae_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref()),
                 )
             }
         }
@@ -313,14 +313,15 @@ impl std::error::Error for ByDisplayValueError {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     use wasm_bindgen_test::*;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    use super::*;
     use web_sys::{Element, HtmlInputElement, HtmlTextAreaElement};
 
-    use crate::{make_element_with_html_string, QueryElement};
+    use hyphae::QueryElement;
+    use hyphae_utils::make_element_with_html_string;
 
     #[wasm_bindgen_test]
     fn get_input_by_display_value() {

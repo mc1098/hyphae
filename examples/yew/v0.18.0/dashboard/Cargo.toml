@@ -11,9 +11,8 @@ serde_derive = "1"
 yew = { version = "0.18.0", features = ["toml"] }
 
 [dev-dependencies]
-sap = { path = "../../../.." }
-sap-mock = { path = "../../../../crates/sap-mock" }
-sap-utils = { path = "../../../../crates/sap-utils" }
+hyphae = { path = "../../../.." }
+hyphae-mock = { path = "../../../../crates/hyphae-mock" }
 wasm-bindgen-test = "0.3.24"
 wasm-bindgen = "0.2.74"
 wasm-bindgen-futures = "0.4.24"

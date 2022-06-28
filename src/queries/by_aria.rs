@@ -177,7 +177,7 @@ version does not need to be explicitly set.
  */
 
 use crate::Error;
-use sap_aria::{
+use hyphae_aria::{
     element_accessible_name, property::AriaProperty, role::AriaRole, state::AriaState,
     ToQueryString,
 };
@@ -228,7 +228,7 @@ pub trait ByAria {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlButtonElement;
 
     #[wasm_bindgen_test]
@@ -260,7 +260,7 @@ pub trait ByAria {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -329,7 +329,7 @@ pub trait ByAria {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -364,7 +364,7 @@ pub trait ByAria {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlButtonElement;
 
     #[wasm_bindgen_test]
@@ -427,7 +427,7 @@ pub trait ByAria {
     # fn main() {}
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use web_sys::HtmlInputElement;
 
     #[wasm_bindgen_test]
@@ -471,7 +471,7 @@ where
             ))
         });
 
-        if let Some((an, e)) = sap_utils::closest(name, elements, |(k, _)| k) {
+        if let Some((an, e)) = hyphae_utils::closest(name, elements, |(k, _)| k) {
             if an == name {
                 Ok(e)
             } else {
@@ -595,7 +595,7 @@ impl Debug for ByAriaError {
                     provided?
                     Note: ARIA type variants comments provide information on which element, \
                     properties or state they match.",
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )
             }
             ByAriaError::NotFound {
@@ -606,7 +606,7 @@ impl Debug for ByAriaError {
                     f,
                     "\nNo element found with an accessible name equal or similar to '{}' in the following HTML:{}",
                     name,
-                    sap_utils::format_html(inner_html)
+                    hyphae_utils::format_html(inner_html)
                 )
             }
             ByAriaError::Closest {
@@ -618,7 +618,7 @@ impl Debug for ByAriaError {
                     f,
                     "\nNo exact match found for an accessible name of: '{}'.\nA similar match was found in the following HTML:{}",
                     name,
-                    sap_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
+                    hyphae_utils::format_html_with_closest(inner_html, closest_node.unchecked_ref())
                 )
             }
         }
@@ -639,14 +639,15 @@ impl std::error::Error for ByAriaError {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::make_element_with_html_string;
-
     use super::*;
-    use sap_aria::state::InvalidToken;
+
     use wasm_bindgen_test::*;
-    use web_sys::{HtmlButtonElement, HtmlImageElement, HtmlInputElement};
     wasm_bindgen_test_configure!(run_in_browser);
+
+    use hyphae_aria::state::InvalidToken;
+    use hyphae_utils::make_element_with_html_string;
+
+    use web_sys::{HtmlButtonElement, HtmlImageElement, HtmlInputElement};
 
     #[wasm_bindgen_test]
     fn get_by_button_role_with_text_content() {

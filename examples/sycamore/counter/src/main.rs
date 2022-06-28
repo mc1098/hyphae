@@ -36,7 +36,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
 
-    use sap::prelude::*;
+    use hyphae::prelude::*;
     use wasm_bindgen_test::*;
     wasm_bindgen_test_configure!(run_in_browser);
 
