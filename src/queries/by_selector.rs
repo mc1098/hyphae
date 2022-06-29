@@ -68,9 +68,9 @@ pub trait BySelector {
     /// The first input ("input-1") is the first `HtmlInputElement` in the DOM
     /// so the query will short circuit once this element is found.
     ///
-    /// ```
+    /// ```no_run
     /// # fn main() {}
-    /// use wasm_bingen_test::*;
+    /// use wasm_bindgen_test::*;
     /// wasm_bindgen_test_configure!(run_in_browser);
     /// use hyphae::prelude::*;
     /// use web_sys::HtmlInputElement;
@@ -78,6 +78,7 @@ pub trait BySelector {
     /// #[wasm_bindgen_test]
     /// fn get_input_by_type() {
     ///     let rendered: QueryElement = // feature dependent rendering
+    ///     # QueryElement::new();
     ///     let input: HtmlInputElement = rendered
     ///         .get_first_by_selector("input")
     ///         .unwrap();
@@ -90,9 +91,9 @@ pub trait BySelector {
     /// The second input ("input-2") is the only `HtmlInputElement` with the
     /// class value of "myclass" and the `HtmlDivElement`s are skipped because
     /// they don't match the `T` returned.
-    /// ```
+    /// ```no_run
     /// # fn main() {}
-    /// use wasm_bingen_test::*;
+    /// use wasm_bindgen_test::*;
     /// wasm_bindgen_test_configure!(run_in_browser);
     /// use hyphae::prelude::*;
     /// use web_sys::HtmlInputElement;
@@ -100,7 +101,8 @@ pub trait BySelector {
     /// #[wasm_bindgen_test]
     /// fn get_input_by_class() {
     ///     let rendered: QueryElement = // feature dependent rendering
-    ///     let input: HtmlInputElement = rendered
+    ///     # QueryElement::new();
+    ///     let mut input: HtmlInputElement = rendered
     ///         .get_first_by_selector(".myclass")
     ///         .unwrap();
     ///
@@ -109,9 +111,9 @@ pub trait BySelector {
     /// ```
     ///
     /// ## Get third input by id selector "#input-3":
-    /// ```
+    /// ```no_run
     /// # fn main() {}
-    /// use wasm_bingen_test::*;
+    /// use wasm_bindgen_test::*;
     /// wasm_bindgen_test_configure!(run_in_browser);
     /// use hyphae::prelude::*;
     /// use web_sys::HtmlInputElement;
@@ -119,7 +121,8 @@ pub trait BySelector {
     /// #[wasm_bindgen_test]
     /// fn get_input_by_id() {
     ///     let rendered: QueryElement = // feature dependent rendering
-    ///     let input: HtmlInputElement = rendered
+    ///     # QueryElement::new();
+    ///     let mut input: HtmlInputElement = rendered
     ///         .get_first_by_selector("#input-3")
     ///         .unwrap();
     ///
@@ -159,9 +162,9 @@ pub trait BySelector {
     /// ```
     ///
     /// ## Get all inputs by type selector "input":
-    /// ```
+    /// ```no_run
     /// # fn main() {}
-    /// use wasm_bingen_test::*;
+    /// use wasm_bindgen_test::*;
     /// wasm_bindgen_test_configure!(run_in_browser);
     /// use hyphae::prelude::*;
     /// use web_sys::HtmlInputElement;
@@ -169,8 +172,9 @@ pub trait BySelector {
     /// #[wasm_bindgen_test]
     /// fn get_inputs_by_type() {
     ///     let rendered: QueryElement = // feature dependent rendering
-    ///     let iter: HtmlInputElement = rendered
-    ///         .get_all_by_selector("input")
+    ///     # QueryElement::new();
+    ///     let mut iter = rendered
+    ///         .get_all_by_selector::<HtmlInputElement>("input")
     ///         .unwrap();
     ///
     ///     assert_eq!("input-1", iter.next().unwrap().id());
@@ -183,9 +187,9 @@ pub trait BySelector {
     /// ## Get all elements by class selector ".myclass":
     /// The second div ("div-2") and input ("input-2") are the only elements with the
     /// class value of "myclass".
-    /// ```
+    /// ```no_run
     /// # fn main() {}
-    /// use wasm_bingen_test::*;
+    /// use wasm_bindgen_test::*;
     /// wasm_bindgen_test_configure!(run_in_browser);
     /// use hyphae::prelude::*;
     /// use web_sys::HtmlInputElement;
@@ -193,8 +197,9 @@ pub trait BySelector {
     /// #[wasm_bindgen_test]
     /// fn get_input_by_class() {
     ///     let rendered: QueryElement = // feature dependent rendering
-    ///     let iter: HtmlInputElement = rendered
-    ///         .get_all_by_selector(".myclass")
+    ///     # QueryElement::new();
+    ///     let mut iter = rendered
+    ///         .get_all_by_selector::<HtmlInputElement>(".myclass")
     ///         .unwrap();
     ///
     ///     assert_eq!("div-2", iter.next().unwrap().id());
