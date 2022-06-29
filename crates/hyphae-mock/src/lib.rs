@@ -1,6 +1,6 @@
 #![warn(missing_docs)]
 /*!
-# Sap Mock
+# hyphae Mock
 
 Provides simple mocks for JS APIs.
 
