@@ -46,11 +46,14 @@ $ wasm-pack test --headless --firefox --chrome
 
 One of the tests found in the `todo` example.
 
-```rust
+```rust ,ignore
 use super::*;
-use hyphae::{events::*, prelude::*, type_to};
+
 use wasm_bindgen_test::*;
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+use hyphae::{event::*, prelude::*, type_to};
+
 use web_sys::{HtmlButtonElement, HtmlInputElement};
 
 #[wasm_bindgen_test]
@@ -89,21 +92,21 @@ fn make_new_todo_item_complete_it_then_clear_completed() {
 
 ### Query typos
 
-We all make mistakes and when we do so in tests it can be even more confusing, does the code I'm 
-testing work?, is it the test?, is it hyphae?! (how dare you! ;) ). 
+We all make mistakes and when we do so in tests it can be even more confusing, does the code I'm
+testing work?, is it the test?, is it hyphae?! (how dare you! ;) ).
 
-Small typos when trying to find elements using queries is easily done, so hyphae tries to find similar 
-string values when a query fails to find an exact match: 
+Small typos when trying to find elements using queries is easily done, so hyphae tries to find similar
+string values when a query fails to find an exact match:
 
-In the `todo` example if you tried to find the input with the placeholder text "What needs to be done?", 
+In the `todo` example if you tried to find the input with the placeholder text "What needs to be done?",
 it is easy to type this with no capital and forget the question mark (or something similar).
 
-```rust
+```rust ,ignore
 let input: HtmlInputElement = rendered.assert_by_placeholder_test("what needs to be done");
 ```
 
-This will cause the test to fail because an exact match wasn't found but will contain the following 
-output to help you: 
+This will cause the test to fail because an exact match wasn't found but will contain the following
+output to help you:
 
 ```bash
 No exact match found for the placeholder text: 'what needs to be done'.
@@ -149,4 +152,4 @@ A similar match was found in the following HTML:
   </footer>
 </div>
 ```
-This provides a "did you mean" hint and also shows the current state of the DOM when the query failed. 
+This provides a "did you mean" hint and also shows the current state of the DOM when the query failed.
