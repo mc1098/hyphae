@@ -23,9 +23,7 @@ The `display value` for each element:
     </select>
     ```
     The second `option` is the default due to the `selected` boolean attribute but without the
-    default will normally be the first `option`[^note].
-
-    [^note] _Needs to be confirmed that this is the standard_
+    default will normally be the first `option` (TODO: _Needs to be confirmed that this is the standard_).
 - [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)\:
 
     The `display value` will be current text found in the textarea element.
@@ -45,7 +43,7 @@ you are querying for a [`HtmlInputElement`](web_sys::HtmlInputElement) by `displ
 In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
-[^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+[^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
 type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
 or performing certain actions, such as [`click`](web_sys::HtmlElement::click())._
 
@@ -190,7 +188,7 @@ pub trait ByDisplayValue {
         assert_eq!("greeting-textarea", element.id());
     }
     ```
-    [^note] _Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
+    [^note]: _Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
     find the first element with a display value regardless of it's type._
     */
     fn get_by_display_value<T>(&self, search: &str) -> Result<T, Error>

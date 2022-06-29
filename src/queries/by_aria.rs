@@ -212,7 +212,7 @@ pub trait ByAria {
     The button element has an implicit ARIA button role and the accessible name for the button is
     equal to it's text content [^note].
 
-    [^note] _The accessible name is only the text content as there are no label or aria referenced
+    [^note]: _The accessible name is only the text content as there are no label or aria referenced
     elements. See the [module page for more on Accessible name](super::by_aria)_
 
     Rendered html:
@@ -300,7 +300,7 @@ pub trait ByAria {
     you want to find the very first element that matches the ARIA property and accessible name
     then use [`HtmlElement`](web_sys::HtmlElement).
 
-    [^note]_If an accessible name is provided then it must match the content of
+    [^note]: _If an accessible name is provided then it must match the content of
     [`AriaProperty::Label`]._
 
     # Panics

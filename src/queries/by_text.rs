@@ -22,7 +22,7 @@ and vice versa.
 In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
-[^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+[^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
 type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
 or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 
@@ -122,7 +122,7 @@ pub trait ByText {
     The inner div element is the first element with the correct text node and will be returned due
     to `T` being [`HtmlElement`](web_sys::HtmlElement)[^note].
 
-    [^note]_`T` could be
+    [^note]: _`T` could be
     [`HtmlDivElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlDivElement.html)
     to be even more restrictive, however, it is not required in this case._
 

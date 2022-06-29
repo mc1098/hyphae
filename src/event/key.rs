@@ -42,7 +42,7 @@ impl From<Vec<Key>> for Keys {
     }
 }
 
-/// An enum for the possible event types for [`KeyboardEvent`]s.
+/// An enum for the possible event types for [`web_sys::KeyboardEvent`]s.
 #[derive(Clone, Copy)]
 pub enum KeyEventType {
     /// The `keydown` event type.
@@ -120,7 +120,7 @@ macro_rules! key_impl {
 
 key_impl! {
     /**
-    Standard key value to be used to represent the [`KeyboardEvent::key()`].
+    Standard key value to be used to represent the [`web_sys::KeyboardEvent::key()`].
     The [list of keys](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values)
     used can be found on MDN.
     */
