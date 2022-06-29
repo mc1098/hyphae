@@ -31,7 +31,7 @@ you are querying for a [`HtmlInputElement`](web_sys::HtmlInputElement) then you 
 In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
-[^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+[^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
 type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
 or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 
@@ -146,7 +146,7 @@ pub trait ByPlaceholderText {
         assert_eq!("username-element", element.id());
     }
     ```
-    [^note]_Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
+    [^note]:_Use [`HtmlElement`](web_sys::HtmlElement) with care and only when you truly want to
     find the first element with a display value regardless of it’s type._
 
     */

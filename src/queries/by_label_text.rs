@@ -26,7 +26,7 @@ and vice versa.
 In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
-[^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+[^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
 type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
 or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
 
@@ -65,10 +65,10 @@ pub trait ByLabelText {
 
     # Errors
 
-    - [`ByLabelTextError::LabelNotFound`]
+    - Label not found
 
         When no matching label text can be found.
-    - [`ByLabelTextError::NoElementFound`]
+    - No element found
 
         When at least a single label was found with the correct text but no associated element was
         found, this could happen for the following reasons:
@@ -120,7 +120,7 @@ pub trait ByLabelText {
     ## Label not found
 
     When the searched text doesn't match any labels then a [`Result::Err`] will be returned
-    with the value of [`ByLabelTextError::LabelNotFound`].
+    with an error about the label not being found.
 
     Rendered html:
     ```html
@@ -153,8 +153,8 @@ pub trait ByLabelText {
     ## Label found but `for` value doesn't match input `id`
 
     When a label element is found with the search text, however, the `for` value doesn't match the
-    input element's `id`. This will return a [`Result::Err`] with a value of
-    [`ByLabelTextError::NoElementFound`].
+    input element's `id`. This will return a [`Result::Err`] with an error complaining that no element
+    could be found.
 
     Rendered html:
     ```html
@@ -214,10 +214,10 @@ pub trait ByLabelText {
 
     # Errors
 
-    - [`ByLabelTextError::LabelNotFound`]
+    - Label not found
 
         When no matching label text can be found.
-    - [`ByLabelTextError::NoElementFound`]
+    - No element found
 
         When at least a single label was found with the correct text but no associated element was
         found, this could happen for the following reasons:
@@ -270,7 +270,7 @@ pub trait ByLabelText {
     ## Label not found
 
     When the searched text doesn't match any labels then a [`Result::Err`] will be returned
-    with the value of [`ByLabelTextError::LabelNotFound`].
+    with an error complaining that the label could not be found.
 
     Rendered html:
     ```html
@@ -303,8 +303,8 @@ pub trait ByLabelText {
     ## Label found but `for` value doesn't match input `id`
 
     When a label element is found with the search text, however, the `for` value doesn't match the
-    input element's `id`. This will return a [`Result::Err`] with a value of
-    [`ByLabelTextError::NoElementFound`].
+    input element's `id`. This will return a [`Result::Err`] with an error complaining that no
+    element could be found.
 
     Rendered html:
     ```html
