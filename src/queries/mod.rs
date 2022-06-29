@@ -12,6 +12,7 @@ pub mod by_aria;
 pub mod by_display_value;
 pub mod by_label_text;
 pub mod by_placeholder_text;
+pub mod by_selector;
 pub mod by_text;
 
 /// Wrapper around a root element which has been rendered.
