@@ -1,31 +1,29 @@
-/**
-Asserts that a [`Node`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Node.html)'s
-text content is equal to the expected String value (using [`PartialEq`](std::cmp::PartialEq)).
-
-If you want to take into account styling then you will want to use [`assert_inner_text`].
-
-# Examples
-The expected text content is the first argument and the node is the second:
-```no_run
-# use hyphae::assert_text_content;
-# use web_sys::Node;
-# fn test_assert_text_context(node: Node) {
-let node: Node = //.. some function to get Node with text content with "Hello, World!"
-    # node;
-assert_text_content!("Hello, World!", node);
-# }
-```
-A second version is available to add a custom panic message when the equality fails:
-```no_run
-# use hyphae::assert_text_content;
-# use web_sys::Node;
-# fn test_assert_text_content(node: Node) {
-let node: Node = //.. some function to get Node with text content with "Hello, World!"
- # node;
-assert_text_content!("Hello, Rust!", node, "oops, that isn't correct!");
-# }
-```
-*/
+/// Asserts that a [`Node`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Node.html)'s
+/// text content is equal to the expected String value (using [`PartialEq`](std::cmp::PartialEq)).
+///
+/// If you want to take into account styling then you will want to use [`assert_inner_text`].
+///
+/// # Examples
+/// The expected text content is the first argument and the node is the second:
+/// ```no_run
+/// # use hyphae::assert_text_content;
+/// # use web_sys::Node;
+/// # fn test_assert_text_context(node: Node) {
+/// let node: Node = //.. some function to get Node with text content with "Hello, World!"
+///     # node;
+/// assert_text_content!("Hello, World!", node);
+/// # }
+/// ```
+/// A second version is available to add a custom panic message when the equality fails:
+/// ```no_run
+/// # use hyphae::assert_text_content;
+/// # use web_sys::Node;
+/// # fn test_assert_text_content(node: Node) {
+/// let node: Node = //.. some function to get Node with text content with "Hello, World!"
+///  # node;
+/// assert_text_content!("Hello, Rust!", node, "oops, that isn't correct!");
+/// # }
+/// ```
 #[macro_export]
 macro_rules! assert_text_content {
     ($expected: expr, $element:expr $(,)?) => {
@@ -45,34 +43,32 @@ macro_rules! assert_text_content {
     };
 }
 
-/**
-Asserts that a [`HtmlElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlElement.html)'s
-inner text is equal to the expected String value (using [`PartialEq`](std::cmp::PartialEq)).
-
-If you want to exclude styling then you will want to use [`assert_text_content`].
-
-# Examples
-The expected inner text is the first argument and the HtmlElement is the second:
-```no_run
-# use hyphae::assert_inner_text;
-# use web_sys::HtmlElement;
-# fn test_assert_inner_text(element: HtmlElement) {
-let element: HtmlElement = //.. some function to get Element with inner text of "Hello, World!"
-    # element;
-assert_inner_text!("Hello, World!", element);
-# }
-```
-A second version is available to add a custom panic message when the equality fails:
-```no_run
-# use hyphae::assert_inner_text;
-# use web_sys::HtmlElement;
-# fn test_assert_inner_text(element: HtmlElement) {
-let element: HtmlElement = //.. some function to get HtmlElement with inner text of "Hello, World!"
- # element;
-assert_inner_text!("Hello, Rust!", element, "oops, that isn't correct!");
-# }
-```
-*/
+/// Asserts that a [`HtmlElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlElement.html)'s
+/// inner text is equal to the expected String value (using [`PartialEq`](std::cmp::PartialEq)).
+///
+/// If you want to exclude styling then you will want to use [`assert_text_content`].
+///
+/// # Examples
+/// The expected inner text is the first argument and the HtmlElement is the second:
+/// ```no_run
+/// # use hyphae::assert_inner_text;
+/// # use web_sys::HtmlElement;
+/// # fn test_assert_inner_text(element: HtmlElement) {
+/// let element: HtmlElement = //.. some function to get Element with inner text of "Hello, World!"
+///     # element;
+/// assert_inner_text!("Hello, World!", element);
+/// # }
+/// ```
+/// A second version is available to add a custom panic message when the equality fails:
+/// ```no_run
+/// # use hyphae::assert_inner_text;
+/// # use web_sys::HtmlElement;
+/// # fn test_assert_inner_text(element: HtmlElement) {
+/// let element: HtmlElement = //.. some function to get HtmlElement with inner text of "Hello, World!"
+///  # element;
+/// assert_inner_text!("Hello, Rust!", element, "oops, that isn't correct!");
+/// # }
+/// ```
 #[macro_export]
 macro_rules! assert_inner_text {
     ($expected: expr, $element:expr $(,$($arg:tt)+)?) => {

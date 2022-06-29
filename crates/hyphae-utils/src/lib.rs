@@ -42,28 +42,26 @@ where
     .unwrap_throw();
 }
 
-/**
-Asynchronous wait for a given amount of ms.
-
-This is a Rust Future which uses an underlying JS Promise and Timeout.
-This can be useful to assert something has occurred, or not, after a given amount of time -
-especially as you cannot use [sleep](std::thread::sleep) in a test using
-[`wasm_bindgen_test`](wasm_bindgen_testhttps://crates.io/crates/wasm-bindgen-test/).
-
-# Examples
-```no_run
-
-use wasm_bindgen_test::*;
-
-#[wasm_bindgen_test]
-async fn some_test_that_requires_waiting() {
-    // setup..
-    // wait 500ms
-    hyphae_utils::wait_ms(500);
-    // some asserts..
-}
-```
-*/
+/// Asynchronous wait for a given amount of ms.
+///
+/// This is a Rust Future which uses an underlying JS Promise and Timeout.
+/// This can be useful to assert something has occurred, or not, after a given amount of time -
+/// especially as you cannot use [sleep](std::thread::sleep) in a test using
+/// [`wasm_bindgen_test`](wasm_bindgen_testhttps://crates.io/crates/wasm-bindgen-test/).
+///
+/// # Examples
+/// ```no_run
+///
+/// use wasm_bindgen_test::*;
+///
+/// #[wasm_bindgen_test]
+/// async fn some_test_that_requires_waiting() {
+///     // setup..
+///     // wait 500ms
+///     hyphae_utils::wait_ms(500);
+///     // some asserts..
+/// }
+/// ```
 pub async fn wait_ms(ms: u32) {
     JsFuture::from(wait_promise(ms.into())).await.unwrap_throw();
 }
