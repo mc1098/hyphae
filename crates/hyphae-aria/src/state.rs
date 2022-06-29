@@ -66,26 +66,22 @@ aria_state! {
         /// Indicates an element is being modified and that assistive technologies MAY want to
         /// wait until the modifications are complete before exposing them to the user.
         Busy(bool) => state_default,
-        /**
-        Indicates the current "checked" state of checkboxes, radio buttons,
-        and other widgets.
-
-        Attribute parity:
-        - `input` elements of the following types that are checked:
-            - `radio`
-            - `checkbox`
-        */
+        /// Indicates the current "checked" state of checkboxes, radio buttons,
+        /// and other widgets.
+        ///
+        /// Attribute parity:
+        /// - `input` elements of the following types that are checked:
+        ///     - `radio`
+        ///     - `checkbox`
         Checked(TriState) => state_checked,
         /// Indicates the element that represents the current item within a container or set
         /// of related elements.
         Current(CurrentToken) => state_default,
-        /**
-        Indicates that the element is perceivable but disabled, so it is not editable or
-        otherwise operable.
-
-        Attribute parity:
-        - any element which is disabled will be equivalent to aria-disabled="true"
-        */
+        /// Indicates that the element is perceivable but disabled, so it is not editable or
+        /// otherwise operable.
+        ///
+        /// Attribute parity:
+        /// - any element which is disabled will be equivalent to aria-disabled="true"
         Disabled(bool) => state_disabled,
         /// Indicates whether the element, or another grouping element it controls, is
         /// currently expanded or collapsed.
@@ -93,12 +89,10 @@ aria_state! {
         #[deprecated(note = "Deprecated in ARIA 1.1")]
         /// Indicates an element's "grabbed" state in a drag-and-drop operation.
         Grabbed(DuoState) => state_default,
-        /**
-        Indicates whether the element is exposed to an accessibility API.
-
-        Attribute parity:
-        - any element which is hidden will be equivalent to aria-hidden="true"
-        */
+        /// Indicates whether the element is exposed to an accessibility API.
+        ///
+        /// Attribute parity:
+        /// - any element which is hidden will be equivalent to aria-hidden="true"
         Hidden(DuoState) => state_hidden,
         /// Indicates the entered value does not conform to the format expected by the
         /// application.

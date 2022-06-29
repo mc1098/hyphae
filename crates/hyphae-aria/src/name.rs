@@ -142,14 +142,12 @@ macro_rules! text_alternative_alt_title {
     };
 }
 
-/**
-Recursive function to calculate a nodes accessible name.
-
-aria-labelledby traversal (albt)
-
-NOTE: Pseudo elements are part of the standard but some browsers seem to ignore them and even my
-screen reader does.
-*/
+/// Recursive function to calculate a nodes accessible name.
+///
+/// aria-labelledby traversal (albt)
+///
+/// NOTE: Pseudo elements are part of the standard but some browsers seem to ignore them and even my
+/// screen reader does.
 #[allow(dead_code)]
 fn element_accessible_name_impl(
     node: &Node,

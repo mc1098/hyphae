@@ -1,150 +1,143 @@
-/*!
-Supports finding elements generically by their inner text.
-
-The text of an element is the text raw text between the opening and closing tags.
-
-```html
-<div id="1">
-    div text node
-    <button id="2">button text node</button>
-</div>
-```
-The elements will have the following inner text:
-1 - "div text nodebutton text node"
-2 - "button text node"
-
-# Generics
-Each trait function supports generics for convenience and to help narrow the scope of the search. If
-you are querying for a [`HtmlButtonElement`](web_sys::HtmlInputElement) then you won't find a
-[`HtmlDivElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlDivElement.html)
-and vice versa.
-
-In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
-type[^note].
-
-[^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
-type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
-or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
-
-# What is [`JsCast`]?
-
-The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
-performing checked and unchecked casting between JS types.
- */
+//! Supports finding elements generically by their inner text.
+//!
+//! The text of an element is the text raw text between the opening and closing tags.
+//!
+//! ```html
+//! <div id="1">
+//!     div text node
+//!     <button id="2">button text node</button>
+//! </div>
+//! ```
+//! The elements will have the following inner text:
+//! 1 - "div text nodebutton text node"
+//! 2 - "button text node"
+//!
+//! # Generics
+//! Each trait function supports generics for convenience and to help narrow the scope of the search. If
+//! you are querying for a [`HtmlButtonElement`](web_sys::HtmlInputElement) then you won't find a
+//! [`HtmlDivElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlDivElement.html)
+//! and vice versa.
+//!
+//! In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
+//! type[^note].
+//!
+//! [^note]: _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'
+//! type, however, [`HtmlElement`](web_sys::HtmlElement) has more useful functions for making assertions
+//! or performing certain actions, such as [`click`](web_sys::HtmlElement::click)._
+//!
+//! # What is [`JsCast`]?
+//!
+//! The generic type returned needs to impl [`JsCast`] which is a trait from [`wasm_bindgen`] crate for
+//! performing checked and unchecked casting between JS types.
 use std::{
     fmt::{Debug, Display},
     ops::Deref,
 };
 
+use hyphae::{Error, QueryElement};
+
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{HtmlElement, Node, NodeFilter, TreeWalker};
 
-use hyphae::{Error, QueryElement};
-
-/**
-Enables queries by inner text.
-
-_See each trait function for examples._
-*/
+/// Enables queries by inner text.
+///
+/// _See each trait function for examples._
 pub trait ByText {
-    /**
-
-    Get a generic element by the inner text.
-
-    Using one of the generic types above as `T` will essentially skip the other two types of
-    elements - if you want to find the very first element that matches the display value then use
-    [`HtmlElement`](web_sys::HtmlElement).
-
-    # Panics
-    _Nothing to see here_
-
-    # Examples
-
-    Rendered html:
-    ```html
-    <div>
-        <div id="text-div">Hello, World!</div>
-        <button id="text-button">Hello, World!</button>
-        <label id="text-label">Hello, World!</label>
-    </div>
-    ```
-
-    ## Get button by text:
-
-    The button is the second element with the correct text node and will be returned due to
-    `T` being [`HtmlButtonElement`](web_sys::HtmlButtonElement).
-
-    ```no_run
-    # fn main() {}
-    use wasm_bindgen_test::*;
-    wasm_bindgen_test_configure!(run_in_browser);
-    use hyphae::prelude::*;
-    use web_sys::HtmlButtonElement;
-
-    #[wasm_bindgen_test]
-    fn get_button_by_text() {
-        let rendered: QueryElement = // feature dependent rendering
-            # QueryElement::new();
-        let button: HtmlButtonElement = rendered
-            .get_by_text("Hello, World!")
-            .unwrap();
-
-        assert_eq!("text-button", button.id());
-    }
-    ```
-
-    ## Get label by text:
-
-    The label is the last element with the correct text node and will be returned due to `T` being
-    [`HtmlLabelElement`](web_sys::HtmlLabelElement).
-
-    ```no_run
-    # fn main() {}
-    use wasm_bindgen_test::*;
-    wasm_bindgen_test_configure!(run_in_browser);
-    use hyphae::prelude::*;
-    use web_sys::HtmlLabelElement;
-
-    #[wasm_bindgen_test]
-    fn get_label_by_text() {
-        let rendered: QueryElement = // feature dependent rendering
-            # QueryElement::new();
-        let label: HtmlLabelElement = rendered
-            .get_by_text("Hello, World!")
-            .unwrap();
-
-        assert_eq!("text-label", label.id());
-    }
-    ```
-
-    ## Get first element by text:
-
-    The inner div element is the first element with the correct text node and will be returned due
-    to `T` being [`HtmlElement`](web_sys::HtmlElement)[^note].
-
-    [^note]: _`T` could be
-    [`HtmlDivElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlDivElement.html)
-    to be even more restrictive, however, it is not required in this case._
-
-    ```no_run
-    # fn main() {}
-    use wasm_bindgen_test::*;
-    wasm_bindgen_test_configure!(run_in_browser);
-    use hyphae::prelude::*;
-    use web_sys::HtmlElement;
-
-    #[wasm_bindgen_test]
-    fn get_first_element_by_text() {
-        let rendered: QueryElement = // feature dependent rendering
-            # QueryElement::new();
-        let element: HtmlElement = rendered
-            .get_by_text("Hello, World!")
-            .unwrap();
-
-        assert_eq!("text-div", element.id());
-    }
-    ```
-    */
+    /// Get a generic element by the inner text.
+    ///
+    /// Using one of the generic types above as `T` will essentially skip the other two types of
+    /// elements - if you want to find the very first element that matches the display value then use
+    /// [`HtmlElement`](web_sys::HtmlElement).
+    ///
+    /// # Panics
+    /// _Nothing to see here_
+    ///
+    /// # Examples
+    ///
+    /// Rendered html:
+    /// ```html
+    /// <div>
+    /// <div id="text-div">Hello, World!</div>
+    /// <button id="text-button">Hello, World!</button>
+    /// <label id="text-label">Hello, World!</label>
+    /// </div>
+    /// ```
+    ///
+    /// ## Get button by text:
+    ///
+    /// The button is the second element with the correct text node and will be returned due to
+    /// `T` being [`HtmlButtonElement`](web_sys::HtmlButtonElement).
+    ///
+    /// ```no_run
+    /// # fn main() {}
+    /// use wasm_bindgen_test::*;
+    /// wasm_bindgen_test_configure!(run_in_browser);
+    /// use hyphae::prelude::*;
+    /// use web_sys::HtmlButtonElement;
+    ///
+    /// #[wasm_bindgen_test]
+    /// fn get_button_by_text() {
+    /// let rendered: QueryElement = // feature dependent rendering
+    /// # QueryElement::new();
+    /// let button: HtmlButtonElement = rendered
+    /// .get_by_text("Hello, World!")
+    /// .unwrap();
+    ///
+    /// assert_eq!("text-button", button.id());
+    /// }
+    /// ```
+    ///
+    /// ## Get label by text:
+    ///
+    /// The label is the last element with the correct text node and will be returned due to `T` being
+    /// [`HtmlLabelElement`](web_sys::HtmlLabelElement).
+    ///
+    /// ```no_run
+    /// # fn main() {}
+    /// use wasm_bindgen_test::*;
+    /// wasm_bindgen_test_configure!(run_in_browser);
+    /// use hyphae::prelude::*;
+    /// use web_sys::HtmlLabelElement;
+    ///
+    /// #[wasm_bindgen_test]
+    /// fn get_label_by_text() {
+    /// let rendered: QueryElement = // feature dependent rendering
+    /// # QueryElement::new();
+    /// let label: HtmlLabelElement = rendered
+    /// .get_by_text("Hello, World!")
+    /// .unwrap();
+    ///
+    /// assert_eq!("text-label", label.id());
+    /// }
+    /// ```
+    ///
+    /// ## Get first element by text:
+    ///
+    /// The inner div element is the first element with the correct text node and will be returned due
+    /// to `T` being [`HtmlElement`](web_sys::HtmlElement)[^note].
+    ///
+    /// [^note]: _`T` could be
+    /// [`HtmlDivElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlDivElement.html)
+    /// to be even more restrictive, however, it is not required in this case._
+    ///
+    /// ```no_run
+    /// # fn main() {}
+    /// use wasm_bindgen_test::*;
+    /// wasm_bindgen_test_configure!(run_in_browser);
+    /// use hyphae::prelude::*;
+    /// use web_sys::HtmlElement;
+    ///
+    /// #[wasm_bindgen_test]
+    /// fn get_first_element_by_text() {
+    /// let rendered: QueryElement = // feature dependent rendering
+    /// # QueryElement::new();
+    /// let element: HtmlElement = rendered
+    /// .get_by_text("Hello, World!")
+    /// .unwrap();
+    ///
+    /// assert_eq!("text-div", element.id());
+    /// }
+    /// ```
     fn get_by_text<T>(&self, search: &str) -> Result<T, Error>
     where
         T: JsCast;
@@ -250,23 +243,19 @@ impl ByText for QueryElement {
     }
 }
 
-/**
-An error indicating that no inner text was an equal match for a given search term.
-*/
+/// An error indicating that no inner text was an equal match for a given search term.
 enum ByTextError {
     /// No inner text could be found with the given search term.
     NotFound {
         search_term: String,
         inner_html: String,
     },
-    /**
-    No inner text with an exact match for the search term could be found, however, a inner text
-    with a similar content as the search term was found.
-
-    This should help find elements when a user has made a typo in either the test or the
-    implementation being tested or when trying to find text with a dynamic number that may be
-    incorrect
-    */
+    /// No inner text with an exact match for the search term could be found, however, a inner text
+    /// with a similar content as the search term was found.
+    ///
+    /// This should help find elements when a user has made a typo in either the test or the
+    /// implementation being tested or when trying to find text with a dynamic number that may be
+    /// incorrect
     Closest {
         search_term: String,
         inner_html: String,

@@ -1,11 +1,9 @@
 #![warn(missing_docs)]
-/*!
-# hyphae Mock
-
-Provides simple mocks for JS APIs.
-
-_Work in Progress_
-*/
+//! # hyphae Mock
+//!
+//! Provides simple mocks for JS APIs.
+//!
+//! _Work in Progress_
 
 use js_sys::Uint8Array;
 use serde::Serialize;
@@ -100,45 +98,43 @@ impl Drop for WebSocketController {
     }
 }
 
-/**
-Replaces the JS WebSocket with a mocked version and returns a controller for the mocked version.
-
-The parameter is used to simulate connection time - using 0 will make the mock WebSocket connect
-immediately.
-
-# Examples
-
-Mock a WebSocket that connects immediately:
-```no_run
-use hyphae_mock::WebSocketController;
-
-let controller: WebSocketController = hyphae_mock::mock_ws(0);
-// `ws` is a mocked WebSocket
-let ws = web_sys::WebSocket::new("anyurl").unwrap();
-// No wait required
-assert!(controller.is_opened());
-```
-
-Mock a WebSocket that takes 500ms to connect:
-```no_run
-# async fn wait_for_ws() {
-use hyphae_mock::WebSocketController;
-
-// Mock a WebSocket that takes 500ms to connect
-let controller: WebSocketController = hyphae_mock::mock_ws(500);
-// `ws` is a mocked WebSocket
-let ws = web_sys::WebSocket::new("anyurl").unwrap();
-
-// Won't be open yet.
-assert!(!controller.is_opened());
-
-// Need to be in an async fn here to await
-hyphae_utils::wait_ms(500).await;
-// After 500ms mock WebSocket will be opened
-assert!(controller.is_opened());
-# }
-```
-*/
+/// Replaces the JS WebSocket with a mocked version and returns a controller for the mocked version.
+///
+/// The parameter is used to simulate connection time - using 0 will make the mock WebSocket connect
+/// immediately.
+///
+/// # Examples
+///
+/// Mock a WebSocket that connects immediately:
+/// ```no_run
+/// use hyphae_mock::WebSocketController;
+///
+/// let controller: WebSocketController = hyphae_mock::mock_ws(0);
+/// // `ws` is a mocked WebSocket
+/// let ws = web_sys::WebSocket::new("anyurl").unwrap();
+/// // No wait required
+/// assert!(controller.is_opened());
+/// ```
+///
+/// Mock a WebSocket that takes 500ms to connect:
+/// ```no_run
+/// # async fn wait_for_ws() {
+/// use hyphae_mock::WebSocketController;
+///
+/// // Mock a WebSocket that takes 500ms to connect
+/// let controller: WebSocketController = hyphae_mock::mock_ws(500);
+/// // `ws` is a mocked WebSocket
+/// let ws = web_sys::WebSocket::new("anyurl").unwrap();
+///
+/// // Won't be open yet.
+/// assert!(!controller.is_opened());
+///
+/// // Need to be in an async fn here to await
+/// hyphae_utils::wait_ms(500).await;
+/// // After 500ms mock WebSocket will be opened
+/// assert!(controller.is_opened());
+/// # }
+/// ```
 pub fn mock_ws(conn_delay: u32) -> WebSocketController {
     WebSocketController(mock_websocket(conn_delay.into()))
 }
@@ -155,47 +151,45 @@ impl Drop for FetchMockHandle {
     }
 }
 
-/**
-Mocks the Fetch API to return either a value or an error depending on the mock input.
-
-When used with [`Ok`] any calls to the fetch api will return a Response with the body of `T`,
-however, when [`Err`] is used the fetch API will return a error Response with the status of
-the u32 provided and will contain the string as the reason for this error.
-
-# Examples
-```
-use wasm_bindgen_test::*;
-use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
-use serde::{Deserialize, Serialize};
-use web_sys::{window, Response};
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-struct Model {
-    value: usize,
-}
-
-#[wasm_bindgen_test]
-async fn mock_fetch_usize() {
-    let mock = Model { value: 32 };
-
-    // Hold handle to keep mock alive
-    let _handle = hyphae_mock::mock_fetch(Ok(&mock));
-    let window = window().expect("No global window");
-    // Wrap fetch call into a Future to await it
-    let resp: Response = JsFuture::from(window.fetch_with_str("someurl"))
-        .await
-        .unwrap()
-        .unchecked_into();
-    let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
-    let value = json.into_serde::<Model>().unwrap();
-
-    assert_eq!(mock, value);
-
-    // _handle goes out of scope and restores fetch for other tests
-}
-```
-*/
+/// Mocks the Fetch API to return either a value or an error depending on the mock input.
+///
+/// When used with [`Ok`] any calls to the fetch api will return a Response with the body of `T`,
+/// however, when [`Err`] is used the fetch API will return a error Response with the status of
+/// the u32 provided and will contain the string as the reason for this error.
+///
+/// # Examples
+/// ```
+/// use wasm_bindgen_test::*;
+/// use wasm_bindgen::JsCast;
+/// use wasm_bindgen_futures::JsFuture;
+/// use serde::{Deserialize, Serialize};
+/// use web_sys::{window, Response};
+///
+/// #[derive(Debug, Serialize, Deserialize, PartialEq)]
+/// struct Model {
+///     value: usize,
+/// }
+///
+/// #[wasm_bindgen_test]
+/// async fn mock_fetch_usize() {
+///     let mock = Model { value: 32 };
+///
+///     // Hold handle to keep mock alive
+///     let _handle = hyphae_mock::mock_fetch(Ok(&mock));
+///     let window = window().expect("No global window");
+///     // Wrap fetch call into a Future to await it
+///     let resp: Response = JsFuture::from(window.fetch_with_str("someurl"))
+///         .await
+///         .unwrap()
+///         .unchecked_into();
+///     let json = JsFuture::from(resp.json().unwrap()).await.unwrap();
+///     let value = json.into_serde::<Model>().unwrap();
+///
+///     assert_eq!(mock, value);
+///
+///     // _handle goes out of scope and restores fetch for other tests
+/// }
+/// ```
 pub fn mock_fetch<T>(mock: Result<&T, (u32, String)>) -> FetchMockHandle
 where
     T: Serialize,

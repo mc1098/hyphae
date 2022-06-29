@@ -1,9 +1,7 @@
-/*!
-Convenience module for firing events to [`EventTarget`].
-
-The goal of this module is to remove the boilerplate from firing [`web_sys`] events by providing
-helper functions and traits for medium/high level actions.
-*/
+//! Convenience module for firing events to [`EventTarget`].
+//!
+//! The goal of this module is to remove the boilerplate from firing [`web_sys`] events by providing
+//! helper functions and traits for medium/high level actions.
 mod key;
 
 pub use key::*;
@@ -13,43 +11,41 @@ use web_sys::{
     MouseEvent, MouseEventInit,
 };
 
-/**
-Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
-
-Uses the [`KeyEventType`] and [`Key`] enum to provide type safe options - this avoids typos causing
-tests to fail.
-
-The [list of keys available](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
-
-# Examples
-## Control Key
-[`Key`] has a variant for most of the keys listed above (see next example for typed chars).
-```
-use hyphae::event::*;
-use web_sys::HtmlButtonElement;
-
-# fn control_key_example(btn: HtmlButtonElement) {
-let btn: HtmlButtonElement = // function to get button element
-    # btn;
-// can confirm by pressing enter on button
-dispatch_key_event(&btn, KeyEventType::KeyPress, Key::Enter);
-# }
-```
-
-## Char literals
-A [`char`] can be accepted and will be the equivalent to using [`Key::Lit`] variant with the [`char`]
-value.
-```
-use hyphae::event::*;
-use web_sys::HtmlInputElement;
-
-# fn char_literal_example(input: HtmlInputElement) {
-let input: HtmlInputElement = // get input
-    # input;
-dispatch_key_event(&input, KeyEventType::KeyPress, 'a');
-# }
-```
-*/
+/// Dispatches a single [`KeyboardEvent`] with the type and key provided to the event target.
+///
+/// Uses the [`KeyEventType`] and [`Key`] enum to provide type safe options - this avoids typos causing
+/// tests to fail.
+///
+/// The [list of keys available](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
+///
+/// # Examples
+/// ## Control Key
+/// [`Key`] has a variant for most of the keys listed above (see next example for typed chars).
+/// ```
+/// use hyphae::event::*;
+/// use web_sys::HtmlButtonElement;
+///
+/// # fn control_key_example(btn: HtmlButtonElement) {
+/// let btn: HtmlButtonElement = // function to get button element
+///     # btn;
+/// // can confirm by pressing enter on button
+/// dispatch_key_event(&btn, KeyEventType::KeyPress, Key::Enter);
+/// # }
+/// ```
+///
+/// ## Char literals
+/// A [`char`] can be accepted and will be the equivalent to using [`Key::Lit`] variant with the [`char`]
+/// value.
+/// ```
+/// use hyphae::event::*;
+/// use web_sys::HtmlInputElement;
+///
+/// # fn char_literal_example(input: HtmlInputElement) {
+/// let input: HtmlInputElement = // get input
+///     # input;
+/// dispatch_key_event(&input, KeyEventType::KeyPress, 'a');
+/// # }
+/// ```
 pub fn dispatch_key_event<K>(element: &EventTarget, event_type: KeyEventType, key: K)
 where
     K: Into<Key>,
@@ -63,28 +59,27 @@ where
     element.dispatch_event(&key_event).unwrap();
 }
 
-/**
-A simple simulation of typing a single key to the [`EventTarget`].
-
-This will fire the following events, in this order, on the target:
-- `keydown` [`KeyboardEvent`]
-- `keypress` [`KeyboardEvent`]
-- `keyup` [`KeyboardEvent`]
-- `input` [`InputEvent`]
-
-# Examples
-```
-use hyphae::event::*;
-use web_sys::HtmlInputElement;
-
-# fn type_key_example(input: HtmlInputElement) {
-let input: HtmlInputElement = // some function to get input element;
-    # input;
-type_key(&input, 'A');
-assert_eq!("A", input.value());
-# }
-```
-*/
+/// A simple simulation of typing a single key to the [`EventTarget`].
+///
+/// This will fire the following events, in this order, on the target:
+/// - `keydown` [`KeyboardEvent`]
+/// - `keypress` [`KeyboardEvent`]
+/// - `keyup` [`KeyboardEvent`]
+/// - `input` [`InputEvent`]
+///
+/// # Examples
+/// ```
+/// use hyphae::event::*;
+/// use web_sys::HtmlInputElement;
+///
+/// # fn type_key_example(input: HtmlInputElement) {
+/// let input: HtmlInputElement = // some function to get input element;
+///     # input;
+/// type_key(&input, 'A');
+/// assert_eq!("A", input.value());
+/// # }
+/// ```
+///
 pub fn type_key<K>(element: &EventTarget, key: K)
 where
     K: Into<Key>,
@@ -100,28 +95,26 @@ where
     }
 }
 
-/**
-A simple simulation of typing a multiple keys to the [`EventTarget`].
-
-This will fire the following events, in this order, on the target for each key:
-- `keydown` [`KeyboardEvent`]
-- `keypress` [`KeyboardEvent`]
-- `keyup` [`KeyboardEvent`]
-- `input` [`InputEvent`] if the key is visible
-
-# Examples
-```
-use hyphae::event::*;
-use web_sys::HtmlInputElement;
-
-# fn type_key_example(input: HtmlInputElement) {
-let input: HtmlInputElement = // some function to get input element;
-    # input;
-type_keys(&input, "abc");
-assert_eq!("abc", input.value());
-# }
-```
-*/
+/// A simple simulation of typing a multiple keys to the [`EventTarget`].
+///
+/// This will fire the following events, in this order, on the target for each key:
+/// - `keydown` [`KeyboardEvent`]
+/// - `keypress` [`KeyboardEvent`]
+/// - `keyup` [`KeyboardEvent`]
+/// - `input` [`InputEvent`] if the key is visible
+///
+/// # Examples
+/// ```
+/// use hyphae::event::*;
+/// use web_sys::HtmlInputElement;
+///
+/// # fn type_key_example(input: HtmlInputElement) {
+/// let input: HtmlInputElement = // some function to get input element;
+///     # input;
+/// type_keys(&input, "abc");
+/// assert_eq!("abc", input.value());
+/// # }
+/// ```
 pub fn type_keys<K>(element: &EventTarget, keys: K)
 where
     K: Into<Keys>,
@@ -178,21 +171,19 @@ macro_rules! type_to {
 
 /// Enables firing a `dblclick` [`MouseEvent`].
 pub trait DblClick {
-    /**
-    Fires a `dblclick` [`MouseEvent`] on this [`EventTarget`].
-
-    # Examples
-    ```
-    use hyphae::event::DblClick;
-    use web_sys::HtmlButtonElement;
-
-    # fn dbl_click_example(btn: HtmlButtonElement) {
-    let btn: HtmlButtonElement = // get button from query
-        # btn;
-    btn.dbl_click();
-    # }
-    ```
-    */
+    /// Fires a `dblclick` [`MouseEvent`] on this [`EventTarget`].
+    ///
+    /// # Examples
+    /// ```
+    /// use hyphae::event::DblClick;
+    /// use web_sys::HtmlButtonElement;
+    ///
+    /// # fn dbl_click_example(btn: HtmlButtonElement) {
+    /// let btn: HtmlButtonElement = // get button from query
+    ///     # btn;
+    /// btn.dbl_click();
+    /// # }
+    /// ```
     fn dbl_click(&self)
     where
         Self: AsRef<EventTarget>;
@@ -210,37 +201,35 @@ impl DblClick for EventTarget {
     }
 }
 
-/**
-Dispatches a [`InputEvent`] with the `data` given, to the event target.
-
-Input events can only be fired on the following:
-- [`HtmlInputElement`](web_sys::HtmlInputElement)
-- [`HtmlSelectElement`](web_sys::HtmlSelectElement)
-- [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)
-
-Using the function on other elements will do nothing!
-
-Only use this if you need to trigger an `oninput` event listener - if you want to change the value
-of the [`EventTarget`] you can just use the relative set value method.
-
-# Examples
-```
-use hyphae::event::dispatch_input_event;
-use web_sys::{HtmlInputElement, InputEventInit};
-
-# fn dispatch_input_event_example(input: HtmlInputElement) {
-let input: HtmlInputElement = // function to get input element
-    # input;
-// enter value into input
-let mut init = InputEventInit::new();
-init.data(Some("Hello World!"));
-init.input_type("insertText");
-
-dispatch_input_event(&input, init);
-assert_eq!("Hello, World!", input.value());
-# }
-```
-*/
+/// Dispatches a [`InputEvent`] with the `data` given, to the event target.
+///
+/// Input events can only be fired on the following:
+/// - [`HtmlInputElement`](web_sys::HtmlInputElement)
+/// - [`HtmlSelectElement`](web_sys::HtmlSelectElement)
+/// - [`HtmlTextAreaElement`](web_sys::HtmlTextAreaElement)
+///
+/// Using the function on other elements will do nothing!
+///
+/// Only use this if you need to trigger an `oninput` event listener - if you want to change the value
+/// of the [`EventTarget`] you can just use the relative set value method.
+///
+/// # Examples
+/// ```
+/// use hyphae::event::dispatch_input_event;
+/// use web_sys::{HtmlInputElement, InputEventInit};
+///
+/// # fn dispatch_input_event_example(input: HtmlInputElement) {
+/// let input: HtmlInputElement = // function to get input element
+///     # input;
+/// // enter value into input
+/// let mut init = InputEventInit::new();
+/// init.data(Some("Hello World!"));
+/// init.input_type("insertText");
+///
+/// dispatch_input_event(&input, init);
+/// assert_eq!("Hello, World!", input.value());
+/// # }
+/// ```
 pub fn dispatch_input_event(element: &EventTarget, data: InputEventInit) {
     let input_event = InputEvent::new_with_event_init_dict("input", &data).unwrap();
     let data = input_event.data();
@@ -260,22 +249,20 @@ pub fn dispatch_input_event(element: &EventTarget, data: InputEventInit) {
 
 /// Enables dispatching a bubbling `change` event from an EventTarget
 pub trait EventTargetChanged {
-    /**
-    Dispatches a change [`Event`] on this [`EventTarget`]
-
-    # Examples
-    ```
-    use hyphae::event::EventTargetChanged;
-    use web_sys::HtmlInputElement;
-
-    # fn dispatch_input_event_example(input: HtmlInputElement) {
-    let input: HtmlInputElement = // function to get input element
-        # input;
-    // dispatch "change" event
-    input.changed();
-    # }
-    ```
-    */
+    /// Dispatches a change [`Event`] on this [`EventTarget`]
+    ///
+    /// # Examples
+    /// ```
+    /// use hyphae::event::EventTargetChanged;
+    /// use web_sys::HtmlInputElement;
+    ///
+    /// # fn dispatch_input_event_example(input: HtmlInputElement) {
+    /// let input: HtmlInputElement = // function to get input element
+    ///     # input;
+    /// // dispatch "change" event
+    /// input.changed();
+    /// # }
+    /// ```
     fn changed(&self);
 }
 

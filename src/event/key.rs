@@ -81,10 +81,8 @@ macro_rules! key_impl {
         #[$($key_doc)+]
         #[derive(Copy, Clone)]
         pub enum Key {
-            /**
-            A literal key such as an alphanumeric or even the single space ' '.
-            This also allows for special characters such as '🎉'.
-            */
+            /// A literal key such as an alphanumeric or even the single space ' '.
+            /// This also allows for special characters such as '🎉'.
             Lit(char),
             $(
                 #[allow(missing_docs)] // might have to keep this or document every key...

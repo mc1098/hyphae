@@ -1,9 +1,7 @@
-/*!
-Queries for finding [`Element`](web_sys::Element)s.
-
-This module helps to query the DOM of a rendered root element. The goal is to use high/medium level
-APIs so that the DOM can be queried in a manner similar to how a user might navigate the UI.
-*/
+//! Queries for finding [`Element`](web_sys::Element)s.
+//!
+//! This module helps to query the DOM of a rendered root element. The goal is to use high/medium level
+//! APIs so that the DOM can be queried in a manner similar to how a user might navigate the UI.
 
 use std::ops::Deref;
 
@@ -20,16 +18,14 @@ pub mod by_text;
 pub struct QueryElement(HtmlElement);
 
 impl QueryElement {
-    /**
-    Wrap rendered root element ready to be queried.
-
-    # Examples
-    ```no_run
-    use hyphae::prelude::*;
-    let rendered = QueryElement::new();
-    // .. use `rendered` to get elements and perform tests
-    ```
-    */
+    /// Wrap rendered root element ready to be queried.
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use hyphae::prelude::*;
+    /// let rendered = QueryElement::new();
+    /// // .. use `rendered` to get elements and perform tests
+    /// ```
     pub fn new() -> Self {
         Self::default()
     }
