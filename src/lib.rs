@@ -1,8 +1,8 @@
 #![warn(missing_docs)]
 /*!
-# Sap
+# hyphae
 
-Sap is a testing library that provides abstractions on top of [`wasm_bindgen`] for testing DOM nodes.
+hyphae is a testing library that provides abstractions on top of [`wasm_bindgen`] for testing DOM nodes.
 
 The main feature of this crate is using `queries` to find elements in the DOM and perform actions
 that simulate user behaviour to assert that your application behaves correctly.
@@ -14,7 +14,7 @@ by ARIA and using this will also help you consider the accessibility of your app
 Requirements:
 - [`wasm-bindgen-test`](https://crates.io/crates/wasm-bindgen) in dev-dependencies
 
-All Sap functions are assuming they will be in wasm-bindgen-tests:
+All hyphae functions are assuming they will be in wasm-bindgen-tests:
 
 ```no_run
 use wasm_bindgen_test::*;
@@ -52,7 +52,7 @@ pub use queries::QueryElement;
 /// Alias for boxed error
 pub type Error = Box<dyn std::error::Error>;
 
-/// Sap Prelude
+/// hyphae Prelude
 ///
 /// Convenient module to import the most used imports for hyphae.
 ///

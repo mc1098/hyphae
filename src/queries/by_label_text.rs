@@ -23,7 +23,7 @@ you are querying for a [`HtmlInputElement`](web_sys::HtmlInputElement) then you 
 [`HtmlOutputElement`](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.HtmlOutputElement.html)
 and vice versa.
 
-In [`Sap`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
+In [`hyphae`](crate) the [`HtmlElement`](web_sys::HtmlElement) can be used as a "catch all" generic
 type[^note].
 
 [^note] _[`Element`](web_sys::Element) and [`Node`](web_sys::Node) can also be used as a 'catch all'

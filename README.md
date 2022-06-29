@@ -1,4 +1,4 @@
-# Sap
+# hyphae
 
 <!-- [![Crates.io][crates-badge]][crates-url] -->
 [![MIT licensed][mit-badge]][mit-url]
@@ -11,7 +11,7 @@
 [actions-badge]: https://github.com/mc1098/hyphae/workflows/CI/badge.svg
 [actions-url]: https://github.com/mc1098/hyphae/actions?query=workflow%3ACI+branch%3Astaging
 
-Sap is a testing library that provides abstractions on top of `wasm_bindgen` for testing DOM nodes.
+hyphae is a testing library that provides abstractions on top of `wasm_bindgen` for testing DOM nodes.
 
 The main feature of this crate is using `queries` to find elements in the DOM and perform actions
 that simulate user behaviour to assert that your application behaves correctly.
@@ -23,7 +23,7 @@ by ARIA and using this will also help you consider the accessibility of your app
 Requirements:
 - [`wasm-bindgen-test`](https://crates.io/crates/wasm-bindgen) in dev-dependencies
 
-All Sap functions are assuming they will be in wasm-bindgen-tests:
+All hyphae functions are assuming they will be in wasm-bindgen-tests:
 
 ```rust
 use wasm_bindgen_test::*;
@@ -90,9 +90,9 @@ fn make_new_todo_item_complete_it_then_clear_completed() {
 ### Query typos
 
 We all make mistakes and when we do so in tests it can be even more confusing, does the code I'm 
-testing work?, is it the test?, is it Sap?! (how dare you! ;) ). 
+testing work?, is it the test?, is it hyphae?! (how dare you! ;) ). 
 
-Small typos when trying to find elements using queries is easily done, so Sap tries to find similar 
+Small typos when trying to find elements using queries is easily done, so hyphae tries to find similar 
 string values when a query fails to find an exact match: 
 
 In the `todo` example if you tried to find the input with the placeholder text "What needs to be done?", 
