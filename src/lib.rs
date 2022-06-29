@@ -31,8 +31,8 @@ pub mod prelude {
         assert_inner_text, assert_text_content,
         iter::*,
         queries::{
-            by_aria::*, by_display_value::*, by_label_text::*, by_placeholder_text::*, by_text::*,
-            QueryElement,
+            by_aria::*, by_display_value::*, by_label_text::*, by_placeholder_text::*,
+            by_selector::*, by_text::*, QueryElement,
         },
         Error,
     };

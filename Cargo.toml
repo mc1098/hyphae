@@ -66,5 +66,3 @@ members = [
 	"examples/sycamore/todo",
 ]
 
-[patch.crates-io]
-hyphae-aria = { path = "crates/hyphae-aria" }
